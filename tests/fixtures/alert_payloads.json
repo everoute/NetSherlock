@@ -1,0 +1,79 @@
+{
+  "vm_network_latency_alert": {
+    "status": "firing",
+    "labels": {
+      "alertname": "VMNetworkLatency",
+      "instance": "192.168.1.10:9100",
+      "hostname": "compute-node-1",
+      "vm_name": "test-vm-001",
+      "severity": "warning"
+    },
+    "annotations": {
+      "summary": "VM network latency > 5ms",
+      "description": "VM test-vm-001 experiencing high network latency"
+    },
+    "startsAt": "2026-01-20T10:00:00Z",
+    "fingerprint": "abc123def456"
+  },
+  "host_network_latency_alert": {
+    "status": "firing",
+    "labels": {
+      "alertname": "HostNetworkLatency",
+      "instance": "192.168.1.10:9100",
+      "hostname": "compute-node-1",
+      "severity": "critical"
+    },
+    "annotations": {
+      "summary": "Host network latency > 10ms",
+      "description": "Host compute-node-1 experiencing high network latency"
+    },
+    "startsAt": "2026-01-20T10:00:00Z",
+    "fingerprint": "xyz789abc012"
+  },
+  "unknown_alert": {
+    "status": "firing",
+    "labels": {
+      "alertname": "CustomNetworkAlert",
+      "instance": "192.168.1.10:9100",
+      "severity": "info"
+    },
+    "annotations": {
+      "summary": "Custom alert"
+    },
+    "startsAt": "2026-01-20T10:00:00Z",
+    "fingerprint": "unknown123"
+  },
+  "alertmanager_webhook_payload": {
+    "version": "4",
+    "groupKey": "{}:{alertname=\"VMNetworkLatency\"}",
+    "truncatedAlerts": 0,
+    "status": "firing",
+    "receiver": "netsherlock",
+    "groupLabels": {
+      "alertname": "VMNetworkLatency"
+    },
+    "commonLabels": {
+      "alertname": "VMNetworkLatency",
+      "severity": "warning"
+    },
+    "commonAnnotations": {
+      "summary": "VM network latency alert"
+    },
+    "alerts": [
+      {
+        "status": "firing",
+        "labels": {
+          "alertname": "VMNetworkLatency",
+          "instance": "192.168.1.10:9100",
+          "hostname": "compute-node-1",
+          "vm_name": "test-vm-001"
+        },
+        "annotations": {
+          "summary": "VM network latency > 5ms"
+        },
+        "startsAt": "2026-01-20T10:00:00Z",
+        "fingerprint": "abc123def456"
+      }
+    ]
+  }
+}

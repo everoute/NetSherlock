@@ -1,0 +1,51 @@
+{
+  "vm_network_env_sample": {
+    "vm_uuid": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    "host": "192.168.1.10",
+    "qemu_pid": 12345,
+    "nics": [
+      {
+        "mac": "fa:16:3e:aa:bb:cc",
+        "host_vnet": "vnet0",
+        "ovs_bridge": "br-int",
+        "vhost_pids": [
+          {
+            "pid": 12346,
+            "type": "vhost-worker"
+          }
+        ]
+      }
+    ]
+  },
+  "system_network_env_sample": {
+    "host": "192.168.1.10",
+    "ports": [
+      {
+        "port_name": "mgt0",
+        "port_type": "mgt",
+        "ip_address": "192.168.1.10",
+        "ovs_bridge": "br-mgt",
+        "physical_nics": [
+          {
+            "name": "eth0",
+            "driver": "ixgbe",
+            "speed": "10000Mb/s"
+          }
+        ]
+      },
+      {
+        "port_name": "storage0",
+        "port_type": "storage",
+        "ip_address": "10.0.0.10",
+        "ovs_bridge": "br-storage",
+        "physical_nics": [
+          {
+            "name": "eth1",
+            "driver": "ixgbe",
+            "speed": "25000Mb/s"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "metrics_query_success": {
+    "status": "success",
+    "result_type": "matrix",
+    "series": [
+      {
+        "metric": {
+          "hostname": "compute-node-1",
+          "__name__": "host_network_ping_time_ns"
+        },
+        "values": [
+          [1705744800, "5000000"],
+          [1705744860, "5500000"],
+          [1705744920, "12000000"],
+          [1705744980, "8000000"]
+        ]
+      }
+    ]
+  },
+  "metrics_query_empty": {
+    "status": "success",
+    "result_type": "matrix",
+    "series": []
+  },
+  "metrics_query_error": {
+    "status": "error",
+    "error": "query parse error: invalid expression"
+  },
+  "logs_query_success": {
+    "status": "success",
+    "entries": [
+      {
+        "timestamp": 1705744800000000000,
+        "line": "2026-01-20T10:00:00Z [INFO] Network latency spike detected on vnet0",
+        "labels": {
+          "service": "network-monitor",
+          "hostname": "compute-node-1"
+        }
+      },
+      {
+        "timestamp": 1705744860000000000,
+        "line": "2026-01-20T10:01:00Z [WARN] High packet loss on interface eth0",
+        "labels": {
+          "service": "network-monitor",
+          "hostname": "compute-node-1"
+        }
+      }
+    ]
+  },
+  "logs_query_empty": {
+    "status": "success",
+    "entries": []
+  }
+}

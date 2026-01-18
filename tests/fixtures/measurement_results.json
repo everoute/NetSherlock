@@ -1,0 +1,85 @@
+{
+  "latency_measurement_result": {
+    "measurement_id": "meas-12345678",
+    "measurement_type": "latency",
+    "status": "success",
+    "metadata": {
+      "tool_name": "vm_network_latency_summary.py",
+      "host": "192.168.1.10",
+      "duration_sec": 30,
+      "start_time": "2026-01-20T10:00:00Z",
+      "end_time": "2026-01-20T10:00:30Z"
+    },
+    "latency_data": {
+      "segments": [
+        {
+          "name": "virtio_tx",
+          "avg_us": 15.5,
+          "p99_us": 45.2
+        },
+        {
+          "name": "vhost_handle",
+          "avg_us": 25.3,
+          "p99_us": 120.5
+        },
+        {
+          "name": "tap_rx",
+          "avg_us": 8.2,
+          "p99_us": 22.1
+        },
+        {
+          "name": "ovs_process",
+          "avg_us": 35.7,
+          "p99_us": 180.3
+        }
+      ],
+      "total_avg_us": 84.7,
+      "total_p99_us": 368.1
+    },
+    "raw_output": "virtio_tx: avg=15.5us p50=12.0us p99=45.2us\nvhost_handle: avg=25.3us p50=20.0us p99=120.5us\ntap_rx: avg=8.2us p50=6.5us p99=22.1us\novs_process: avg=35.7us p50=28.0us p99=180.3us"
+  },
+  "packet_drop_result": {
+    "measurement_id": "meas-87654321",
+    "measurement_type": "packet_drop",
+    "status": "success",
+    "metadata": {
+      "tool_name": "kernel_drop_stack_stats_summary.py",
+      "host": "192.168.1.10",
+      "duration_sec": 30
+    },
+    "drop_data": {
+      "drop_points": [
+        {
+          "location": "nf_conntrack_in",
+          "count": 15
+        },
+        {
+          "location": "tcp_v4_rcv",
+          "count": 3
+        }
+      ],
+      "total_drops": 18
+    }
+  },
+  "coordinated_measurement_result": {
+    "measurement_id": "coord-abc12345",
+    "receiver_result": {
+      "measurement_id": "coord-abc12345-rx",
+      "measurement_type": "latency",
+      "status": "success",
+      "raw_output": "Receiver data collected"
+    },
+    "sender_result": {
+      "measurement_id": "coord-abc12345-tx",
+      "measurement_type": "latency",
+      "status": "success",
+      "raw_output": "Sender data collected"
+    }
+  },
+  "failed_measurement_result": {
+    "measurement_id": "meas-failed123",
+    "measurement_type": "latency",
+    "status": "failed",
+    "error": "SSH connection timeout to 192.168.1.10"
+  }
+}
