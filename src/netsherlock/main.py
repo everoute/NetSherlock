@@ -262,12 +262,20 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
     Examples:
 
     \b
-      # Diagnose latency issues on a host
-      netsherlock diagnose --host 192.168.1.10 --type latency
+      # Single VM network diagnosis
+      netsherlock diagnose --network-type vm \\
+        --src-host 192.168.1.10 \\
+        --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \\
+        --type latency
 
     \b
-      # Diagnose VM network issues
-      netsherlock diagnose --host 192.168.1.10 --vm-id ae6aa164-604c-4cb0-84b8-2dea034307f1
+      # VM-to-VM network diagnosis
+      netsherlock diagnose --network-type vm \\
+        --src-host 192.168.1.10 \\
+        --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \\
+        --dst-host 192.168.1.20 \\
+        --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2 \\
+        --type latency
 
     \b
       # Collect network environment information
@@ -285,7 +293,28 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
 
 @cli.command()
 @click.option(
-    "--host", "-h", required=True, help="Target host IP address to diagnose"
+    "--network-type",
+    "-n",
+    required=True,
+    type=click.Choice(["vm", "system"]),
+    help="Network type: vm (VM network) or system (host network)",
+)
+@click.option(
+    "--src-host",
+    required=True,
+    help="Source host management IP address (required)",
+)
+@click.option(
+    "--src-vm",
+    help="Source VM UUID (required for network-type=vm)",
+)
+@click.option(
+    "--dst-host",
+    help="Destination host management IP (for inter-node diagnosis)",
+)
+@click.option(
+    "--dst-vm",
+    help="Destination VM UUID (required when --dst-host specified for vm network)",
 )
 @click.option(
     "--type",
@@ -294,12 +323,6 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
     type=click.Choice(["latency", "packet_drop", "connectivity"]),
     default="latency",
     help="Type of diagnosis to perform",
-)
-@click.option(
-    "--vm-id", help="VM UUID if diagnosing VM network (implies VM network type)"
-)
-@click.option(
-    "--target", help="Target host for path diagnosis (optional)"
 )
 @click.option(
     "--duration",
@@ -330,10 +353,12 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
 @click.pass_context
 def diagnose(
     ctx: click.Context,
-    host: str,
+    network_type: str,
+    src_host: str,
+    src_vm: str | None,
+    dst_host: str | None,
+    dst_vm: str | None,
     diagnosis_type: str,
-    vm_id: str | None,
-    target: str | None,
     duration: int,
     mode: str | None,
     mode_autonomous: bool,
@@ -355,41 +380,62 @@ def diagnose(
       --interactive (default): Stops at checkpoints for user confirmation
       --autonomous: Runs without user intervention
 
+    VM Network Parameters:
+
+    \b
+      --network-type vm  : VM network diagnosis
+      --src-host         : Source host management IP (required)
+      --src-vm           : Source VM UUID (required for vm network)
+      --dst-host         : Destination host management IP (optional)
+      --dst-vm           : Destination VM UUID (required if --dst-host specified)
+
     Examples:
 
     \b
-      # Basic latency diagnosis (interactive mode by default)
-      netsherlock diagnose --host 192.168.1.10 --type latency
+      # Single VM network diagnosis
+      netsherlock diagnose --network-type vm \\
+        --src-host 192.168.1.10 \\
+        --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \\
+        --type latency
 
     \b
-      # Autonomous mode - no user interaction
-      netsherlock diagnose --host 192.168.1.10 --type latency --autonomous
-
-    \b
-      # VM network diagnosis
-      netsherlock diagnose --host 192.168.1.10 --vm-id <uuid> --type latency
-
-    \b
-      # Path diagnosis between two hosts
-      netsherlock diagnose --host 192.168.1.10 --target 192.168.1.20 --type latency
+      # VM-to-VM network diagnosis (autonomous mode)
+      netsherlock diagnose --network-type vm \\
+        --src-host 192.168.1.10 \\
+        --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \\
+        --dst-host 192.168.1.20 \\
+        --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2 \\
+        --type latency --autonomous
     """
     # Determine mode from flags
     effective_mode = _determine_diagnosis_mode(mode, mode_autonomous, mode_interactive)
+
+    # Validate parameter combinations
+    if network_type == "vm":
+        if not src_vm:
+            raise click.UsageError("--src-vm is required for --network-type=vm")
+        if dst_host and not dst_vm:
+            raise click.UsageError("--dst-vm is required when --dst-host is specified")
+        if dst_vm and not dst_host:
+            raise click.UsageError("--dst-host is required when --dst-vm is specified")
 
     request_id = str(uuid.uuid4())[:8]
 
     request = DiagnosisRequest(
         request_id=request_id,
         request_type=diagnosis_type,
-        source_host=host,
-        target_host=target,
-        vm_id=vm_id,
+        network_type=network_type,
+        src_host=src_host,
+        src_vm=src_vm,
+        dst_host=dst_host,
+        dst_vm=dst_vm,
         options={"duration": duration, "mode": effective_mode.value},
     )
 
     log = logger.bind(
         request_id=request_id,
-        host=host,
+        network_type=network_type,
+        src_host=src_host,
         type=diagnosis_type,
         mode=effective_mode.value,
     )
@@ -402,13 +448,16 @@ def diagnose(
         # Display request info
         if not json_output:
             click.echo(f"Diagnosis Request: {request_id}")
-            click.echo(f"  Host: {host}")
-            click.echo(f"  Type: {diagnosis_type}")
+            click.echo(f"  Network Type: {network_type}")
+            click.echo(f"  Source Host: {src_host}")
+            if src_vm:
+                click.echo(f"  Source VM: {src_vm}")
+            if dst_host:
+                click.echo(f"  Destination Host: {dst_host}")
+            if dst_vm:
+                click.echo(f"  Destination VM: {dst_vm}")
+            click.echo(f"  Diagnosis Type: {diagnosis_type}")
             click.echo(f"  Mode: {effective_mode.value}")
-            if vm_id:
-                click.echo(f"  VM: {vm_id}")
-            if target:
-                click.echo(f"  Target: {target}")
             click.echo(f"  Duration: {duration}s")
             click.echo()
 

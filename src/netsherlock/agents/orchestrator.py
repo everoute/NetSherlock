@@ -5,9 +5,11 @@ This is the primary agent that coordinates the four-layer diagnostic workflow,
 invoking subagents in sequence: L1 (direct) → L2 → L3 → L4.
 """
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from claude_code_sdk import Agent, query
 
@@ -28,6 +30,9 @@ from .subagents import (
     L4AnalysisSubagent,
 )
 
+if TYPE_CHECKING:
+    from netsherlock.config.settings import Settings
+
 
 class NetworkTroubleshootingOrchestrator:
     """
@@ -42,31 +47,48 @@ class NetworkTroubleshootingOrchestrator:
 
     def __init__(
         self,
-        model: str = "claude-sonnet-4-20250514",
-        compact_prompts: bool = False,
-        grafana_url: str = "http://192.168.79.79/grafana",
-        grafana_auth: tuple[str, str] = ("o11y", "HC!r0cks"),
+        settings: Settings | None = None,
+        model: str | None = None,
+        compact_prompts: bool | None = None,
     ):
         """Initialize the orchestrator.
 
         Args:
-            model: Claude model to use
-            compact_prompts: Use compact prompts for token efficiency
-            grafana_url: Grafana base URL
-            grafana_auth: Grafana Basic Auth credentials (user, password)
+            settings: Application settings (uses default if None)
+            model: Override model from settings
+            compact_prompts: Override compact_prompts from settings
         """
-        self.model = model
-        self.compact_prompts = compact_prompts
-        self.system_prompt = get_main_prompt(compact=compact_prompts)
+        # Load settings if not provided
+        if settings is None:
+            from netsherlock.config.settings import get_settings
+            settings = get_settings()
 
-        # Grafana configuration
-        self.grafana_url = grafana_url
-        self.grafana_auth = grafana_auth
+        self._settings = settings
 
-        # Initialize subagents
-        self._l2_subagent = L2EnvironmentSubagent(model=model, compact_prompt=compact_prompts)
-        self._l3_subagent = L3MeasurementSubagent(model=model, compact_prompt=compact_prompts)
-        self._l4_subagent = L4AnalysisSubagent(model=model, compact_prompt=compact_prompts)
+        # LLM configuration (overrides take precedence)
+        self.model = model if model is not None else settings.llm.model
+        self.compact_prompts = (
+            compact_prompts if compact_prompts is not None else settings.llm.compact_prompts
+        )
+        self.system_prompt = get_main_prompt(compact=self.compact_prompts)
+
+        # Grafana configuration from settings
+        self.grafana_url = settings.grafana.base_url
+        self.grafana_auth = (
+            settings.grafana.username,
+            settings.grafana.password.get_secret_value() if settings.grafana.password else "",
+        )
+
+        # Initialize subagents with same settings
+        self._l2_subagent = L2EnvironmentSubagent(
+            settings=settings, model=self.model, compact_prompt=self.compact_prompts
+        )
+        self._l3_subagent = L3MeasurementSubagent(
+            settings=settings, model=self.model, compact_prompt=self.compact_prompts
+        )
+        self._l4_subagent = L4AnalysisSubagent(
+            settings=settings, model=self.model, compact_prompt=self.compact_prompts
+        )
 
         # L1 tools for direct access
         self._l1_tools = self._create_l1_tools()
@@ -303,22 +325,22 @@ Return a complete diagnosis with root cause and recommendations.
 
 # Convenience function to create orchestrator
 def create_orchestrator(
-    model: str = "claude-sonnet-4-20250514",
-    compact_prompts: bool = False,
-    **kwargs: Any,
+    settings: Settings | None = None,
+    model: str | None = None,
+    compact_prompts: bool | None = None,
 ) -> NetworkTroubleshootingOrchestrator:
     """Create a network troubleshooting orchestrator.
 
     Args:
-        model: Claude model to use
-        compact_prompts: Use compact prompts for token efficiency
-        **kwargs: Additional configuration (grafana_url, grafana_auth)
+        settings: Application settings (uses default if None)
+        model: Override model from settings
+        compact_prompts: Override compact_prompts from settings
 
     Returns:
         Configured orchestrator instance
     """
     return NetworkTroubleshootingOrchestrator(
+        settings=settings,
         model=model,
         compact_prompts=compact_prompts,
-        **kwargs,
     )

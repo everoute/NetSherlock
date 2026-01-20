@@ -313,7 +313,8 @@ class TestDiagnosisControllerExecution:
         return DiagnosisRequest(
             request_id="test-001",
             request_type="latency",
-            source_host="192.168.1.10",
+            network_type="system",
+            src_host="192.168.1.10",
         )
 
     @pytest.mark.asyncio
@@ -440,7 +441,8 @@ class TestDiagnosisControllerCheckpointInteraction:
         request = DiagnosisRequest(
             request_id="test-001",
             request_type="latency",
-            source_host="192.168.1.10",
+            network_type="system",
+            src_host="192.168.1.10",
         )
 
         # Start in background

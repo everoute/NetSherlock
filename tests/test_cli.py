@@ -70,15 +70,22 @@ class TestCLIDiagnoseCommand:
         """Create CLI test runner."""
         return CliRunner()
 
+    # Base VM diagnosis args for reuse in tests
+    VM_DIAG_ARGS = [
+        "--network-type", "vm",
+        "--src-host", "192.168.1.10",
+        "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    ]
+
     def test_diagnose_default_mode_is_interactive(self, runner):
         """diagnose command should default to interactive mode."""
-        result = runner.invoke(cli, ["diagnose", "--host", "192.168.1.10"])
+        result = runner.invoke(cli, ["diagnose", *self.VM_DIAG_ARGS])
         assert result.exit_code == 0 or "Mode: interactive" in result.output
 
     def test_diagnose_with_autonomous_flag(self, runner):
         """diagnose --autonomous should show autonomous mode."""
         result = runner.invoke(
-            cli, ["diagnose", "--host", "192.168.1.10", "--autonomous"]
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--autonomous"]
         )
         # Check output contains mode info (may fail on actual SSH)
         assert "autonomous" in result.output.lower() or result.exit_code != 0
@@ -86,21 +93,21 @@ class TestCLIDiagnoseCommand:
     def test_diagnose_with_interactive_flag(self, runner):
         """diagnose --interactive should show interactive mode."""
         result = runner.invoke(
-            cli, ["diagnose", "--host", "192.168.1.10", "--interactive"]
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--interactive"]
         )
         assert "interactive" in result.output.lower() or result.exit_code != 0
 
     def test_diagnose_with_mode_option(self, runner):
         """diagnose --mode autonomous should work."""
         result = runner.invoke(
-            cli, ["diagnose", "--host", "192.168.1.10", "--mode", "autonomous"]
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--mode", "autonomous"]
         )
         assert "autonomous" in result.output.lower() or result.exit_code != 0
 
     def test_diagnose_conflicting_flags_error(self, runner):
         """diagnose with both --autonomous and --interactive should error."""
         result = runner.invoke(
-            cli, ["diagnose", "--host", "192.168.1.10", "--autonomous", "--interactive"]
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--autonomous", "--interactive"]
         )
         assert result.exit_code != 0
         assert "Cannot use both" in result.output
@@ -116,9 +123,70 @@ class TestCLIDiagnoseCommand:
     def test_diagnose_invalid_mode_value(self, runner):
         """diagnose --mode invalid should error."""
         result = runner.invoke(
-            cli, ["diagnose", "--host", "192.168.1.10", "--mode", "invalid"]
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--mode", "invalid"]
         )
         assert result.exit_code != 0
+
+    def test_diagnose_help_shows_new_parameters(self, runner):
+        """diagnose --help should show new src/dst parameters."""
+        result = runner.invoke(cli, ["diagnose", "--help"])
+        assert result.exit_code == 0
+        assert "--network-type" in result.output
+        assert "--src-host" in result.output
+        assert "--src-vm" in result.output
+        assert "--dst-host" in result.output
+        assert "--dst-vm" in result.output
+
+    def test_diagnose_vm_requires_src_vm(self, runner):
+        """diagnose --network-type vm requires --src-vm."""
+        result = runner.invoke(
+            cli, ["diagnose", "--network-type", "vm", "--src-host", "192.168.1.10"]
+        )
+        assert result.exit_code != 0
+        assert "--src-vm is required" in result.output
+
+    def test_diagnose_vm_dst_host_requires_dst_vm(self, runner):
+        """diagnose with --dst-host requires --dst-vm for vm network."""
+        result = runner.invoke(
+            cli, [
+                "diagnose",
+                "--network-type", "vm",
+                "--src-host", "192.168.1.10",
+                "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+                "--dst-host", "192.168.1.20",
+            ]
+        )
+        assert result.exit_code != 0
+        assert "--dst-vm is required" in result.output
+
+    def test_diagnose_vm_dst_vm_requires_dst_host(self, runner):
+        """diagnose with --dst-vm requires --dst-host."""
+        result = runner.invoke(
+            cli, [
+                "diagnose",
+                "--network-type", "vm",
+                "--src-host", "192.168.1.10",
+                "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+                "--dst-vm", "bf7bb275-715d-5dc1-95c9-3feb045418g2",
+            ]
+        )
+        assert result.exit_code != 0
+        assert "--dst-host is required" in result.output
+
+    def test_diagnose_vm_to_vm_valid(self, runner):
+        """diagnose VM-to-VM with all required params should work."""
+        result = runner.invoke(
+            cli, [
+                "diagnose",
+                "--network-type", "vm",
+                "--src-host", "192.168.1.10",
+                "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+                "--dst-host", "192.168.1.20",
+                "--dst-vm", "bf7bb275-715d-5dc1-95c9-3feb045418g2",
+            ]
+        )
+        # May fail on actual diagnosis, but parameter validation should pass
+        assert "Destination Host: 192.168.1.20" in result.output or result.exit_code != 0
 
 
 class TestCLIConfigCommand:

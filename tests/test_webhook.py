@@ -36,7 +36,8 @@ from netsherlock.api.webhook import (
     diagnosis_worker,
     diagnosis_queue,
     diagnosis_store,
-    VALID_PROBLEM_TYPES,
+    VALID_DIAGNOSIS_TYPES,
+    VALID_NETWORK_TYPES,
 )
 from netsherlock.schemas.config import (
     DiagnosisMode,
@@ -160,27 +161,27 @@ class TestApiKeyAuthentication:
         """Create test client."""
         return TestClient(app, raise_server_exceptions=False)
 
+    # Standard valid payload for tests
+    VALID_PAYLOAD = {
+        "network_type": "vm",
+        "diagnosis_type": "latency",
+        "src_host": "192.168.1.10",
+        "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    }
+
     def test_missing_api_key_returns_401(self, client):
         """Missing API key should return 401."""
         with patch("netsherlock.api.webhook._get_api_key", return_value=TEST_API_KEY):
-            payload = {
-                "problem_type": "vm_network_latency",
-                "src_node": "192.168.1.10",
-            }
-            response = client.post("/diagnose", json=payload)
+            response = client.post("/diagnose", json=self.VALID_PAYLOAD)
             assert response.status_code == 401
             assert "Missing X-API-Key header" in response.json()["detail"]
 
     def test_invalid_api_key_returns_403(self, client):
         """Invalid API key should return 403."""
         with patch("netsherlock.api.webhook._get_api_key", return_value=TEST_API_KEY):
-            payload = {
-                "problem_type": "vm_network_latency",
-                "src_node": "192.168.1.10",
-            }
             response = client.post(
                 "/diagnose",
-                json=payload,
+                json=self.VALID_PAYLOAD,
                 headers={"X-API-Key": "wrong-key"},
             )
             assert response.status_code == 403
@@ -195,13 +196,9 @@ class TestApiKeyAuthentication:
                 )
                 mock_settings.return_value.get_diagnosis_config.return_value = mock_config
 
-                payload = {
-                    "problem_type": "vm_network_latency",
-                    "src_node": "192.168.1.10",
-                }
                 response = client.post(
                     "/diagnose",
-                    json=payload,
+                    json=self.VALID_PAYLOAD,
                     headers={"X-API-Key": TEST_API_KEY},
                 )
                 assert response.status_code == 200
@@ -210,11 +207,7 @@ class TestApiKeyAuthentication:
         """When no API key is configured, requests should fail unless insecure mode is allowed."""
         with patch("netsherlock.api.webhook._get_api_key", return_value=""):
             with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=False):
-                payload = {
-                    "problem_type": "vm_network_latency",
-                    "src_node": "192.168.1.10",
-                }
-                response = client.post("/diagnose", json=payload)
+                response = client.post("/diagnose", json=self.VALID_PAYLOAD)
                 assert response.status_code == 500
                 assert "WEBHOOK_API_KEY" in response.json()["detail"]
 
@@ -228,11 +221,7 @@ class TestApiKeyAuthentication:
                     )
                     mock_settings.return_value.get_diagnosis_config.return_value = mock_config
 
-                    payload = {
-                        "problem_type": "vm_network_latency",
-                        "src_node": "192.168.1.10",
-                    }
-                    response = client.post("/diagnose", json=payload)
+                    response = client.post("/diagnose", json=self.VALID_PAYLOAD)
                     assert response.status_code == 200
 
     def test_health_endpoint_no_auth_required(self, client):
@@ -250,48 +239,91 @@ class TestInputValidation:
         """Create test client."""
         return TestClient(app, raise_server_exceptions=False)
 
-    def test_invalid_problem_type_rejected(self, client):
-        """Invalid problem_type should be rejected."""
+    def test_invalid_network_type_rejected(self, client):
+        """Invalid network_type should be rejected."""
         with patch("netsherlock.api.webhook._get_api_key", return_value=""):
             with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
                 payload = {
-                    "problem_type": "invalid_type",
-                    "src_node": "192.168.1.10",
+                    "network_type": "invalid_type",
+                    "src_host": "192.168.1.10",
                 }
                 response = client.post("/diagnose", json=payload)
                 assert response.status_code == 422
 
-    def test_invalid_src_ip_rejected(self, client):
-        """Invalid src_node IP should be rejected."""
+    def test_invalid_src_host_ip_rejected(self, client):
+        """Invalid src_host IP should be rejected."""
         with patch("netsherlock.api.webhook._get_api_key", return_value=""):
             with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
                 payload = {
-                    "problem_type": "vm_network_latency",
-                    "src_node": "not-an-ip",
+                    "network_type": "vm",
+                    "src_host": "not-an-ip",
+                    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
                 }
                 response = client.post("/diagnose", json=payload)
                 assert response.status_code == 422
 
-    def test_invalid_dst_ip_rejected(self, client):
-        """Invalid dst_node IP should be rejected."""
+    def test_invalid_dst_host_ip_rejected(self, client):
+        """Invalid dst_host IP should be rejected."""
         with patch("netsherlock.api.webhook._get_api_key", return_value=""):
             with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
                 payload = {
-                    "problem_type": "vm_network_latency",
-                    "src_node": "192.168.1.10",
-                    "dst_node": "not-an-ip",
+                    "network_type": "vm",
+                    "src_host": "192.168.1.10",
+                    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+                    "dst_host": "not-an-ip",
+                    "dst_vm": "bf7bb275-715d-5dc1-95c9-3feb045418g2",
                 }
                 response = client.post("/diagnose", json=payload)
                 assert response.status_code == 422
 
-    def test_valid_problem_types(self):
-        """All valid problem types should be accepted."""
-        for problem_type in VALID_PROBLEM_TYPES:
+    def test_valid_network_types(self):
+        """All valid network types should be accepted."""
+        for network_type in VALID_NETWORK_TYPES:
+            if network_type == "vm":
+                request = DiagnosticRequest(
+                    network_type=network_type,
+                    src_host="192.168.1.10",
+                    src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+                )
+            else:
+                request = DiagnosticRequest(
+                    network_type=network_type,
+                    src_host="192.168.1.10",
+                )
+            assert request.network_type == network_type
+
+    def test_valid_diagnosis_types(self):
+        """All valid diagnosis types should be accepted."""
+        for diagnosis_type in VALID_DIAGNOSIS_TYPES:
             request = DiagnosticRequest(
-                problem_type=problem_type,
-                src_node="192.168.1.10",
+                network_type="vm",
+                diagnosis_type=diagnosis_type,
+                src_host="192.168.1.10",
+                src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
             )
-            assert request.problem_type == problem_type
+            assert request.diagnosis_type == diagnosis_type
+
+    def test_vm_network_requires_src_vm(self):
+        """VM network should require src_vm."""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            DiagnosticRequest(
+                network_type="vm",
+                src_host="192.168.1.10",
+            )
+
+    def test_vm_network_dst_host_requires_dst_vm(self):
+        """VM network with dst_host should require dst_vm."""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            DiagnosticRequest(
+                network_type="vm",
+                src_host="192.168.1.10",
+                src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+                dst_host="192.168.1.20",
+            )
 
 
 class TestAlertmanagerWebhookEndpoint:
@@ -448,6 +480,14 @@ class TestDiagnoseEndpoint:
         """Create test client."""
         return TestClient(app, raise_server_exceptions=False)
 
+    # Standard valid payload for tests
+    VALID_PAYLOAD = {
+        "network_type": "vm",
+        "diagnosis_type": "latency",
+        "src_host": "192.168.1.10",
+        "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    }
+
     def test_diagnose_default_mode(self, client):
         """Diagnose without mode should use config default."""
         with patch("netsherlock.api.webhook._get_api_key", return_value=""):
@@ -458,12 +498,7 @@ class TestDiagnoseEndpoint:
                     )
                     mock_settings.return_value.get_diagnosis_config.return_value = mock_config
 
-                    payload = {
-                        "problem_type": "vm_network_latency",
-                        "src_node": "192.168.1.10",
-                    }
-
-                    response = client.post("/diagnose", json=payload)
+                    response = client.post("/diagnose", json=self.VALID_PAYLOAD)
                     assert response.status_code == 200
 
                     data = response.json()
@@ -480,11 +515,7 @@ class TestDiagnoseEndpoint:
                     )
                     mock_settings.return_value.get_diagnosis_config.return_value = mock_config
 
-                    payload = {
-                        "problem_type": "vm_network_latency",
-                        "src_node": "192.168.1.10",
-                        "mode": "autonomous",
-                    }
+                    payload = {**self.VALID_PAYLOAD, "mode": "autonomous"}
 
                     response = client.post("/diagnose", json=payload)
                     assert response.status_code == 200
@@ -503,11 +534,7 @@ class TestDiagnoseEndpoint:
                     )
                     mock_settings.return_value.get_diagnosis_config.return_value = mock_config
 
-                    payload = {
-                        "problem_type": "vm_network_latency",
-                        "src_node": "192.168.1.10",
-                        "mode": "interactive",
-                    }
+                    payload = {**self.VALID_PAYLOAD, "mode": "interactive"}
 
                     response = client.post("/diagnose", json=payload)
                     assert response.status_code == 200
@@ -526,12 +553,7 @@ class TestDiagnoseEndpoint:
                     )
                     mock_settings.return_value.get_diagnosis_config.return_value = mock_config
 
-                    payload = {
-                        "problem_type": "vm_network_latency",
-                        "src_node": "192.168.1.10",
-                    }
-
-                    response = client.post("/diagnose", json=payload)
+                    response = client.post("/diagnose", json=self.VALID_PAYLOAD)
                     assert response.status_code == 200
 
                     data = response.json()
@@ -607,21 +629,24 @@ class TestHealthEndpoint:
 class TestDiagnosticRequestModel:
     """Tests for DiagnosticRequest model."""
 
+    # Standard valid request kwargs
+    VALID_VM_REQUEST = {
+        "network_type": "vm",
+        "src_host": "192.168.1.10",
+        "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    }
+
     def test_request_with_mode(self):
         """Request should accept mode parameter."""
         request = DiagnosticRequest(
-            problem_type="vm_network_latency",
-            src_node="192.168.1.10",
+            **self.VALID_VM_REQUEST,
             mode="autonomous",
         )
         assert request.mode == "autonomous"
 
     def test_request_without_mode(self):
         """Request without mode should have None."""
-        request = DiagnosticRequest(
-            problem_type="vm_network_latency",
-            src_node="192.168.1.10",
-        )
+        request = DiagnosticRequest(**self.VALID_VM_REQUEST)
         assert request.mode is None
 
     def test_request_invalid_mode_rejected(self):
@@ -630,19 +655,18 @@ class TestDiagnosticRequestModel:
 
         with pytest.raises(ValidationError):
             DiagnosticRequest(
-                problem_type="vm_network_latency",
-                src_node="192.168.1.10",
+                **self.VALID_VM_REQUEST,
                 mode="invalid_mode",
             )
 
-    def test_request_invalid_problem_type_rejected(self):
-        """Invalid problem_type should be rejected."""
+    def test_request_invalid_network_type_rejected(self):
+        """Invalid network_type should be rejected."""
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
             DiagnosticRequest(
-                problem_type="invalid_problem",
-                src_node="192.168.1.10",
+                network_type="invalid_network",
+                src_host="192.168.1.10",
             )
 
     def test_request_invalid_ip_rejected(self):
@@ -651,9 +675,41 @@ class TestDiagnosticRequestModel:
 
         with pytest.raises(ValidationError):
             DiagnosticRequest(
-                problem_type="vm_network_latency",
-                src_node="not-an-ip",
+                network_type="vm",
+                src_host="not-an-ip",
+                src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
             )
+
+    def test_request_vm_requires_src_vm(self):
+        """VM network should require src_vm."""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            DiagnosticRequest(
+                network_type="vm",
+                src_host="192.168.1.10",
+            )
+
+    def test_request_system_network_no_src_vm_required(self):
+        """System network should not require src_vm."""
+        request = DiagnosticRequest(
+            network_type="system",
+            src_host="192.168.1.10",
+        )
+        assert request.network_type == "system"
+        assert request.src_vm is None
+
+    def test_request_vm_to_vm_valid(self):
+        """VM-to-VM request should be valid with all required fields."""
+        request = DiagnosticRequest(
+            network_type="vm",
+            src_host="192.168.1.10",
+            src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+            dst_host="192.168.1.20",
+            dst_vm="bf7bb275-715d-5dc1-95c9-3feb045418g2",
+        )
+        assert request.dst_host == "192.168.1.20"
+        assert request.dst_vm == "bf7bb275-715d-5dc1-95c9-3feb045418g2"
 
 
 class TestAlertmanagerModels:

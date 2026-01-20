@@ -42,6 +42,13 @@ class TestCLIControllerIntegration:
         """Create CLI test runner."""
         return CliRunner()
 
+    # Standard VM diagnosis args for reuse in tests
+    VM_DIAG_ARGS = [
+        "--network-type", "vm",
+        "--src-host", "192.168.1.10",
+        "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    ]
+
     @pytest.fixture
     def mock_controller_result(self):
         """Create a mock successful diagnosis result."""
@@ -57,13 +64,13 @@ class TestCLIControllerIntegration:
     def test_diagnose_creates_request_correctly(self, runner):
         """CLI diagnose should create correct DiagnosisRequest."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--type", "latency"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--type", "latency"],
             )
 
             # Verify request info is shown
@@ -73,13 +80,13 @@ class TestCLIControllerIntegration:
     def test_diagnose_autonomous_mode_in_output(self, runner):
         """Autonomous mode should be shown in output."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--autonomous"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--autonomous"],
             )
 
             assert "autonomous" in result.output.lower()
@@ -87,19 +94,19 @@ class TestCLIControllerIntegration:
     def test_diagnose_interactive_mode_in_output(self, runner):
         """Interactive mode should be shown in output."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--interactive"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--interactive"],
             )
 
             assert "interactive" in result.output.lower()
 
-    def test_diagnose_with_vm_id_in_output(self, runner):
-        """VM ID should be shown in output when provided."""
+    def test_diagnose_with_src_vm_in_output(self, runner):
+        """Source VM should be shown in output when provided."""
         vm_id = "ae6aa164-604c-4cb0-84b8-2dea034307f1"
 
         with patch(
@@ -109,15 +116,15 @@ class TestCLIControllerIntegration:
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--vm-id", vm_id],
+                ["diagnose", *self.VM_DIAG_ARGS],
             )
 
             assert vm_id in result.output
 
-    def test_diagnose_with_target_in_output(self, runner):
-        """Target host should be shown when provided."""
+    def test_diagnose_with_dst_host_in_output(self, runner):
+        """Destination host should be shown when provided."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
@@ -125,10 +132,9 @@ class TestCLIControllerIntegration:
                 cli,
                 [
                     "diagnose",
-                    "--host",
-                    "192.168.1.10",
-                    "--target",
-                    "192.168.1.20",
+                    *self.VM_DIAG_ARGS,
+                    "--dst-host", "192.168.1.20",
+                    "--dst-vm", "bf7bb275-715d-5dc1-95c9-3feb045418g2",
                 ],
             )
 
@@ -137,13 +143,13 @@ class TestCLIControllerIntegration:
     def test_diagnose_mode_option_overrides_default(self, runner):
         """--mode option should override default mode."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--mode", "autonomous"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--mode", "autonomous"],
             )
 
             assert "autonomous" in result.output.lower()
@@ -266,16 +272,23 @@ class TestCLIOutputFormatting:
         """Create CLI test runner."""
         return CliRunner()
 
+    # Standard VM diagnosis args for reuse in tests
+    VM_DIAG_ARGS = [
+        "--network-type", "vm",
+        "--src-host", "192.168.1.10",
+        "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    ]
+
     def test_json_output_is_valid_json(self, runner):
         """--json flag should produce valid JSON output."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["--json", "diagnose", "--host", "192.168.1.10"],
+                ["--json", "diagnose", *self.VM_DIAG_ARGS],
             )
 
             # Output should contain JSON structure
@@ -287,16 +300,16 @@ class TestCLIOutputFormatting:
             has_json = any("{" in line for line in output_lines)
             assert has_json or result.exit_code == 0
 
-    def test_text_output_includes_host(self, runner):
-        """Text output should include host information."""
+    def test_text_output_includes_src_host(self, runner):
+        """Text output should include source host information."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10"],
+                ["diagnose", *self.VM_DIAG_ARGS],
             )
 
             assert "192.168.1.10" in result.output
@@ -304,13 +317,13 @@ class TestCLIOutputFormatting:
     def test_text_output_includes_type(self, runner):
         """Text output should include diagnosis type."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--type", "packet_drop"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--type", "packet_drop"],
             )
 
             assert "packet_drop" in result.output.lower()
@@ -318,13 +331,13 @@ class TestCLIOutputFormatting:
     def test_text_output_includes_duration(self, runner):
         """Text output should include duration."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(success=True, data=None)
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--duration", "60"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--duration", "60"],
             )
 
             assert "60" in result.output
@@ -338,11 +351,18 @@ class TestCLIErrorHandling:
         """Create CLI test runner."""
         return CliRunner()
 
+    # Standard VM diagnosis args for reuse in tests
+    VM_DIAG_ARGS = [
+        "--network-type", "vm",
+        "--src-host", "192.168.1.10",
+        "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    ]
+
     def test_conflicting_flags_returns_error(self, runner):
         """Conflicting --autonomous and --interactive should error."""
         result = runner.invoke(
             cli,
-            ["diagnose", "--host", "192.168.1.10", "--autonomous", "--interactive"],
+            ["diagnose", *self.VM_DIAG_ARGS, "--autonomous", "--interactive"],
         )
 
         assert result.exit_code != 0
@@ -352,22 +372,29 @@ class TestCLIErrorHandling:
         """Invalid --mode value should error."""
         result = runner.invoke(
             cli,
-            ["diagnose", "--host", "192.168.1.10", "--mode", "invalid"],
+            ["diagnose", *self.VM_DIAG_ARGS, "--mode", "invalid"],
         )
 
         assert result.exit_code != 0
 
-    def test_missing_required_host_returns_error(self, runner):
-        """Missing --host should error."""
-        result = runner.invoke(cli, ["diagnose"])
+    def test_missing_required_network_type_returns_error(self, runner):
+        """Missing --network-type should error."""
+        result = runner.invoke(cli, ["diagnose", "--src-host", "192.168.1.10"])
 
         assert result.exit_code != 0
-        assert "host" in result.output.lower()
+        assert "network-type" in result.output.lower()
+
+    def test_missing_required_src_host_returns_error(self, runner):
+        """Missing --src-host should error."""
+        result = runner.invoke(cli, ["diagnose", "--network-type", "vm"])
+
+        assert result.exit_code != 0
+        assert "src-host" in result.output.lower()
 
     def test_environment_collection_failure_returns_error(self, runner):
         """Environment collection failure should return error."""
         with patch(
-            "netsherlock.tools.l2_environment.collect_system_network_env"
+            "netsherlock.tools.l2_environment.collect_vm_network_env"
         ) as mock_collect:
             mock_collect.return_value = MagicMock(
                 success=False, error="SSH connection failed"
@@ -375,7 +402,7 @@ class TestCLIErrorHandling:
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10"],
+                ["diagnose", *self.VM_DIAG_ARGS],
             )
 
             assert result.exit_code != 0
@@ -615,6 +642,13 @@ class TestCLIControllerRunIntegration:
         """Create CLI test runner."""
         return CliRunner()
 
+    # Standard VM diagnosis args for reuse in tests
+    VM_DIAG_ARGS = [
+        "--network-type", "vm",
+        "--src-host", "192.168.1.10",
+        "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    ]
+
     def test_diagnose_runs_controller_autonomous(self, runner):
         """diagnose --autonomous should run controller in autonomous mode."""
         with patch(
@@ -636,7 +670,7 @@ class TestCLIControllerRunIntegration:
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--autonomous"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--autonomous"],
             )
 
             # Controller should be called
@@ -662,7 +696,7 @@ class TestCLIControllerRunIntegration:
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--interactive"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--interactive"],
             )
 
             # Controller should be created with checkpoint_callback
@@ -690,7 +724,7 @@ class TestCLIControllerRunIntegration:
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--autonomous"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--autonomous"],
             )
 
             assert result.exit_code == 1
@@ -714,7 +748,7 @@ class TestCLIControllerRunIntegration:
 
             result = runner.invoke(
                 cli,
-                ["diagnose", "--host", "192.168.1.10", "--interactive"],
+                ["diagnose", *self.VM_DIAG_ARGS, "--interactive"],
             )
 
             assert result.exit_code == 2

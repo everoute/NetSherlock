@@ -346,9 +346,9 @@ def generate_diagnosis_report(
     report = DiagnosisReport(
         report_id=report_id,
         request_id=request.request_id,
-        source_host=request.source_host,
-        target_host=request.target_host,
-        vm_id=request.vm_id,
+        source_host=request.src_host,
+        target_host=request.dst_host,
+        vm_id=request.src_vm,
         diagnosis_type=request.request_type,
         summary=summary,
         latency_analysis=latency_analysis,

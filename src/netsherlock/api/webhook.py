@@ -239,17 +239,39 @@ class AlertmanagerWebhook(BaseModel):
     alerts: list[AlertmanagerAlert] = Field(default_factory=list)
 
 
-# Valid problem types
-VALID_PROBLEM_TYPES = {"vm_network_latency", "vm_network_drop", "system_network_latency", "host_network_latency"}
+# Valid diagnosis types
+VALID_DIAGNOSIS_TYPES = {"latency", "packet_drop", "connectivity"}
+
+# Valid network types
+VALID_NETWORK_TYPES = {"vm", "system"}
 
 
 class DiagnosticRequest(BaseModel):
-    """Manual diagnostic request."""
+    """Manual diagnostic request.
 
-    problem_type: str = Field(..., description="Type of problem: vm_network_latency, vm_network_drop, system_network_latency, host_network_latency")
-    src_node: str = Field(..., description="Source node IP address")
-    dst_node: str | None = Field(None, description="Destination node IP address")
-    vm_name: str | None = Field(None, description="VM name if applicable")
+    Parameters:
+        network_type: Network type (vm or system)
+        diagnosis_type: Type of diagnosis (latency, packet_drop, connectivity)
+        src_host: Source host management IP (required)
+        src_vm: Source VM UUID (required for network_type=vm)
+        dst_host: Destination host management IP (optional)
+        dst_vm: Destination VM UUID (required when dst_host specified for vm network)
+        mode: Diagnosis mode (autonomous or interactive)
+        description: Additional problem description
+    """
+
+    network_type: Literal["vm", "system"] = Field(
+        ..., description="Network type: vm (VM network) or system (host network)"
+    )
+    diagnosis_type: Literal["latency", "packet_drop", "connectivity"] = Field(
+        default="latency", description="Type of diagnosis: latency, packet_drop, connectivity"
+    )
+    src_host: str = Field(..., description="Source host management IP address")
+    src_vm: str | None = Field(None, description="Source VM UUID (required for network_type=vm)")
+    dst_host: str | None = Field(None, description="Destination host management IP address")
+    dst_vm: str | None = Field(
+        None, description="Destination VM UUID (required when dst_host specified for vm network)"
+    )
     description: str | None = Field(None, description="Additional problem description")
     mode: Literal["autonomous", "interactive"] | None = Field(
         None,
@@ -260,34 +282,37 @@ class DiagnosticRequest(BaseModel):
         description="Alert type for mode selection (e.g., VMNetworkLatency)",
     )
 
-    @field_validator("problem_type")
+    @field_validator("src_host")
     @classmethod
-    def validate_problem_type(cls, v: str) -> str:
-        """Validate problem_type is one of allowed values."""
-        if v not in VALID_PROBLEM_TYPES:
-            raise ValueError(f"Invalid problem_type: {v}. Must be one of: {', '.join(sorted(VALID_PROBLEM_TYPES))}")
-        return v
-
-    @field_validator("src_node")
-    @classmethod
-    def validate_src_node(cls, v: str) -> str:
-        """Validate src_node is a valid IP address."""
+    def validate_src_host(cls, v: str) -> str:
+        """Validate src_host is a valid IP address."""
         try:
             ipaddress.ip_address(v)
         except ValueError:
-            raise ValueError(f"Invalid src_node IP address: {v}")
+            raise ValueError(f"Invalid src_host IP address: {v}")
         return v
 
-    @field_validator("dst_node")
+    @field_validator("dst_host")
     @classmethod
-    def validate_dst_node(cls, v: str | None) -> str | None:
-        """Validate dst_node is a valid IP address if provided."""
+    def validate_dst_host(cls, v: str | None) -> str | None:
+        """Validate dst_host is a valid IP address if provided."""
         if v is not None:
             try:
                 ipaddress.ip_address(v)
             except ValueError:
-                raise ValueError(f"Invalid dst_node IP address: {v}")
+                raise ValueError(f"Invalid dst_host IP address: {v}")
         return v
+
+    def model_post_init(self, __context) -> None:
+        """Validate parameter combinations after model initialization."""
+        # VM network validation
+        if self.network_type == "vm":
+            if not self.src_vm:
+                raise ValueError("src_vm is required for network_type=vm")
+            if self.dst_host and not self.dst_vm:
+                raise ValueError("dst_vm is required when dst_host is specified")
+            if self.dst_vm and not self.dst_host:
+                raise ValueError("dst_host is required when dst_vm is specified")
 
 
 class DiagnosisResponse(BaseModel):
@@ -456,27 +481,40 @@ async def create_diagnosis(
 
     Requires X-API-Key header for authentication.
 
+    Request body parameters:
+    - network_type: vm or system (required)
+    - diagnosis_type: latency, packet_drop, or connectivity (default: latency)
+    - src_host: Source host management IP (required)
+    - src_vm: Source VM UUID (required for network_type=vm)
+    - dst_host: Destination host management IP (optional)
+    - dst_vm: Destination VM UUID (required when dst_host specified for vm network)
+    - mode: autonomous or interactive (optional, determined by config if not specified)
+
     Mode selection:
     - If mode is specified in request, use it
-    - Otherwise, determine based on problem_type and config
+    - Otherwise, determine based on network_type and config
     """
     diagnosis_id = generate_diagnosis_id("manual")
 
     # Determine mode
     force_mode = DiagnosisMode(request.mode) if request.mode else None
+    # Use alert_type field for mode selection if specified, otherwise derive from network_type
+    alert_type_for_mode = request.alert_type or (
+        "VMNetworkLatency" if request.network_type == "vm" else "HostNetworkLatency"
+    )
     effective_mode = determine_webhook_mode(
-        alert_type=request.problem_type,
+        alert_type=alert_type_for_mode,
         force_mode=force_mode,
     )
 
     # Queue for processing with mode
     request_data = request.model_dump()
     request_data["mode"] = effective_mode.value
-    request_data["alert_type"] = request.problem_type  # Include for mode selection
+    request_data["alert_type"] = alert_type_for_mode  # Include for mode selection
     await diagnosis_queue.put(("manual", diagnosis_id, request_data))
 
     logger.info(
-        f"Manual diagnosis queued: {diagnosis_id} - {request.problem_type} (mode={effective_mode.value})"
+        f"Manual diagnosis queued: {diagnosis_id} - {request.network_type}/{request.diagnosis_type} (mode={effective_mode.value})"
     )
 
     return DiagnosisResponse(

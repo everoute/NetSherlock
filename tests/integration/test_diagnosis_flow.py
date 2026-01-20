@@ -24,16 +24,18 @@ class TestDiagnosisRequestCreation:
         request = DiagnosisRequest(
             request_id="test-001",
             request_type="latency",
-            source_host="192.168.1.10",
-            target_host="192.168.1.20",
-            vm_id="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+            network_type="vm",
+            src_host="192.168.1.10",
+            src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+            dst_host="192.168.1.20",
+            dst_vm="bf7bb275-715d-5dc1-95c9-3feb045418g2",
             alert_type="VMNetworkLatency",
         )
 
         assert request.request_id == "test-001"
-        assert request.source_host == "192.168.1.10"
-        assert request.target_host == "192.168.1.20"
-        assert request.vm_id is not None
+        assert request.src_host == "192.168.1.10"
+        assert request.dst_host == "192.168.1.20"
+        assert request.src_vm is not None
         assert request.alert_type == "VMNetworkLatency"
 
     def test_request_minimal_fields(self):
@@ -41,13 +43,14 @@ class TestDiagnosisRequestCreation:
         request = DiagnosisRequest(
             request_id="test-002",
             request_type="latency",
-            source_host="192.168.1.10",
+            network_type="system",
+            src_host="192.168.1.10",
         )
 
         assert request.request_id == "test-002"
-        assert request.source_host == "192.168.1.10"
-        assert request.target_host is None
-        assert request.vm_id is None
+        assert request.src_host == "192.168.1.10"
+        assert request.dst_host is None
+        assert request.src_vm is None
 
 
 class TestModeSelection:
@@ -130,12 +133,14 @@ class TestAlertToDiagnosisIntegration:
         request = DiagnosisRequest(
             request_id="alert-001",
             request_type="latency",
-            source_host=alert_data["labels"].get("instance", "").split(":")[0] or "unknown",
+            network_type="vm",
+            src_host=alert_data["labels"].get("instance", "").split(":")[0] or "192.168.1.10",
+            src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
             alert_type=alert_data["labels"]["alertname"],
         )
 
         assert request.alert_type == "VMNetworkLatency"
-        assert request.source_host != ""
+        assert request.src_host != ""
 
     def test_unknown_alert_type_from_payload(self, alert_payloads):
         """Unknown alert type should be captured from payload."""
@@ -144,7 +149,8 @@ class TestAlertToDiagnosisIntegration:
         request = DiagnosisRequest(
             request_id="alert-002",
             request_type="latency",
-            source_host="192.168.1.10",
+            network_type="system",
+            src_host="192.168.1.10",
             alert_type=alert_data["labels"]["alertname"],
         )
 
@@ -159,9 +165,11 @@ class TestManualRequestIntegration:
         request = DiagnosisRequest(
             request_id="manual-001",
             request_type="latency",
-            source_host="192.168.1.10",
-            target_host="192.168.1.20",
-            vm_id="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+            network_type="vm",
+            src_host="192.168.1.10",
+            src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+            dst_host="192.168.1.20",
+            dst_vm="bf7bb275-715d-5dc1-95c9-3feb045418g2",
         )
 
         mode = interactive_config.determine_mode(
@@ -176,7 +184,8 @@ class TestManualRequestIntegration:
         request = DiagnosisRequest(
             request_id="manual-002",
             request_type="latency",
-            source_host="192.168.1.10",
+            network_type="system",
+            src_host="192.168.1.10",
         )
 
         # Force autonomous mode
@@ -188,17 +197,18 @@ class TestManualRequestIntegration:
 
         assert mode == DiagnosisMode.AUTONOMOUS
 
-    def test_diagnosis_request_with_vm_id(self, interactive_config):
-        """Diagnosis request with VM ID should be properly handled."""
+    def test_diagnosis_request_with_src_vm(self, interactive_config):
+        """Diagnosis request with src_vm should be properly handled."""
         request = DiagnosisRequest(
             request_id="manual-003",
             request_type="latency",
-            source_host="192.168.1.10",
-            vm_id="ae6aa164-604c-4cb0-84b8-2dea034307f1",
+            network_type="vm",
+            src_host="192.168.1.10",
+            src_vm="ae6aa164-604c-4cb0-84b8-2dea034307f1",
         )
 
-        assert request.vm_id is not None
-        assert request.source_host == "192.168.1.10"
+        assert request.src_vm is not None
+        assert request.src_host == "192.168.1.10"
 
 
 class TestCheckpointDataCreation:

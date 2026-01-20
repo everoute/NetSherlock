@@ -5,7 +5,9 @@ This module implements the L2, L3, and L4 subagents that are invoked
 by the main orchestrator agent.
 """
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from claude_code_sdk import Agent, query
 
@@ -17,6 +19,9 @@ from .base import (
     DiagnosisResult,
 )
 
+if TYPE_CHECKING:
+    from netsherlock.config.settings import Settings
+
 
 class L2EnvironmentSubagent:
     """
@@ -26,15 +31,28 @@ class L2EnvironmentSubagent:
     needed for precise L3 measurements.
     """
 
-    def __init__(self, model: str = "claude-sonnet-4-20250514", compact_prompt: bool = False):
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        model: str | None = None,
+        compact_prompt: bool | None = None,
+    ):
         """Initialize the L2 subagent.
 
         Args:
-            model: Claude model to use
-            compact_prompt: Use compact prompt for token efficiency
+            settings: Application settings (uses default if None)
+            model: Override model from settings
+            compact_prompt: Override compact_prompt from settings
         """
-        self.model = model
-        self.system_prompt = get_l2_prompt(compact=compact_prompt)
+        # Load settings if not provided
+        if settings is None:
+            from netsherlock.config.settings import get_settings
+            settings = get_settings()
+
+        self._settings = settings
+        self.model = model if model is not None else settings.llm.model
+        compact = compact_prompt if compact_prompt is not None else settings.llm.compact_prompts
+        self.system_prompt = get_l2_prompt(compact=compact)
         self._tools = self._create_tools()
 
     def _create_tools(self) -> list[dict[str, Any]]:
@@ -125,15 +143,28 @@ class L3MeasurementSubagent:
     precise network performance data.
     """
 
-    def __init__(self, model: str = "claude-sonnet-4-20250514", compact_prompt: bool = False):
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        model: str | None = None,
+        compact_prompt: bool | None = None,
+    ):
         """Initialize the L3 subagent.
 
         Args:
-            model: Claude model to use
-            compact_prompt: Use compact prompt for token efficiency
+            settings: Application settings (uses default if None)
+            model: Override model from settings
+            compact_prompt: Override compact_prompt from settings
         """
-        self.model = model
-        self.system_prompt = get_l3_prompt(compact=compact_prompt)
+        # Load settings if not provided
+        if settings is None:
+            from netsherlock.config.settings import get_settings
+            settings = get_settings()
+
+        self._settings = settings
+        self.model = model if model is not None else settings.llm.model
+        compact = compact_prompt if compact_prompt is not None else settings.llm.compact_prompts
+        self.system_prompt = get_l3_prompt(compact=compact)
         self._tools = self._create_tools()
 
     def _create_tools(self) -> list[dict[str, Any]]:
@@ -262,15 +293,28 @@ class L4AnalysisSubagent:
     and generating actionable diagnostic reports.
     """
 
-    def __init__(self, model: str = "claude-sonnet-4-20250514", compact_prompt: bool = False):
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        model: str | None = None,
+        compact_prompt: bool | None = None,
+    ):
         """Initialize the L4 subagent.
 
         Args:
-            model: Claude model to use
-            compact_prompt: Use compact prompt for token efficiency
+            settings: Application settings (uses default if None)
+            model: Override model from settings
+            compact_prompt: Override compact_prompt from settings
         """
-        self.model = model
-        self.system_prompt = get_l4_prompt(compact=compact_prompt)
+        # Load settings if not provided
+        if settings is None:
+            from netsherlock.config.settings import get_settings
+            settings = get_settings()
+
+        self._settings = settings
+        self.model = model if model is not None else settings.llm.model
+        compact = compact_prompt if compact_prompt is not None else settings.llm.compact_prompts
+        self.system_prompt = get_l4_prompt(compact=compact)
         self._tools = self._create_tools()
 
     def _create_tools(self) -> list[dict[str, Any]]:

@@ -482,20 +482,24 @@ VALID_PROBLEM_TYPES = {
 }
 
 class DiagnosticRequest(BaseModel):
-    problem_type: str  # Validated against VALID_PROBLEM_TYPES
-    src_node: str      # Validated as IP address
-    dst_node: str | None  # Validated as IP if provided
+    network_type: Literal["vm", "system"]  # Network type
+    diagnosis_type: Literal["latency", "packet_drop", "connectivity"] = "latency"
+    src_host: str      # Validated as IP address
+    src_vm: str | None = None  # Required for network_type=vm
+    dst_host: str | None = None  # Validated as IP if provided
+    dst_vm: str | None = None  # Required if dst_host provided for vm type
 
-    @field_validator("problem_type")
-    def validate_problem_type(cls, v):
-        if v not in VALID_PROBLEM_TYPES:
-            raise ValueError(f"Invalid: {v}")
-        return v
-
-    @field_validator("src_node")
-    def validate_src_node(cls, v):
+    @field_validator("src_host")
+    def validate_src_host(cls, v):
         ipaddress.ip_address(v)  # Raises if invalid
         return v
+
+    def model_post_init(self, __context):
+        if self.network_type == "vm":
+            if not self.src_vm:
+                raise ValueError("src_vm required for vm network type")
+            if self.dst_host and not self.dst_vm:
+                raise ValueError("dst_vm required when dst_host specified")
 ```
 
 **Pagination Bounds:**
@@ -713,7 +717,7 @@ pytest -v
 | Tools | `test_tool_executor.py` | Tool routing, layer mapping | 18 |
 | Webhook API | `test_webhook.py` | Authentication, validation, endpoints | 41 |
 | **Integration** | `integration/*` | **L1→L4 flow, dual-mode, CLI-Controller** | **120** |
-| **Total** | | | **304**
+| **Total** | | | **316**
 
 ### Test Fixtures
 
@@ -779,11 +783,21 @@ print(result.recommendations)
 ### CLI Usage
 
 ```bash
-# Diagnose host latency (interactive mode)
-netsherlock diagnose --host 192.168.1.10 --type latency
+# Single VM diagnosis (interactive mode)
+netsherlock diagnose \
+  --network-type vm \
+  --src-host 192.168.1.10 \
+  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
+  --type latency
 
-# Diagnose VM network (autonomous mode)
-netsherlock diagnose --host 192.168.1.10 --vm-id <uuid> --autonomous
+# VM-to-VM diagnosis (autonomous mode)
+netsherlock diagnose \
+  --network-type vm \
+  --src-host 192.168.1.10 \
+  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
+  --dst-host 192.168.1.20 \
+  --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2 \
+  --autonomous
 
 # Collect environment
 netsherlock env system --host 192.168.1.10
@@ -814,14 +828,28 @@ curl -X POST http://localhost:8080/webhook/alertmanager \
     }]
   }'
 
-# Manual diagnosis
+# Manual diagnosis (single VM)
 curl -X POST http://localhost:8080/diagnose \
   -H "X-API-Key: your-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "problem_type": "vm_network_latency",
-    "src_node": "192.168.1.10",
-    "dst_node": "192.168.1.20"
+    "network_type": "vm",
+    "diagnosis_type": "latency",
+    "src_host": "192.168.1.10",
+    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1"
+  }'
+
+# Manual diagnosis (VM-to-VM)
+curl -X POST http://localhost:8080/diagnose \
+  -H "X-API-Key: your-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "network_type": "vm",
+    "diagnosis_type": "latency",
+    "src_host": "192.168.1.10",
+    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    "dst_host": "192.168.1.20",
+    "dst_vm": "bf7bb275-715d-5dc1-95c9-3feb045418g2"
   }'
 
 # Check status
@@ -832,6 +860,14 @@ curl http://localhost:8080/diagnose/{diagnosis_id} \
 ---
 
 ## Version History
+
+- **v0.3.0** - CLI Parameter Refactoring (Phase 10.1)
+  - Refactored CLI parameters with explicit src/dst semantics
+  - New parameters: `--network-type`, `--src-host`, `--src-vm`, `--dst-host`, `--dst-vm`
+  - Added parameter validation for VM network type
+  - Updated webhook API `DiagnosticRequest` model
+  - Updated all test cases with new parameters
+  - Total: 316 passing tests (196 unit + 120 integration)
 
 - **v0.2.0** - CLI-Controller Integration (Phase 10)
   - Full CLI integration with DiagnosisController

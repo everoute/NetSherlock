@@ -444,8 +444,11 @@ class DiagnosisController:
         # TODO: Connect to L2 tools via ToolExecutor
         self._log.debug("phase_l2_environment", request_id=request.request_id)
         return {
-            "host": request.source_host,
-            "vm_id": request.vm_id,
+            "host": request.src_host,
+            "src_vm": request.src_vm,
+            "dst_host": request.dst_host,
+            "dst_vm": request.dst_vm,
+            "network_type": request.network_type,
             "network_env": {},
         }
 

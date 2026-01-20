@@ -118,6 +118,48 @@ class MeasurementSettings(BaseSettings):
     )
 
 
+class LLMSettings(BaseSettings):
+    """LLM (Claude) configuration settings."""
+
+    model_config = SettingsConfigDict(env_prefix="LLM_")
+
+    api_key: SecretStr | None = Field(
+        default=None,
+        description="Anthropic API key (set via LLM_API_KEY env var)",
+    )
+    model: str = Field(
+        default="claude-sonnet-4-20250514",
+        description="Claude model to use for agent",
+    )
+    max_tokens: int = Field(
+        default=4096,
+        description="Maximum tokens for LLM response",
+    )
+    temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="LLM temperature (0.0 for deterministic)",
+    )
+    compact_prompts: bool = Field(
+        default=False,
+        description="Use compact prompts to reduce token usage",
+    )
+
+    def get_api_key(self) -> str | None:
+        """Get API key, checking LLM_API_KEY first, then ANTHROPIC_API_KEY.
+
+        Returns:
+            API key string or None if not configured
+        """
+        import os
+
+        if self.api_key:
+            return self.api_key.get_secret_value()
+        # Fallback to ANTHROPIC_API_KEY for compatibility
+        return os.environ.get("ANTHROPIC_API_KEY")
+
+
 class DiagnosisSettings(BaseSettings):
     """Diagnosis mode settings.
 
@@ -212,6 +254,7 @@ class Settings(BaseSettings):
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     measurement: MeasurementSettings = Field(default_factory=MeasurementSettings)
     diagnosis: DiagnosisSettings = Field(default_factory=DiagnosisSettings)
+    llm: LLMSettings = Field(default_factory=LLMSettings)
 
     # Node local log paths
     node_log_base_path: Path = Field(
