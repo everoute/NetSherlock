@@ -26,7 +26,7 @@ class ProblemType(str, Enum):
     TCP_RETRANSMISSION = "tcp_retransmission"
 
     @classmethod
-    def from_alert_name(cls, alert_name: str) -> "ProblemType | None":
+    def from_alert_name(cls, alert_name: str) -> ProblemType | None:
         """Map alertname to problem type.
 
         Args:
@@ -143,7 +143,7 @@ class DiagnosisRequest(BaseModel):
 
     model_config = {"extra": "allow"}
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context: object) -> None:
         """Validate parameter combinations after model initialization."""
         # VM network validation
         if self.network_type == "vm":

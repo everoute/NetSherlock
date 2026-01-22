@@ -11,13 +11,12 @@ from typing import TYPE_CHECKING, Any
 
 from claude_code_sdk import Agent, query
 
-from .prompts import get_l2_prompt, get_l3_prompt, get_l4_prompt
 from .base import (
-    AlertContext,
-    NetworkEnvironment,
-    MeasurementResult,
     DiagnosisResult,
+    MeasurementResult,
+    NetworkEnvironment,
 )
+from .prompts import get_l2_prompt, get_l3_prompt, get_l4_prompt
 
 if TYPE_CHECKING:
     from netsherlock.config.settings import Settings
@@ -441,7 +440,7 @@ def create_subagent(
     Returns:
         Subagent instance for the specified layer
     """
-    subagents = {
+    subagents: dict[str, type[L2EnvironmentSubagent | L3MeasurementSubagent | L4AnalysisSubagent]] = {
         "l2": L2EnvironmentSubagent,
         "l3": L3MeasurementSubagent,
         "l4": L4AnalysisSubagent,
@@ -450,4 +449,5 @@ def create_subagent(
     if layer.lower() not in subagents:
         raise ValueError(f"Unknown layer: {layer}. Must be one of: l2, l3, l4")
 
-    return subagents[layer.lower()](model=model, compact_prompt=compact_prompt)
+    subagent_class = subagents[layer.lower()]
+    return subagent_class(model=model, compact_prompt=compact_prompt)

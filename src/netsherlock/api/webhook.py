@@ -12,21 +12,21 @@ This module provides the HTTP API for:
 import asyncio
 import hashlib
 import hmac
+import ipaddress
 import logging
 import secrets
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
-from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Header, HTTPException, BackgroundTasks, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
-import ipaddress
 
 from netsherlock.agents import (
-    create_orchestrator,
     DiagnosisResult,
     NetworkTroubleshootingOrchestrator,
+    create_orchestrator,
 )
 from netsherlock.config.settings import get_settings
 from netsherlock.schemas.config import DiagnosisMode, DiagnosisRequestSource

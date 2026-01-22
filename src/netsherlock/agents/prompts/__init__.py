@@ -8,11 +8,6 @@ This module contains system prompts for the layered subagent architecture:
 - L4: Diagnostic Analysis
 """
 
-from .main_orchestrator import (
-    MAIN_ORCHESTRATOR_PROMPT,
-    MAIN_ORCHESTRATOR_PROMPT_COMPACT,
-    get_main_prompt,
-)
 from .l2_environment_awareness import (
     L2_ENVIRONMENT_AWARENESS_PROMPT,
     L2_ENVIRONMENT_AWARENESS_PROMPT_COMPACT,
@@ -27,6 +22,11 @@ from .l4_diagnostic_analysis import (
     L4_DIAGNOSTIC_ANALYSIS_PROMPT,
     L4_DIAGNOSTIC_ANALYSIS_PROMPT_COMPACT,
     get_l4_prompt,
+)
+from .main_orchestrator import (
+    MAIN_ORCHESTRATOR_PROMPT,
+    MAIN_ORCHESTRATOR_PROMPT_COMPACT,
+    get_main_prompt,
 )
 
 __all__ = [

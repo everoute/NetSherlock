@@ -19,10 +19,8 @@ import structlog
 
 from netsherlock.config.global_inventory import GlobalInventory
 from netsherlock.core.skill_executor import (
-    MockSkillExecutor,
     SkillExecutor,
     SkillExecutorProtocol,
-    SkillResult,
 )
 from netsherlock.schemas.alert import DiagnosisRequest
 from netsherlock.schemas.analysis import AnalysisResult, LatencyBreakdown, LayerType, SegmentData
@@ -41,7 +39,6 @@ from .checkpoints import (
     CheckpointResult,
     CheckpointStatus,
 )
-
 
 logger = structlog.get_logger(__name__)
 
@@ -158,13 +155,13 @@ class DiagnosisResult:
         )
 
     @classmethod
-    def error(cls, diagnosis_id: str, mode: DiagnosisMode, error: str) -> DiagnosisResult:
+    def create_error(cls, diagnosis_id: str, mode: DiagnosisMode, error_msg: str) -> DiagnosisResult:
         """Create an error result."""
         return cls(
             diagnosis_id=diagnosis_id,
             status=DiagnosisStatus.ERROR,
             mode=mode,
-            error=error,
+            error=error_msg,
         )
 
 
@@ -270,7 +267,7 @@ class DiagnosisController:
 
         # Fallback: create minimal config from request
         self._log.warning("no_config_file_provided", msg="Creating minimal config from request")
-        from netsherlock.schemas.minimal_input import NodeConfig, SSHConfig, TestPair
+        from netsherlock.schemas.minimal_input import NodeConfig, NodePair, SSHConfig
 
         nodes = {}
         # Create basic host-sender node
@@ -296,7 +293,7 @@ class DiagnosisController:
                 role="host",
             )
 
-        if request.dst_vm:
+        if request.dst_vm and request.dst_host:
             nodes["vm-receiver"] = NodeConfig(
                 ssh=SSHConfig(user="root", host=request.dst_host),
                 workdir="/tmp/netsherlock",
@@ -307,7 +304,7 @@ class DiagnosisController:
 
         test_pairs = None
         if "vm-sender" in nodes and "vm-receiver" in nodes:
-            test_pairs = {"vm": TestPair(server="vm-receiver", client="vm-sender")}
+            test_pairs = {"vm": NodePair(server="vm-receiver", client="vm-sender")}
 
         return MinimalInputConfig(nodes=nodes, test_pairs=test_pairs)
 
@@ -347,7 +344,7 @@ class DiagnosisController:
             self._minimal_input = self._load_minimal_input(request)
         except Exception as e:
             self._log.error("failed_to_load_config", error=str(e))
-            return DiagnosisResult.error(self._state.diagnosis_id, mode, f"Config error: {e}")
+            return DiagnosisResult.create_error(self._state.diagnosis_id, mode, f"Config error: {e}")
 
         # Initialize checkpoint manager for interactive mode
         if mode == DiagnosisMode.INTERACTIVE:
@@ -381,7 +378,7 @@ class DiagnosisController:
             )
             self._state.status = DiagnosisStatus.ERROR
             self._state.error = str(e)
-            return DiagnosisResult.error(self._state.diagnosis_id, mode, str(e))
+            return DiagnosisResult.create_error(self._state.diagnosis_id, mode, str(e))
         finally:
             self._state.completed_at = datetime.now()
 

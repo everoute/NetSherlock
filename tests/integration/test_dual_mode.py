@@ -3,11 +3,16 @@
 Tests mode selection logic, checkpoint behavior, and mode switching.
 """
 
-import asyncio
-from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from netsherlock.controller.checkpoints import (
+    CheckpointData,
+    CheckpointManager,
+    CheckpointResult,
+    CheckpointStatus,
+)
+from netsherlock.controller.diagnosis_controller import DiagnosisController
 from netsherlock.schemas.config import (
     AutonomousConfig,
     CheckpointType,
@@ -16,15 +21,6 @@ from netsherlock.schemas.config import (
     DiagnosisRequestSource,
     InteractiveConfig,
 )
-from netsherlock.controller.diagnosis_controller import DiagnosisController
-from netsherlock.controller.checkpoints import (
-    Checkpoint,
-    CheckpointData,
-    CheckpointManager,
-    CheckpointResult,
-    CheckpointStatus,
-)
-from netsherlock.schemas.alert import DiagnosisRequest
 
 
 class TestModeSelectionIntegration:

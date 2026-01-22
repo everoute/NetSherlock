@@ -2,11 +2,13 @@
 
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from netsherlock.config.settings import Settings, reset_settings
+from netsherlock.config.settings import reset_settings
+from netsherlock.controller.checkpoints import CheckpointManager
+from netsherlock.controller.diagnosis_controller import DiagnosisController
 from netsherlock.schemas.config import (
     AutonomousConfig,
     CheckpointType,
@@ -14,7 +16,7 @@ from netsherlock.schemas.config import (
     DiagnosisMode,
     InteractiveConfig,
 )
-from netsherlock.schemas.environment import VMNetworkEnv, VMNicInfo, VhostInfo
+from netsherlock.schemas.environment import VhostInfo, VMNetworkEnv, VMNicInfo
 from netsherlock.schemas.measurement import (
     LatencyBreakdown,
     LatencySegment,
@@ -23,8 +25,6 @@ from netsherlock.schemas.measurement import (
     MeasurementStatus,
     MeasurementType,
 )
-from netsherlock.controller.diagnosis_controller import DiagnosisController
-from netsherlock.controller.checkpoints import CheckpointManager
 
 # Path to fixtures directory
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"

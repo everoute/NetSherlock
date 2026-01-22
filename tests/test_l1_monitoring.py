@@ -4,26 +4,27 @@ Tests for grafana_query_metrics, loki_query_logs, read_node_logs,
 and convenience functions.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from netsherlock.core.grafana_client import (
+    LogEntry,
+    LogsResult,
+    MetricSample,
+    MetricSeries,
+    MetricsResult,
+)
 from netsherlock.tools.l1_monitoring import (
-    NodeLogsResult,
     NETWORK_QUERIES,
     NODE_LOG_FILES,
+    NodeLogsResult,
     grafana_query_metrics,
     loki_query_logs,
-    read_node_logs,
     query_host_latency,
     query_host_loss_rate,
     query_tcp_retransmissions,
-)
-from netsherlock.core.grafana_client import (
-    MetricsResult,
-    MetricSeries,
-    MetricSample,
-    LogsResult,
-    LogEntry,
+    read_node_logs,
 )
 
 
@@ -599,7 +600,7 @@ class TestQueryHostLatency:
             series=[],
         )
 
-        result = query_host_latency("node2")
+        query_host_latency("node2")
 
         mock_query.assert_called_once()
         call_args = mock_query.call_args
@@ -635,7 +636,7 @@ class TestQueryHostLossRate:
             series=[],
         )
 
-        result = query_host_loss_rate("node3")
+        query_host_loss_rate("node3")
 
         mock_query.assert_called_once()
 
@@ -668,7 +669,7 @@ class TestQueryTcpRetransmissions:
             series=[],
         )
 
-        result = query_tcp_retransmissions("node2")
+        query_tcp_retransmissions("node2")
 
         mock_query.assert_called_once()
         call_args = mock_query.call_args

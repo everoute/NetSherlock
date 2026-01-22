@@ -85,16 +85,22 @@ class NodeConfig:
 
 
 @dataclass
-class TestPair:
-    """Test pair definition for cross-node measurement.
+class NodePair:
+    """Node pair definition for cross-node measurement.
 
     Attributes:
         server: Server (receiver) node name
         client: Client (sender) node name
+
+    Note: Renamed from TestPair to avoid pytest collection warnings.
     """
 
     server: str
     client: str
+
+
+# Backward compatibility alias
+TestPair = NodePair
 
 
 @dataclass
@@ -111,7 +117,7 @@ class MinimalInputConfig:
     """
 
     nodes: dict[str, NodeConfig] = field(default_factory=dict)
-    test_pairs: dict[str, TestPair] | None = None
+    test_pairs: dict[str, NodePair] | None = None
     discovery_hints: dict | None = None
 
     @classmethod
@@ -171,7 +177,7 @@ class MinimalInputConfig:
         test_pairs = None
         if "test_pairs" in data:
             test_pairs = {
-                k: TestPair(server=v["server"], client=v["client"])
+                k: NodePair(server=v["server"], client=v["client"])
                 for k, v in data["test_pairs"].items()
             }
 
@@ -236,14 +242,14 @@ class MinimalInputConfig:
         """
         return {name: node for name, node in self.nodes.items() if node.role == "host"}
 
-    def get_test_pair(self, pair_type: str = "vm") -> TestPair | None:
+    def get_test_pair(self, pair_type: str = "vm") -> NodePair | None:
         """Get test pair by type.
 
         Args:
             pair_type: Type of test pair (default: 'vm')
 
         Returns:
-            TestPair if found, None otherwise
+            NodePair if found, None otherwise
         """
         if self.test_pairs:
             return self.test_pairs.get(pair_type)

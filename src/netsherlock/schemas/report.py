@@ -174,8 +174,8 @@ class DiagnosisReport(BaseModel):
     def to_markdown(self) -> str:
         """Generate markdown-formatted report."""
         lines = [
-            f"# Network Diagnosis Report",
-            f"",
+            "# Network Diagnosis Report",
+            "",
             f"**Report ID**: {self.report_id}",
             f"**Generated**: {self.generated_at.strftime('%Y-%m-%d %H:%M:%S')}",
             f"**Host**: {self.source_host}",
@@ -187,9 +187,9 @@ class DiagnosisReport(BaseModel):
             lines.append(f"**Target**: {self.target_host}")
 
         lines.extend([
-            f"",
-            f"## Summary",
-            f"",
+            "",
+            "## Summary",
+            "",
             f"- **Status**: {self.summary.status.upper()}",
             f"- **Primary Issue**: {self.summary.primary_issue or 'None identified'}",
             f"- **Root Cause**: {self.summary.root_cause.value}",
@@ -198,13 +198,13 @@ class DiagnosisReport(BaseModel):
 
         if self.latency_analysis:
             lines.extend([
-                f"",
-                f"## Latency Analysis",
-                f"",
+                "",
+                "## Latency Analysis",
+                "",
                 f"Total latency: {self.latency_analysis.total_latency_us:.1f} µs",
-                f"",
-                f"| Layer | Latency (µs) | Percentage |",
-                f"|-------|-------------|------------|",
+                "",
+                "| Layer | Latency (µs) | Percentage |",
+                "|-------|-------------|------------|",
             ])
             for attr in self.latency_analysis.attributions:
                 flag = " ⚠️" if attr.is_anomaly else ""
@@ -214,36 +214,36 @@ class DiagnosisReport(BaseModel):
 
         if self.drop_analysis and self.drop_analysis.total_drops > 0:
             lines.extend([
-                f"",
-                f"## Packet Drop Analysis",
-                f"",
+                "",
+                "## Packet Drop Analysis",
+                "",
                 f"Total drops: {self.drop_analysis.total_drops}",
                 f"Drop rate: {self.drop_analysis.drop_rate:.2%}",
             ])
 
         if self.findings:
             lines.extend([
-                f"",
-                f"## Findings",
-                f"",
+                "",
+                "## Findings",
+                "",
             ])
             for finding in self.findings:
                 icon = {"critical": "🔴", "warning": "🟡", "info": "🔵"}[finding.severity.value]
                 lines.append(f"### {icon} {finding.title}")
-                lines.append(f"")
+                lines.append("")
                 lines.append(finding.description)
                 if finding.evidence:
-                    lines.append(f"")
+                    lines.append("")
                     lines.append(f"**Evidence**: {finding.evidence}")
                 if finding.recommendation:
-                    lines.append(f"")
+                    lines.append("")
                     lines.append(f"**Recommendation**: {finding.recommendation}")
-                lines.append(f"")
+                lines.append("")
 
         if self.recommendations:
             lines.extend([
-                f"## Recommendations",
-                f"",
+                "## Recommendations",
+                "",
             ])
             for i, rec in enumerate(self.recommendations, 1):
                 lines.append(f"{i}. {rec}")

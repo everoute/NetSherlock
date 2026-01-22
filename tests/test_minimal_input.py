@@ -8,8 +8,8 @@ import pytest
 from netsherlock.schemas.minimal_input import (
     MinimalInputConfig,
     NodeConfig,
+    NodePair,
     SSHConfig,
-    TestPair,
 )
 
 
@@ -97,12 +97,12 @@ class TestNodeConfig:
         assert node.ssh_string == "root@10.0.0.1"
 
 
-class TestTestPair:
-    """Tests for TestPair."""
+class TestNodePair:
+    """Tests for NodePair."""
 
-    def test_create_test_pair(self):
-        """Create test pair."""
-        pair = TestPair(server="vm-receiver", client="vm-sender")
+    def test_create_node_pair(self):
+        """Create node pair."""
+        pair = NodePair(server="vm-receiver", client="vm-sender")
         assert pair.server == "vm-receiver"
         assert pair.client == "vm-sender"
 
@@ -278,7 +278,7 @@ discovery_hints:
                     role="host",
                 ),
             },
-            test_pairs={"vm": TestPair(server="nonexistent", client="also-nonexistent")},
+            test_pairs={"vm": NodePair(server="nonexistent", client="also-nonexistent")},
         )
         errors = config.validate()
         assert len(errors) == 2
@@ -340,7 +340,7 @@ class TestMinimalInputConfigEdgeCases:
                     role="host",
                 ),
             },
-            test_pairs={"vm": TestPair(server="vm-receiver", client="vm-sender")},
+            test_pairs={"vm": NodePair(server="vm-receiver", client="vm-sender")},
         )
         # Missing vm-receiver
         result = config.get_sender_receiver_config("vm")

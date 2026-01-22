@@ -4,7 +4,6 @@ These tests verify the receiver-first timing constraint for coordinated
 measurements, which is a critical requirement for accurate latency measurement.
 """
 
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,9 +23,9 @@ from netsherlock.schemas.measurement import (
     PacketDropResult,
 )
 from netsherlock.tools.l3_measurement import (
-    _parse_latency_output,
-    _parse_drop_output,
     _build_command,
+    _parse_drop_output,
+    _parse_latency_output,
 )
 
 
@@ -59,6 +58,7 @@ class TestReceiverFirstTiming:
 
         # Check that the code structure enforces receiver-first
         import inspect
+
         from netsherlock.core.bpf_executor import CoordinatedMeasurement
 
         source = inspect.getsource(CoordinatedMeasurement.execute)
@@ -399,8 +399,8 @@ class TestMeasureVmLatencyBreakdown:
         self, mock_executor_class, mock_ssh_class, mock_settings
     ):
         """Test successful measurement with pre-collected environment."""
+        from netsherlock.schemas.environment import VhostInfo, VMNetworkEnv, VMNicInfo
         from netsherlock.tools.l3_measurement import measure_vm_latency_breakdown
-        from netsherlock.schemas.environment import VMNetworkEnv, VMNicInfo, VhostInfo
 
         # Setup mocks
         mock_settings.return_value.ssh = MagicMock()
@@ -452,8 +452,8 @@ class TestMeasureVmLatencyBreakdown:
     @patch("netsherlock.tools.l3_measurement.get_settings")
     def test_measurement_no_nics(self, mock_settings):
         """Test measurement fails with no NICs."""
-        from netsherlock.tools.l3_measurement import measure_vm_latency_breakdown
         from netsherlock.schemas.environment import VMNetworkEnv
+        from netsherlock.tools.l3_measurement import measure_vm_latency_breakdown
 
         mock_settings.return_value.ssh = MagicMock()
         mock_settings.return_value.bpf_tools.remote_tools_path = "/remote/tools"
@@ -480,8 +480,8 @@ class TestMeasureVmLatencyBreakdown:
     @patch("netsherlock.tools.l3_measurement.get_settings")
     def test_measurement_env_collection_fails(self, mock_settings, mock_collect):
         """Test measurement handles env collection failure."""
-        from netsherlock.tools.l3_measurement import measure_vm_latency_breakdown
         from netsherlock.tools.l2_environment import EnvCollectionResult
+        from netsherlock.tools.l3_measurement import measure_vm_latency_breakdown
 
         mock_settings.return_value.ssh = MagicMock()
         mock_settings.return_value.bpf_tools.remote_tools_path = "/remote/tools"
@@ -506,8 +506,8 @@ class TestMeasureVmLatencyBreakdown:
     @patch("netsherlock.tools.l3_measurement.SSHManager")
     def test_measurement_exception(self, mock_ssh_class, mock_settings):
         """Test measurement handles exception."""
-        from netsherlock.tools.l3_measurement import measure_vm_latency_breakdown
         from netsherlock.schemas.environment import VMNetworkEnv, VMNicInfo
+        from netsherlock.tools.l3_measurement import measure_vm_latency_breakdown
 
         mock_settings.return_value.ssh = MagicMock()
         mock_settings.return_value.bpf_tools.remote_tools_path = "/remote/tools"

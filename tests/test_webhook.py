@@ -19,33 +19,28 @@ from unittest.mock import MagicMock
 mock_sdk = MagicMock()
 sys.modules["claude_code_sdk"] = mock_sdk
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
 
 from netsherlock.api.webhook import (
-    app,
-    determine_webhook_mode,
-    AlertmanagerWebhook,
-    AlertmanagerAlert,
-    DiagnosticRequest,
-    generate_diagnosis_id,
-    verify_api_key,
-    _get_api_key,
-    _is_insecure_mode_allowed,
-    diagnosis_worker,
-    diagnosis_queue,
-    diagnosis_store,
     VALID_DIAGNOSIS_TYPES,
     VALID_NETWORK_TYPES,
+    AlertmanagerAlert,
+    AlertmanagerWebhook,
+    DiagnosticRequest,
+    app,
+    determine_webhook_mode,
+    diagnosis_queue,
+    diagnosis_store,
+    generate_diagnosis_id,
 )
 from netsherlock.schemas.config import (
-    DiagnosisMode,
-    DiagnosisConfig,
     AutonomousConfig,
-    InteractiveConfig,
+    DiagnosisConfig,
+    DiagnosisMode,
 )
-
 
 # Test API key for authentication tests
 TEST_API_KEY = "test-api-key-12345"
@@ -767,6 +762,7 @@ class TestDiagnosisWorkerErrorHandling:
             request_type, request_id, request_data = await diagnosis_queue.get()
 
             from datetime import datetime, timezone
+
             from netsherlock.agents import DiagnosisResult
 
             # Simulate worker behavior when orchestrator is None
@@ -813,6 +809,7 @@ class TestDiagnosisWorkerErrorHandling:
             request_type, request_id, request_data = await diagnosis_queue.get()
 
             from datetime import datetime, timezone
+
             from netsherlock.agents import DiagnosisResult
 
             try:

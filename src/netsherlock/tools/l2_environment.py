@@ -10,7 +10,7 @@ troubleshooting-tools/test/tools/network_env_collector.py
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 import structlog

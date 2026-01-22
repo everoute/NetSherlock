@@ -7,7 +7,6 @@ These tests verify that:
 4. Backward compatibility is maintained
 """
 
-import pytest
 
 
 class TestTypeIdentity:
@@ -55,13 +54,8 @@ class TestSchemasExports:
     def test_alert_schemas_exports(self):
         """All alert-related types should be in schemas.alert."""
         from netsherlock.schemas.alert import (
-            ProblemType,
             AlertSeverity,
-            AlertSource,
-            AlertTarget,
-            AlertMetrics,
-            AlertPayload,
-            DiagnosisRequest,
+            ProblemType,
         )
 
         assert ProblemType is not None
@@ -70,17 +64,8 @@ class TestSchemasExports:
     def test_environment_schemas_exports(self):
         """All environment-related types should be in schemas.environment."""
         from netsherlock.schemas.environment import (
-            NetworkType,
-            PhysicalNIC,
-            VhostInfo,
-            VMNicInfo,
-            VMNetworkEnv,
-            SystemNetworkInfo,
-            SystemNetworkEnv,
-            NetworkEndpoint,
-            PathSegment,
-            NetworkPath,
             FlowInfo,
+            NetworkType,
         )
 
         assert NetworkType is not None
@@ -89,15 +74,8 @@ class TestSchemasExports:
     def test_measurement_schemas_exports(self):
         """All measurement-related types should be in schemas.measurement."""
         from netsherlock.schemas.measurement import (
-            MeasurementType,
-            MeasurementStatus,
-            LatencySegment,
-            LatencyBreakdown,
-            DropPoint,
-            PacketDropResult,
-            MeasurementMetadata,
             MeasurementResult,
-            CoordinatedMeasurementResult,
+            MeasurementType,
         )
 
         assert MeasurementType is not None
@@ -106,16 +84,9 @@ class TestSchemasExports:
     def test_report_schemas_exports(self):
         """All report-related types should be in schemas.report."""
         from netsherlock.schemas.report import (
-            Severity,
-            RootCauseCategory,
-            SegmentAttribution,
-            Finding,
-            LatencyAnalysis,
-            DropAnalysis,
-            RootCause,
             Recommendation,
-            DiagnosisSummary,
-            DiagnosisReport,
+            RootCause,
+            RootCauseCategory,
         )
 
         assert RootCauseCategory is not None
@@ -125,12 +96,8 @@ class TestSchemasExports:
     def test_config_schemas_exports(self):
         """All config-related types should be in schemas.config."""
         from netsherlock.schemas.config import (
-            DiagnosisMode,
-            CheckpointType,
-            DiagnosisRequestSource,
-            AutonomousConfig,
-            InteractiveConfig,
             DiagnosisConfig,
+            DiagnosisMode,
         )
 
         assert DiagnosisMode is not None
@@ -143,26 +110,26 @@ class TestSchemasModuleExports:
     def test_all_types_importable_from_schemas(self):
         """All types should be importable from the schemas package."""
         from netsherlock.schemas import (
-            # Alert
-            ProblemType,
             AlertSeverity,
-            DiagnosisRequest,
-            # Config
-            DiagnosisMode,
             CheckpointType,
             DiagnosisConfig,
+            # Config
+            DiagnosisMode,
+            DiagnosisReport,
+            DiagnosisRequest,
             # Environment
             FlowInfo,
-            NetworkPath,
-            VMNetworkEnv,
+            LatencyBreakdown,
             # Measurement
             MeasurementResult,
-            LatencyBreakdown,
+            NetworkPath,
+            # Alert
+            ProblemType,
+            Recommendation,
+            RootCause,
             # Report
             RootCauseCategory,
-            RootCause,
-            Recommendation,
-            DiagnosisReport,
+            VMNetworkEnv,
         )
 
         # Verify types are not None
@@ -192,15 +159,8 @@ class TestBackwardCompatibility:
         """agents/base.py should export all legacy types."""
         from netsherlock.agents.base import (
             AlertContext,
-            VMInfo,
-            NetworkInfo,
-            NodeEnvironment,
-            NetworkPath,
-            NetworkEnvironment,
-            LatencyHistogram,
-            LatencySegment,
-            MeasurementResult,
             DiagnosisResult,
+            VMInfo,
         )
 
         assert AlertContext is not None
@@ -212,9 +172,6 @@ class TestBackwardCompatibility:
         from netsherlock.agents import (
             ProblemType,
             RootCauseCategory,
-            AlertContext,
-            VMInfo,
-            DiagnosisResult,
         )
 
         assert ProblemType is not None
@@ -223,12 +180,13 @@ class TestBackwardCompatibility:
     def test_legacy_types_are_dataclasses(self):
         """Legacy types in agents/base.py should be dataclasses."""
         import dataclasses
+
         from netsherlock.agents.base import (
             AlertContext,
-            VMInfo,
+            LatencyHistogram,
             NetworkInfo,
             NodeEnvironment,
-            LatencyHistogram,
+            VMInfo,
         )
 
         assert dataclasses.is_dataclass(AlertContext)
@@ -240,11 +198,12 @@ class TestBackwardCompatibility:
     def test_schemas_types_are_pydantic_models(self):
         """Types in schemas/ should be Pydantic models."""
         from pydantic import BaseModel
+
         from netsherlock.schemas import (
-            FlowInfo,
-            RootCause,
-            Recommendation,
             DiagnosisReport,
+            FlowInfo,
+            Recommendation,
+            RootCause,
         )
 
         assert issubclass(FlowInfo, BaseModel)

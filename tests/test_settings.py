@@ -2,8 +2,6 @@
 
 import os
 
-import pytest
-
 from netsherlock.config.settings import (
     DiagnosisSettings,
     Settings,

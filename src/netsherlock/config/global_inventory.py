@@ -14,8 +14,8 @@ import yaml
 from netsherlock.schemas.minimal_input import (
     MinimalInputConfig,
     NodeConfig,
+    NodePair,
     SSHConfig,
-    TestPair,
 )
 
 
@@ -172,7 +172,10 @@ class GlobalInventory:
         if not vm_result:
             return None
         _, vm_config = vm_result
-        return self.hosts.get(vm_config.host_ref), vm_config.host_ref if vm_config.host_ref in self.hosts else None
+        host_config = self.hosts.get(vm_config.host_ref)
+        if host_config is None:
+            return None
+        return vm_config.host_ref, host_config
 
     def build_minimal_input(
         self,
@@ -277,7 +280,7 @@ class GlobalInventory:
         # Build test_pairs if we have sender and receiver VMs
         test_pairs = None
         if "vm-sender" in nodes and "vm-receiver" in nodes:
-            test_pairs = {"vm": TestPair(server="vm-receiver", client="vm-sender")}
+            test_pairs = {"vm": NodePair(server="vm-receiver", client="vm-sender")}
 
         return MinimalInputConfig(nodes=nodes, test_pairs=test_pairs)
 

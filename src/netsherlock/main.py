@@ -10,7 +10,7 @@ import json
 import sys
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Literal, cast
 
 import click
 import structlog
@@ -423,8 +423,8 @@ def diagnose(
 
     request = DiagnosisRequest(
         request_id=request_id,
-        request_type=diagnosis_type,
-        network_type=network_type,
+        request_type=cast(Literal["latency", "packet_drop", "connectivity"], diagnosis_type),
+        network_type=cast(Literal["vm", "system"], network_type),
         src_host=src_host,
         src_vm=src_vm,
         dst_host=dst_host,
@@ -545,12 +545,13 @@ def env_system(ctx: click.Context, host: str, port_type: str | None) -> None:
     result = collect_system_network_env(host, port_type)
 
     if result.success and result.data:
+        data = result.data
         if json_output:
-            click.echo(json.dumps(result.data.model_dump(), default=str, indent=2))
+            click.echo(json.dumps(data.model_dump(), default=str, indent=2))
         else:
             click.echo(f"System Network Environment: {host}")
             click.echo("-" * 50)
-            for port in result.data.ports:
+            for port in data.ports:  # type: ignore[union-attr]
                 click.echo(f"  Port: {port.port_name}")
                 click.echo(f"    Type: {port.port_type}")
                 click.echo(f"    IP: {port.ip_address or 'N/A'}")
@@ -584,12 +585,12 @@ def env_vm(ctx: click.Context, host: str, vm_id: str) -> None:
             click.echo(json.dumps(result.data.model_dump(), default=str, indent=2))
         else:
             env = result.data
-            click.echo(f"VM Network Environment: {env.vm_uuid}")
+            click.echo(f"VM Network Environment: {env.vm_uuid}")  # type: ignore[union-attr]
             click.echo("-" * 50)
             click.echo(f"  Host: {env.host}")
-            click.echo(f"  QEMU PID: {env.qemu_pid}")
-            click.echo(f"  NICs: {len(env.nics)}")
-            for i, nic in enumerate(env.nics, 1):
+            click.echo(f"  QEMU PID: {env.qemu_pid}")  # type: ignore[union-attr]
+            click.echo(f"  NICs: {len(env.nics)}")  # type: ignore[union-attr]
+            for i, nic in enumerate(env.nics, 1):  # type: ignore[union-attr]
                 click.echo(f"\n  NIC {i}:")
                 click.echo(f"    MAC: {nic.mac}")
                 click.echo(f"    vnet: {nic.host_vnet}")

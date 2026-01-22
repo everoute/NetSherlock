@@ -1,7 +1,7 @@
 """Tests for Analysis result schemas."""
 
+
 import pytest
-from datetime import datetime
 
 from netsherlock.schemas.analysis import (
     AnalysisResult,

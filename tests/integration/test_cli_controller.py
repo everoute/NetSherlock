@@ -4,28 +4,25 @@ Tests the integration between CLI commands and DiagnosisController,
 including mode selection, checkpoint interactions, and output formatting.
 """
 
-import asyncio
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
 
-from netsherlock.main import cli, _determine_diagnosis_mode
-from netsherlock.controller.diagnosis_controller import (
-    DiagnosisController,
-    DiagnosisPhase,
-    DiagnosisResult,
-    DiagnosisState,
-    DiagnosisStatus,
-)
 from netsherlock.controller.checkpoints import (
     CheckpointData,
     CheckpointManager,
     CheckpointResult,
     CheckpointStatus,
 )
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.controller.diagnosis_controller import (
+    DiagnosisController,
+    DiagnosisResult,
+    DiagnosisState,
+    DiagnosisStatus,
+)
+from netsherlock.main import _determine_diagnosis_mode, cli
 from netsherlock.schemas.config import (
     CheckpointType,
     DiagnosisConfig,
@@ -521,7 +518,7 @@ class TestDiagnosisResultFormatting:
 
     def test_error_result(self):
         """Error result should capture error message."""
-        result = DiagnosisResult.error(
+        result = DiagnosisResult.create_error(
             "test-001", DiagnosisMode.AUTONOMOUS, "Connection failed"
         )
 
@@ -587,8 +584,9 @@ class TestCLIResultFormattingIntegration:
 
     def test_format_diagnosis_result_text(self):
         """Text formatting should work."""
-        from netsherlock.main import _format_diagnosis_result
         from datetime import datetime
+
+        from netsherlock.main import _format_diagnosis_result
 
         result = DiagnosisResult(
             diagnosis_id="test-001",
@@ -608,8 +606,9 @@ class TestCLIResultFormattingIntegration:
 
     def test_format_diagnosis_result_json(self):
         """JSON formatting should produce valid JSON."""
-        from netsherlock.main import _format_diagnosis_result
         from datetime import datetime
+
+        from netsherlock.main import _format_diagnosis_result
 
         result = DiagnosisResult(
             diagnosis_id="test-001",
@@ -668,7 +667,7 @@ class TestCLIControllerRunIntegration:
             mock_instance.run = mock_run
             MockController.return_value = mock_instance
 
-            result = runner.invoke(
+            runner.invoke(
                 cli,
                 ["diagnose", *self.VM_DIAG_ARGS, "--autonomous"],
             )
@@ -694,7 +693,7 @@ class TestCLIControllerRunIntegration:
             mock_instance.run = mock_run
             MockController.return_value = mock_instance
 
-            result = runner.invoke(
+            runner.invoke(
                 cli,
                 ["diagnose", *self.VM_DIAG_ARGS, "--interactive"],
             )
@@ -710,7 +709,7 @@ class TestCLIControllerRunIntegration:
             "netsherlock.main.DiagnosisController"
         ) as MockController:
             mock_instance = MagicMock()
-            mock_result = DiagnosisResult.error(
+            mock_result = DiagnosisResult.create_error(
                 "test-003",
                 DiagnosisMode.AUTONOMOUS,
                 "Test error",

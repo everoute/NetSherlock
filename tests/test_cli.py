@@ -11,7 +11,7 @@ These tests verify:
 import pytest
 from click.testing import CliRunner
 
-from netsherlock.main import cli, _determine_diagnosis_mode
+from netsherlock.main import _determine_diagnosis_mode, cli
 from netsherlock.schemas.config import DiagnosisMode
 
 

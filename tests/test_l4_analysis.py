@@ -5,16 +5,9 @@ Tests for latency analysis, drop analysis, and report generation.
 
 import pytest
 
-from netsherlock.tools.l4_analysis import (
-    analyze_latency_segments,
-    analyze_packet_drops,
-    generate_diagnosis_report,
-    identify_root_cause,
-    _get_layer_recommendation,
-    DEFAULT_THRESHOLDS,
-    LAYER_DEFINITIONS,
-)
+from netsherlock.schemas.alert import DiagnosisRequest
 from netsherlock.schemas.measurement import (
+    DropPoint,
     LatencyBreakdown,
     LatencySegment,
     MeasurementMetadata,
@@ -22,10 +15,17 @@ from netsherlock.schemas.measurement import (
     MeasurementStatus,
     MeasurementType,
     PacketDropResult,
-    DropPoint,
 )
-from netsherlock.schemas.alert import DiagnosisRequest
-from netsherlock.schemas.report import RootCauseCategory, Severity
+from netsherlock.schemas.report import RootCauseCategory
+from netsherlock.tools.l4_analysis import (
+    DEFAULT_THRESHOLDS,
+    LAYER_DEFINITIONS,
+    _get_layer_recommendation,
+    analyze_latency_segments,
+    analyze_packet_drops,
+    generate_diagnosis_report,
+    identify_root_cause,
+)
 
 
 class TestDefaultThresholds:

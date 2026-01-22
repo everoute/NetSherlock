@@ -10,8 +10,6 @@ import pytest
 
 from netsherlock.controller.diagnosis_controller import (
     DiagnosisController,
-    DiagnosisPhase,
-    DiagnosisResult,
     DiagnosisStatus,
 )
 from netsherlock.core.skill_executor import (
@@ -307,7 +305,7 @@ class TestControllerSkillErrors:
             minimal_input_path=minimal_input_file,
         )
 
-        result = await controller.run(
+        await controller.run(
             request=cross_node_vm_request,
             force_mode=DiagnosisMode.AUTONOMOUS,
         )

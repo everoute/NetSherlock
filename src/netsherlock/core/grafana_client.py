@@ -8,7 +8,7 @@ from __future__ import annotations
 import base64
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Literal
+from typing import Literal
 
 import httpx
 import structlog
@@ -123,7 +123,7 @@ class GrafanaClient:
     def __enter__(self) -> GrafanaClient:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
         self.close()
 
     def _parse_time(self, time_spec: str | datetime | float) -> float:
@@ -217,7 +217,7 @@ class GrafanaClient:
         # Parse step to seconds
         step_seconds = self._parse_step(step)
 
-        params = {
+        params: dict[str, str | int] = {
             "query": query,
             "start": int(start_ts),
             "end": int(end_ts),
@@ -433,7 +433,8 @@ class GrafanaClient:
             data = response.json()
 
             if data.get("status") == "success":
-                return data.get("data", [])
+                result: list[str] = data.get("data", [])
+                return result
             return []
 
         except Exception:

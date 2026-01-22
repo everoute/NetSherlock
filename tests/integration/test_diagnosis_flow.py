@@ -4,16 +4,12 @@ Tests the full diagnosis pipeline from alert/request to final report,
 including both autonomous and interactive modes.
 """
 
-import asyncio
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 
-from netsherlock.controller.diagnosis_controller import DiagnosisController
 from netsherlock.controller.checkpoints import CheckpointData, CheckpointResult, CheckpointStatus
-from netsherlock.schemas.config import CheckpointType, DiagnosisConfig, DiagnosisMode, DiagnosisRequestSource
+from netsherlock.controller.diagnosis_controller import DiagnosisController
 from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.schemas.config import CheckpointType, DiagnosisMode, DiagnosisRequestSource
 
 
 class TestDiagnosisRequestCreation:
@@ -162,7 +158,7 @@ class TestManualRequestIntegration:
 
     def test_manual_request_uses_interactive_by_default(self, interactive_config):
         """Manual requests should use interactive mode by default."""
-        request = DiagnosisRequest(
+        DiagnosisRequest(
             request_id="manual-001",
             request_type="latency",
             network_type="vm",
@@ -181,7 +177,7 @@ class TestManualRequestIntegration:
 
     def test_manual_request_can_force_autonomous(self, interactive_config):
         """Manual request can force autonomous mode."""
-        request = DiagnosisRequest(
+        DiagnosisRequest(
             request_id="manual-002",
             request_type="latency",
             network_type="system",

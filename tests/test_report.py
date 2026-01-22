@@ -3,20 +3,20 @@
 Tests for DiagnosisReport and related models including markdown generation.
 """
 
+
 import pytest
-from datetime import datetime
 
 from netsherlock.schemas.report import (
     DiagnosisReport,
     DiagnosisSummary,
-    LatencyAnalysis,
     DropAnalysis,
     Finding,
-    SegmentAttribution,
-    RootCause,
+    LatencyAnalysis,
     Recommendation,
-    Severity,
+    RootCause,
     RootCauseCategory,
+    SegmentAttribution,
+    Severity,
 )
 
 

@@ -5,19 +5,17 @@ partial results when possible.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
+from netsherlock.agents.tool_executor import ToolExecutionError, ToolExecutor, ToolNotFoundError
 from netsherlock.schemas.measurement import (
     MeasurementMetadata,
     MeasurementResult,
     MeasurementStatus,
     MeasurementType,
 )
-from netsherlock.controller.diagnosis_controller import DiagnosisController
-from netsherlock.schemas.alert import DiagnosisRequest
-from netsherlock.agents.tool_executor import ToolExecutor, ToolExecutionError, ToolNotFoundError
 
 
 class TestSSHConnectionFailures:

@@ -7,7 +7,6 @@ These provide the foundational monitoring data for network diagnosis.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Literal
 
 import structlog
@@ -85,11 +84,12 @@ def grafana_query_metrics(
         ...         print(f"Samples: {len(series.values)}")
     """
     settings = get_settings()
+    password = settings.grafana.password.get_secret_value() if settings.grafana.password else ""
 
     with GrafanaClient(
         base_url=settings.grafana.base_url,
         username=settings.grafana.username,
-        password=settings.grafana.password.get_secret_value(),
+        password=password,
         timeout=settings.grafana.timeout,
         victoriametrics_ds_id=settings.grafana.victoriametrics_ds_id,
         loki_ds_id=settings.grafana.loki_ds_id,
@@ -133,11 +133,12 @@ def loki_query_logs(
         ...         print(f"[{entry.timestamp}] {entry.line[:100]}")
     """
     settings = get_settings()
+    password = settings.grafana.password.get_secret_value() if settings.grafana.password else ""
 
     with GrafanaClient(
         base_url=settings.grafana.base_url,
         username=settings.grafana.username,
-        password=settings.grafana.password.get_secret_value(),
+        password=password,
         timeout=settings.grafana.timeout,
         victoriametrics_ds_id=settings.grafana.victoriametrics_ds_id,
         loki_ds_id=settings.grafana.loki_ds_id,

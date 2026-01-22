@@ -1,7 +1,6 @@
 """Tests for the DiagnosisController and checkpoint management."""
 
 import asyncio
-from datetime import datetime
 
 import pytest
 
@@ -22,7 +21,6 @@ from netsherlock.schemas.config import (
     DiagnosisRequestSource,
     InteractiveConfig,
 )
-
 
 # === Checkpoint Tests ===
 
@@ -497,7 +495,7 @@ class TestDiagnosisResult:
         """Error factory creates correct result."""
         from netsherlock.controller.diagnosis_controller import DiagnosisResult, DiagnosisStatus
 
-        result = DiagnosisResult.error("test-123", DiagnosisMode.AUTONOMOUS, "Something failed")
+        result = DiagnosisResult.create_error("test-123", DiagnosisMode.AUTONOMOUS, "Something failed")
 
         assert result.diagnosis_id == "test-123"
         assert result.status == DiagnosisStatus.ERROR

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 import structlog
 
@@ -17,7 +18,6 @@ from netsherlock.schemas.measurement import (
     LatencyBreakdown,
     MeasurementResult,
     MeasurementStatus,
-    MeasurementType,
     PacketDropResult,
 )
 from netsherlock.schemas.report import (
@@ -326,6 +326,7 @@ def generate_diagnosis_report(
                 recommendations.append(cause)
 
     # Determine overall status
+    status: Literal["healthy", "degraded", "critical"]
     if not findings:
         status = "healthy"
     elif any(f.severity == Severity.CRITICAL for f in findings):

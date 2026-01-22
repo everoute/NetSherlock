@@ -166,8 +166,8 @@ class LatencyBreakdown:
             },
             "validation_error_pct": self.validation_error_pct,
             "primary_contributor": (
-                self.get_primary_contributor().value
-                if self.get_primary_contributor()
+                contributor.value
+                if (contributor := self.get_primary_contributor())
                 else None
             ),
         }

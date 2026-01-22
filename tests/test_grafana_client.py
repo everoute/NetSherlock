@@ -3,21 +3,21 @@
 Tests for metrics and logs query functionality.
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import httpx
+import pytest
 
 from netsherlock.core.grafana_client import (
     GrafanaClient,
-    MetricsResult,
-    MetricSeries,
-    MetricSample,
-    LogsResult,
     LogEntry,
-    query_metrics,
+    LogsResult,
+    MetricSample,
+    MetricSeries,
+    MetricsResult,
     query_logs,
+    query_metrics,
 )
 
 

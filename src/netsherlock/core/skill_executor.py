@@ -106,7 +106,7 @@ class SkillExecutor:
             SkillResult containing execution status and results
         """
         try:
-            from claude_agent_sdk import query, ClaudeAgentOptions
+            from claude_agent_sdk import ClaudeAgentOptions, query
         except ImportError:
             logger.error("claude_agent_sdk_not_installed")
             return SkillResult(
@@ -127,13 +127,16 @@ class SkillExecutor:
         log.info("invoking_skill", parameters=list(parameters.keys()))
 
         try:
-            outputs = []
-            async for message in asyncio.wait_for(
-                self._collect_outputs(query(prompt=prompt, options=options)),
-                timeout=timeout,
-            ):
-                outputs.append(message)
-                log.debug("skill_message", message_type=type(message).__name__)
+            outputs: list[Any] = []
+
+            async def collect_all() -> list[Any]:
+                result = []
+                async for message in query(prompt=prompt, options=options):
+                    result.append(message)
+                    log.debug("skill_message", message_type=type(message).__name__)
+                return result
+
+            outputs = await asyncio.wait_for(collect_all(), timeout=timeout)
 
             log.info("skill_completed", output_count=len(outputs))
             return self._parse_skill_output(outputs)
@@ -150,18 +153,6 @@ class SkillExecutor:
                 status="error",
                 error=str(e),
             )
-
-    async def _collect_outputs(self, query_iter):
-        """Async generator to collect query outputs.
-
-        Args:
-            query_iter: Async iterator from query()
-
-        Yields:
-            Messages from the query
-        """
-        async for message in query_iter:
-            yield message
 
     def _build_skill_prompt(self, skill_name: str, parameters: dict[str, Any]) -> str:
         """Build the prompt to trigger a Skill.

@@ -16,7 +16,6 @@ from netsherlock.config.global_inventory import GlobalInventory
 from netsherlock.controller.diagnosis_controller import (
     DiagnosisController,
     DiagnosisPhase,
-    DiagnosisResult,
     DiagnosisStatus,
 )
 from netsherlock.core.skill_executor import (
@@ -29,7 +28,6 @@ from netsherlock.schemas.alert import DiagnosisRequest
 from netsherlock.schemas.analysis import LayerType
 from netsherlock.schemas.config import DiagnosisConfig, DiagnosisMode
 from netsherlock.schemas.minimal_input import MinimalInputConfig
-
 
 # ============================================================================
 # Fixtures

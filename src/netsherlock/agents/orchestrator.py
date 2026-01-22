@@ -13,17 +13,14 @@ from typing import TYPE_CHECKING, Any
 
 from claude_code_sdk import Agent, query
 
-from .prompts import get_main_prompt
 from .base import (
     AlertContext,
-    ProblemType,
-    NetworkEnvironment,
-    MeasurementResult,
     DiagnosisResult,
+    Recommendation,
     RootCause,
     RootCauseCategory,
-    Recommendation,
 )
+from .prompts import get_main_prompt
 from .subagents import (
     L2EnvironmentSubagent,
     L3MeasurementSubagent,

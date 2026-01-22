@@ -44,6 +44,7 @@ dev = [
     "mypy>=1.8.0",
     "ruff>=0.2.0",
     "types-paramiko>=3.4.0",
+    "types-PyYAML>=6.0.0",
 ]
 
 [project.scripts]

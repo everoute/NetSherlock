@@ -4,26 +4,15 @@ Tests that data flows correctly between diagnostic layers
 and that layer outputs are compatible with layer inputs.
 """
 
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 from netsherlock.schemas.environment import (
-    VMNetworkEnv,
-    VMNicInfo,
-    VhostInfo,
+    PhysicalNIC,
     SystemNetworkEnv,
     SystemNetworkInfo,
-    PhysicalNIC,
 )
 from netsherlock.schemas.measurement import (
-    LatencyBreakdown,
-    LatencySegment,
-    MeasurementMetadata,
-    MeasurementResult,
     MeasurementStatus,
-    MeasurementType,
 )
 from netsherlock.schemas.report import (
     RootCauseCategory,

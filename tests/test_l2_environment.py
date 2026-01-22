@@ -3,22 +3,23 @@
 Tests for NetworkEnvCollector class and related functions.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from netsherlock.tools.l2_environment import (
-    NetworkEnvCollector,
-    EnvCollectionResult,
-    build_network_path,
-)
+import pytest
+
 from netsherlock.schemas.environment import (
-    VMNetworkEnv,
-    VMNicInfo,
-    VhostInfo,
+    NetworkType,
     PhysicalNIC,
     SystemNetworkEnv,
     SystemNetworkInfo,
-    NetworkType,
+    VhostInfo,
+    VMNetworkEnv,
+    VMNicInfo,
+)
+from netsherlock.tools.l2_environment import (
+    EnvCollectionResult,
+    NetworkEnvCollector,
+    build_network_path,
 )
 
 
