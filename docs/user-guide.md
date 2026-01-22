@@ -257,7 +257,7 @@ vms:
 
 ```bash
 netsherlock diagnose \
-  --config <CONFIG_FILE> | --inventory <INVENTORY_FILE> \
+  [--config <CONFIG_FILE>] \
   --network-type <TYPE> \
   --src-host <IP> \
   [OPTIONS]
@@ -267,9 +267,17 @@ netsherlock diagnose \
 
 | 参数 | 描述 |
 |------|------|
-| `--config` 或 `--inventory` | 配置文件路径（二选一，必需） |
 | `--network-type` | 网络类型: `vm` 或 `system` |
 | `--src-host` | 源主机 IP 地址 |
+
+### 配置参数
+
+| 参数 | 短选项 | 描述 |
+|------|--------|------|
+| `--config` | `-c` | MinimalInputConfig YAML 文件路径 (**推荐**) |
+| `--inventory` | | GlobalInventory YAML 文件路径 (自动模式) |
+
+> **注意**: 虽然 `--config` 不是必需的，但强烈推荐提供配置文件，以确保 SSH 连接信息和 `test_ip` 正确配置。
 
 ### VM 网络参数
 
@@ -830,16 +838,18 @@ LOG_LEVEL=INFO
 
 ### 常见问题
 
-#### 1. "缺少配置文件"
+#### 1. SSH 连接信息不正确
 
 ```
-Error: Either --config or --inventory is required
+Error: SSH connection failed - invalid host or user
 ```
 
-**解决**: 必须指定配置文件
+**解决**: 使用 `--config` 提供正确的 SSH 配置
 ```bash
 netsherlock diagnose --config config/minimal-input.yaml ...
 ```
+
+**提示**: 虽然 `--config` 不是必需的，但强烈推荐使用配置文件以确保 SSH 和 test_ip 正确配置。
 
 #### 2. SSH 连接失败
 
