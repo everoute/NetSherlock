@@ -77,6 +77,10 @@ class SkillExecutor:
         project_path: str | Path,
         allowed_tools: list[str] | None = None,
         default_timeout: float = 300.0,
+        model: str | None = None,
+        permission_mode: str | None = None,
+        max_turns: int | None = None,
+        max_budget_usd: float | None = None,
     ):
         """Initialize the executor.
 
@@ -84,10 +88,18 @@ class SkillExecutor:
             project_path: Path to the project with Skills defined
             allowed_tools: List of tools the agent can use (default: Skill, Read, Write, Bash)
             default_timeout: Default timeout in seconds for Skill execution
+            model: Claude model to use (e.g., "claude-3-5-haiku-latest")
+            permission_mode: Permission mode ("default", "acceptEdits", "plan", "bypassPermissions")
+            max_turns: Maximum agent turns (None for unlimited)
+            max_budget_usd: Maximum budget in USD (None for unlimited)
         """
         self.project_path = Path(project_path)
         self.allowed_tools = allowed_tools or ["Skill", "Read", "Write", "Bash"]
         self.default_timeout = default_timeout
+        self.model = model
+        self.permission_mode = permission_mode or "bypassPermissions"
+        self.max_turns = max_turns
+        self.max_budget_usd = max_budget_usd
 
     async def invoke(
         self,
@@ -111,7 +123,7 @@ class SkillExecutor:
             logger.error("claude_agent_sdk_not_installed")
             return SkillResult(
                 status="error",
-                error="claude-agent-sdk is not installed. Install with: pip install claude-agent-sdk",
+                error="claude-agent-sdk is not installed. Install with: uv add claude-agent-sdk",
             )
 
         timeout = timeout or self.default_timeout
@@ -119,8 +131,11 @@ class SkillExecutor:
 
         options = ClaudeAgentOptions(
             cwd=str(self.project_path),
-            setting_sources=["project"],
             allowed_tools=self.allowed_tools,
+            model=self.model,
+            permission_mode=self.permission_mode,  # type: ignore[arg-type]
+            max_turns=self.max_turns,
+            max_budget_usd=self.max_budget_usd,
         )
 
         log = logger.bind(skill=skill_name, project_path=str(self.project_path))
@@ -157,6 +172,9 @@ class SkillExecutor:
     def _build_skill_prompt(self, skill_name: str, parameters: dict[str, Any]) -> str:
         """Build the prompt to trigger a Skill.
 
+        The prompt instructs the agent to read and follow the SKILL.md file
+        directly, since the sub-agent doesn't have access to registered skills.
+
         Args:
             skill_name: Name of the Skill
             parameters: Skill parameters
@@ -178,12 +196,18 @@ class SkillExecutor:
                 params_lines.append(f"  - {key}: {value}")
 
         params_str = "\n".join(params_lines)
+        skill_path = self.project_path / ".claude" / "skills" / skill_name / "SKILL.md"
 
-        return f"""Execute the {skill_name} skill with the following parameters:
+        return f"""You need to execute the "{skill_name}" skill.
+
+IMPORTANT: First read the skill definition file at: {skill_path}
+
+Then follow the instructions in that file to complete the task with these parameters:
 
 {params_str}
 
-Please run the complete workflow and return the collected data."""
+After reading the SKILL.md file, execute the appropriate commands using Bash tool.
+Return the collected data in JSON format when complete."""
 
     def _parse_skill_output(self, outputs: list[Any]) -> SkillResult:
         """Parse Skill output into structured result.
@@ -194,31 +218,94 @@ Please run the complete workflow and return the collected data."""
         Returns:
             SkillResult with parsed data
         """
+        import json
+
         result = SkillResult(
             status="success",
             raw_outputs=outputs,
         )
 
-        # Extract structured data from outputs
-        for output in outputs:
-            # Handle different message types
-            if hasattr(output, "content"):
-                content = output.content
-                # Try to extract JSON data from content
-                if isinstance(content, str):
-                    result.data["text_content"] = content
-                elif isinstance(content, dict):
-                    result.data.update(content)
+        text_contents: list[str] = []
+        tool_outputs: list[str] = []
 
-            # Handle tool results
-            if hasattr(output, "tool_results"):
-                for tool_result in output.tool_results:
-                    if hasattr(tool_result, "content"):
-                        if "tool_outputs" not in result.data:
-                            result.data["tool_outputs"] = []
-                        result.data["tool_outputs"].append(tool_result.content)
+        for output in outputs:
+            # Handle ResultMessage (final result)
+            if hasattr(output, "result") and output.result:
+                result.data["final_result"] = output.result
+                # Try to parse JSON from result
+                self._try_parse_json(output.result, result.data)
+
+            # Handle structured_output from ResultMessage
+            if hasattr(output, "structured_output") and output.structured_output:
+                result.data["structured_output"] = output.structured_output
+
+            # Handle content list (AssistantMessage, UserMessage)
+            if hasattr(output, "content") and isinstance(output.content, list):
+                for block in output.content:
+                    # TextBlock from AssistantMessage
+                    if hasattr(block, "text"):
+                        text_contents.append(block.text)
+                        # Try to extract JSON from text
+                        self._try_parse_json(block.text, result.data)
+
+                    # ToolResultBlock from UserMessage (tool execution results)
+                    if hasattr(block, "content") and hasattr(block, "tool_use_id"):
+                        if block.content:
+                            tool_outputs.append(block.content)
+                            # Try to extract JSON from tool output
+                            self._try_parse_json(block.content, result.data)
+
+        if text_contents:
+            result.data["text_content"] = "\n".join(text_contents)
+        if tool_outputs:
+            result.data["tool_outputs"] = tool_outputs
 
         return result
+
+    def _try_parse_json(self, text: str, data: dict[str, Any]) -> bool:
+        """Try to parse JSON from text and merge into data.
+
+        Args:
+            text: Text that might contain JSON
+            data: Dictionary to merge parsed JSON into
+
+        Returns:
+            True if JSON was found and parsed
+        """
+        import json
+        import re
+
+        if not isinstance(text, str):
+            return False
+
+        # Try direct JSON parse
+        try:
+            parsed = json.loads(text.strip())
+            if isinstance(parsed, dict):
+                data.update(parsed)
+                return True
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+        # Try to find JSON in code blocks
+        json_patterns = [
+            r"```json\s*\n?(.*?)\n?```",  # ```json ... ```
+            r"```\s*\n?(\{.*?\})\n?```",  # ``` {...} ```
+            r"(\{[^{}]*\"[^\"]+\"[^{}]*\})",  # Simple JSON object
+        ]
+
+        for pattern in json_patterns:
+            matches = re.findall(pattern, text, re.DOTALL)
+            for match in matches:
+                try:
+                    parsed = json.loads(match.strip())
+                    if isinstance(parsed, dict):
+                        data.update(parsed)
+                        return True
+                except (json.JSONDecodeError, ValueError):
+                    continue
+
+        return False
 
 
 class MockSkillExecutor:

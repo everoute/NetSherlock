@@ -485,6 +485,11 @@ def diagnose(
             config=config,
             checkpoint_callback=checkpoint_callback,
             minimal_input_path=config_path,
+            llm_model=settings.llm.model,
+            llm_max_turns=settings.llm.max_turns,
+            llm_max_budget_usd=settings.llm.max_budget_usd,
+            bpf_local_tools_path=settings.bpf_tools.local_tools_path,
+            bpf_remote_tools_path=settings.bpf_tools.remote_tools_path,
         )
 
         if not json_output:

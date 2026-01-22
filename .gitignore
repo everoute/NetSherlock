@@ -60,7 +60,7 @@ logs/
 Thumbs.db
 
 # Project specific
-planning-with-files/*
+docs/planning-with-files/*
 task_plan.md
 findings.md
 progress.md

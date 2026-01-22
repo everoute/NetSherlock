@@ -185,6 +185,11 @@ class DiagnosisController:
         project_path: str | Path | None = None,
         global_inventory_path: str | Path | None = None,
         minimal_input_path: str | Path | None = None,
+        llm_model: str | None = None,
+        llm_max_turns: int | None = None,
+        llm_max_budget_usd: float | None = None,
+        bpf_local_tools_path: str | Path | None = None,
+        bpf_remote_tools_path: str | Path | None = None,
     ):
         """Initialize controller.
 
@@ -195,6 +200,11 @@ class DiagnosisController:
             project_path: Path to project root for SkillExecutor
             global_inventory_path: Path to global inventory YAML (auto mode)
             minimal_input_path: Path to minimal input YAML (manual mode)
+            llm_model: Claude model to use (e.g., "claude-haiku-4-5-20251001")
+            llm_max_turns: Maximum agent turns (None for unlimited)
+            llm_max_budget_usd: Maximum budget in USD (None for unlimited)
+            bpf_local_tools_path: Local path to BPF measurement tools
+            bpf_remote_tools_path: Remote path for deployed tools on target hosts
         """
         self.config = config
         self.checkpoint_callback = checkpoint_callback
@@ -202,6 +212,11 @@ class DiagnosisController:
         self._project_path = Path(project_path) if project_path else Path.cwd()
         self._global_inventory_path = global_inventory_path
         self._minimal_input_path = minimal_input_path
+        self._llm_model = llm_model
+        self._llm_max_turns = llm_max_turns
+        self._llm_max_budget_usd = llm_max_budget_usd
+        self._bpf_local_tools_path = Path(bpf_local_tools_path) if bpf_local_tools_path else None
+        self._bpf_remote_tools_path = Path(bpf_remote_tools_path) if bpf_remote_tools_path else Path("/tmp/netsherlock-tools")
 
         self._state: DiagnosisState | None = None
         self._checkpoint_manager: CheckpointManager | None = None
@@ -235,6 +250,10 @@ class DiagnosisController:
         return SkillExecutor(
             project_path=self._project_path,
             allowed_tools=["Skill", "Bash", "Read", "Write"],
+            model=self._llm_model,
+            permission_mode="bypassPermissions",
+            max_turns=self._llm_max_turns,
+            max_budget_usd=self._llm_max_budget_usd,
         )
 
     def _load_minimal_input(self, request: DiagnosisRequest) -> MinimalInputConfig:
@@ -606,10 +625,15 @@ class DiagnosisController:
             result["src_env"] = src_env_result.data if src_env_result.is_success else {}
             result["src_test_ip"] = src_vm_node.test_ip
 
-            self._log.debug(
-                "src_env_collected",
+            # Log L2 source environment collection result
+            src_nics = result["src_env"].get("nics", [])
+            self._log.info(
+                "l2_src_env_collected",
                 success=src_env_result.is_success,
                 test_ip=src_vm_node.test_ip,
+                qemu_pid=result["src_env"].get("qemu_pid"),
+                vnet=src_nics[0].get("host_vnet") if src_nics else None,
+                ovs_bridge=src_nics[0].get("ovs_bridge") if src_nics else None,
             )
 
         elif request.network_type == "system" and src_host_node:
@@ -639,10 +663,15 @@ class DiagnosisController:
             result["dst_env"] = dst_env_result.data if dst_env_result.is_success else {}
             result["dst_test_ip"] = dst_vm_node.test_ip
 
-            self._log.debug(
-                "dst_env_collected",
+            # Log L2 destination environment collection result
+            dst_nics = result["dst_env"].get("nics", [])
+            self._log.info(
+                "l2_dst_env_collected",
                 success=dst_env_result.is_success,
                 test_ip=dst_vm_node.test_ip,
+                qemu_pid=result["dst_env"].get("qemu_pid"),
+                vnet=dst_nics[0].get("host_vnet") if dst_nics else None,
+                ovs_bridge=dst_nics[0].get("ovs_bridge") if dst_nics else None,
             )
 
         return result
@@ -739,6 +768,12 @@ class DiagnosisController:
             "duration": request.options.get("duration", 30),
         }
 
+        # BPF tools paths
+        if self._bpf_local_tools_path:
+            params["local_tools_path"] = str(self._bpf_local_tools_path)
+        if self._bpf_remote_tools_path:
+            params["remote_tools_path"] = str(self._bpf_remote_tools_path)
+
         # Sender VM info
         if src_vm_node:
             params["sender_vm_ssh"] = src_vm_node.ssh_string
@@ -773,6 +808,17 @@ class DiagnosisController:
             if phy_nics:
                 params["receiver_phy_nic"] = phy_nics[0].get("name")
 
+        # Log L2→L3 data flow
+        self._log.info(
+            "l2_to_l3_params_built",
+            src_vnet=params.get("sender_vnet"),
+            src_phy_nic=params.get("sender_phy_nic"),
+            dst_vnet=params.get("receiver_vnet"),
+            dst_phy_nic=params.get("receiver_phy_nic"),
+            local_tools_path=params.get("local_tools_path"),
+            remote_tools_path=params.get("remote_tools_path"),
+        )
+
         return params
 
     async def _execute_measurement(
@@ -787,7 +833,11 @@ class DiagnosisController:
         Returns:
             Measurement results including raw data and segments
         """
-        self._log.debug("phase_l3_measurement")
+        self._log.info(
+            "l3_measurement_starting",
+            skill=measurement_plan.get("skill"),
+            duration=measurement_plan.get("parameters", {}).get("duration"),
+        )
 
         mode = measurement_plan.get("mode", "")
 
@@ -802,6 +852,15 @@ class DiagnosisController:
             )
 
             if result.is_success:
+                # Log L3 measurement result
+                segments = result.data.get("segments", {})
+                total_rtt = result.data.get("total_rtt_us", 0)
+                self._log.info(
+                    "l3_measurement_completed",
+                    total_rtt_us=total_rtt,
+                    segment_count=len(segments),
+                    segments_preview=list(segments.keys())[:5] if segments else [],
+                )
                 return {
                     "status": "success",
                     "skill": skill_name,
@@ -844,7 +903,10 @@ class DiagnosisController:
         Returns:
             Analysis results
         """
-        self._log.debug("phase_l4_analysis")
+        self._log.info(
+            "l4_analysis_starting",
+            measurement_status=measurements.get("status"),
+        )
 
         if measurements.get("status") != "success":
             return {
@@ -854,6 +916,13 @@ class DiagnosisController:
 
         # Phase 1: Data calculation (deterministic)
         breakdown = self._calculate_breakdown(measurements)
+
+        # Log L3→L4 data flow
+        self._log.info(
+            "l3_to_l4_breakdown_calculated",
+            total_rtt_us=breakdown.total_rtt_us,
+            primary_contributor=breakdown.get_primary_contributor().value if breakdown.get_primary_contributor() else None,
+        )
 
         # Phase 2: LLM reasoning via skill
         executor = self._get_skill_executor()

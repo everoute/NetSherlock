@@ -123,29 +123,64 @@ class TestSkillExecutor:
         assert result.status == "success"
         assert result.raw_outputs == []
 
-    def test_parse_skill_output_with_content(self, tmp_path):
-        """Parse output with content attribute."""
+    def test_parse_skill_output_with_text_block(self, tmp_path):
+        """Parse output with TextBlock in content list (real SDK format)."""
         executor = SkillExecutor(project_path=tmp_path)
 
-        class MockMessage:
-            content = "test content"
+        class MockTextBlock:
+            text = "test content"
 
-        result = executor._parse_skill_output([MockMessage()])
+        class MockAssistantMessage:
+            content = [MockTextBlock()]
+
+        result = executor._parse_skill_output([MockAssistantMessage()])
 
         assert result.status == "success"
         assert result.data.get("text_content") == "test content"
 
-    def test_parse_skill_output_with_dict_content(self, tmp_path):
-        """Parse output with dictionary content."""
+    def test_parse_skill_output_with_json_in_text(self, tmp_path):
+        """Parse output with JSON embedded in TextBlock."""
         executor = SkillExecutor(project_path=tmp_path)
 
-        class MockMessage:
-            content = {"key": "value", "number": 42}
+        class MockTextBlock:
+            text = '{"key": "value", "number": 42}'
 
-        result = executor._parse_skill_output([MockMessage()])
+        class MockAssistantMessage:
+            content = [MockTextBlock()]
+
+        result = executor._parse_skill_output([MockAssistantMessage()])
 
         assert result.data.get("key") == "value"
         assert result.data.get("number") == 42
+
+    def test_parse_skill_output_with_tool_result(self, tmp_path):
+        """Parse output with ToolResultBlock (tool execution result)."""
+        executor = SkillExecutor(project_path=tmp_path)
+
+        class MockToolResultBlock:
+            tool_use_id = "test-id"
+            content = '{"qemu_pid": 12345, "vnet": "vnet0"}'
+
+        class MockUserMessage:
+            content = [MockToolResultBlock()]
+
+        result = executor._parse_skill_output([MockUserMessage()])
+
+        assert result.data.get("qemu_pid") == 12345
+        assert result.data.get("vnet") == "vnet0"
+        assert "tool_outputs" in result.data
+
+    def test_parse_skill_output_with_result_message(self, tmp_path):
+        """Parse output with ResultMessage (final result)."""
+        executor = SkillExecutor(project_path=tmp_path)
+
+        class MockResultMessage:
+            result = "Final result text"
+            structured_output = None
+
+        result = executor._parse_skill_output([MockResultMessage()])
+
+        assert result.data.get("final_result") == "Final result text"
 
 
 class TestMockSkillExecutor:

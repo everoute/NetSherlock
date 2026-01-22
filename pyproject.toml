@@ -34,7 +34,7 @@ dependencies = [
     "structlog>=24.1.0",
     "tenacity>=8.2.0",
     "pyyaml>=6.0.3",
-    "claude-code-sdk>=0.0.25",
+    "claude-agent-sdk>=0.1.21",
 ]
 
 [project.optional-dependencies]

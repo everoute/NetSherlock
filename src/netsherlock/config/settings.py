@@ -119,45 +119,28 @@ class MeasurementSettings(BaseSettings):
 
 
 class LLMSettings(BaseSettings):
-    """LLM (Claude) configuration settings."""
+    """LLM (Claude Agent SDK) configuration settings.
+
+    Note: Agent SDK uses Claude Code's authentication. Options:
+      1. Run `claude` command to login - SDK uses that auth automatically
+      2. Set ANTHROPIC_API_KEY environment variable
+      3. Use cloud providers via CLAUDE_CODE_USE_BEDROCK/VERTEX/FOUNDRY=1
+    """
 
     model_config = SettingsConfigDict(env_prefix="LLM_")
 
-    api_key: SecretStr | None = Field(
-        default=None,
-        description="Anthropic API key (set via LLM_API_KEY env var)",
-    )
     model: str = Field(
-        default="claude-sonnet-4-20250514",
-        description="Claude model to use for agent",
+        default="claude-haiku-4-5-20251001",
+        description="Claude model (claude-haiku-4-5-20251001, claude-sonnet-4-5-20250929, etc.)",
     )
-    max_tokens: int = Field(
-        default=4096,
-        description="Maximum tokens for LLM response",
+    max_turns: int | None = Field(
+        default=None,
+        description="Maximum agent turns (None for unlimited)",
     )
-    temperature: float = Field(
-        default=0.0,
-        ge=0.0,
-        le=1.0,
-        description="LLM temperature (0.0 for deterministic)",
+    max_budget_usd: float | None = Field(
+        default=None,
+        description="Maximum budget in USD (None for unlimited)",
     )
-    compact_prompts: bool = Field(
-        default=False,
-        description="Use compact prompts to reduce token usage",
-    )
-
-    def get_api_key(self) -> str | None:
-        """Get API key, checking LLM_API_KEY first, then ANTHROPIC_API_KEY.
-
-        Returns:
-            API key string or None if not configured
-        """
-        import os
-
-        if self.api_key:
-            return self.api_key.get_secret_value()
-        # Fallback to ANTHROPIC_API_KEY for compatibility
-        return os.environ.get("ANTHROPIC_API_KEY")
 
 
 class DiagnosisSettings(BaseSettings):
