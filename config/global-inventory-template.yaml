@@ -1,0 +1,135 @@
+# NetSherlock Global Inventory Template
+# ======================================
+#
+# This configuration file defines the global asset inventory for AUTOMATIC MODE.
+# It contains pre-configured information about all managed hosts and VMs.
+#
+# In automatic mode, when an alert is received, NetSherlock uses this inventory
+# to automatically build the diagnosis configuration from the alert parameters.
+#
+# Usage:
+#   netsherlock diagnose --auto \
+#     --inventory config/global-inventory.yaml \
+#     --src-host 192.168.75.101 --src-vm <uuid> \
+#     --dst-host 192.168.75.102 --dst-vm <uuid>
+
+# Host Inventory
+# --------------
+# Define all managed hypervisors/hosts.
+#
+# Each host has:
+#   - mgmt_ip: Management IP address (used for lookup)
+#   - ssh: SSH configuration (user, key_file)
+#   - network_types: List of network types available on the host
+
+hosts:
+  # Host 1 - Compute/Storage node
+  host-192-168-75-101:
+    mgmt_ip: "192.168.75.101"
+    ssh:
+      user: "smartx"
+      key_file: "/root/.ssh/host_key"  # Optional: SSH private key
+    network_types:
+      - mgt        # Management network
+      - storage    # Storage network
+      - access     # VM access network
+
+  # Host 2 - Compute/Storage node
+  host-192-168-75-102:
+    mgmt_ip: "192.168.75.102"
+    ssh:
+      user: "smartx"
+      key_file: "/root/.ssh/host_key"
+    network_types:
+      - mgt
+      - storage
+      - access
+
+  # Host 3 - Another compute node
+  host-192-168-75-103:
+    mgmt_ip: "192.168.75.103"
+    ssh:
+      user: "smartx"
+      key_file: "/root/.ssh/host_key"
+    network_types:
+      - mgt
+      - storage
+
+# VM Inventory
+# ------------
+# Define all managed VMs.
+#
+# Each VM has:
+#   - uuid: VM UUID (used for lookup)
+#   - host_ref: Reference to the host in the 'hosts' section
+#   - ssh: SSH configuration for accessing the VM
+#   - test_ip: IP address used for test traffic (CRITICAL!)
+
+vms:
+  # VM on host-192-168-75-101
+  vm-ae6aa164:
+    uuid: "ae6aa164-604c-4cb0-84b8-2dea034307f1"
+    host_ref: "host-192-168-75-101"  # Which host this VM runs on
+    ssh:
+      user: "root"
+      host: "192.168.2.100"          # VM SSH address (management network)
+      key_file: "/root/.ssh/vm_key"  # Optional: SSH private key
+    test_ip: "10.0.0.1"              # CRITICAL: Test traffic IP
+
+  # VM on host-192-168-75-102
+  vm-be7bb275:
+    uuid: "be7bb275-715d-5dc1-95c9-3efb045418g2"
+    host_ref: "host-192-168-75-102"
+    ssh:
+      user: "root"
+      host: "192.168.2.101"
+      key_file: "/root/.ssh/vm_key"
+    test_ip: "10.0.0.2"
+
+  # Another VM on host-192-168-75-101
+  vm-cf8cc386:
+    uuid: "cf8cc386-826e-6ed2-a6da-4gfc156529h3"
+    host_ref: "host-192-168-75-101"
+    ssh:
+      user: "root"
+      host: "192.168.2.102"
+      key_file: "/root/.ssh/vm_key"
+    test_ip: "10.0.0.3"
+
+# =============================================================================
+# How Automatic Mode Works
+# =============================================================================
+#
+# 1. Alert Received:
+#    Grafana/Alertmanager sends an alert with:
+#    - src_host_ip: 192.168.75.101
+#    - src_vm_uuid: ae6aa164-604c-4cb0-84b8-2dea034307f1
+#    - dst_host_ip: 192.168.75.102
+#    - dst_vm_uuid: be7bb275-715d-5dc1-95c9-3efb045418g2
+#
+# 2. Inventory Lookup:
+#    NetSherlock looks up these IPs and UUIDs in the global inventory
+#    to find the corresponding host and VM configurations.
+#
+# 3. Config Construction:
+#    A MinimalInputConfig is automatically built with:
+#    - host-sender -> host-192-168-75-101
+#    - vm-sender -> vm-ae6aa164 (with test_ip: 10.0.0.1)
+#    - host-receiver -> host-192-168-75-102
+#    - vm-receiver -> vm-be7bb275 (with test_ip: 10.0.0.2)
+#
+# 4. Diagnosis Execution:
+#    The diagnosis proceeds using the constructed configuration.
+#
+# =============================================================================
+
+# =============================================================================
+# Validation Rules
+# =============================================================================
+#
+# The inventory is validated on load:
+# 1. All VM host_ref must point to existing hosts
+# 2. No duplicate UUIDs across VMs
+# 3. No duplicate management IPs across hosts
+#
+# =============================================================================

@@ -1,0 +1,96 @@
+# NetSherlock Minimal Input Configuration Template
+# ================================================
+#
+# This configuration file defines the SSH access and test parameters
+# for diagnosing network issues between nodes.
+#
+# Use this file in MANUAL MODE when you want to explicitly specify
+# all node configurations.
+#
+# Usage:
+#   netsherlock diagnose --config config/minimal-input.yaml \
+#     --network-type vm --type latency \
+#     --src-node vm-sender --dst-node vm-receiver
+
+# Node Definitions
+# ----------------
+# Define all nodes that participate in the diagnosis.
+#
+# Each node has:
+#   - ssh: SSH connection string "user@host" (management IP)
+#   - workdir: Remote directory for tool deployment
+#   - role: "vm" or "host"
+#   - host_ref: (VM only) Reference to the host node
+#   - uuid: (VM only) VM UUID
+#   - test_ip: IP address used for test traffic (may differ from SSH IP!)
+
+nodes:
+  # VM Sender - The VM initiating test traffic
+  vm-sender:
+    ssh: "root@192.168.2.100"        # SSH to VM (management network)
+    workdir: "/tmp/netsherlock"      # Remote working directory
+    role: "vm"                       # Node role: vm or host
+    host_ref: "host-sender"          # Reference to host node
+    uuid: "ae6aa164-604c-4cb0-84b8-2dea034307f1"  # VM UUID
+    test_ip: "10.0.0.1"              # CRITICAL: Test traffic IP (may differ from SSH!)
+
+  # VM Receiver - The VM receiving test traffic
+  vm-receiver:
+    ssh: "root@192.168.2.101"
+    workdir: "/tmp/netsherlock"
+    role: "vm"
+    host_ref: "host-receiver"
+    uuid: "be7bb275-715d-5dc1-95c9-3efb045418g2"
+    test_ip: "10.0.0.2"
+
+  # Host Sender - The hypervisor hosting vm-sender
+  host-sender:
+    ssh: "smartx@192.168.75.101"     # SSH to host (management network)
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+  # Host Receiver - The hypervisor hosting vm-receiver
+  host-receiver:
+    ssh: "smartx@192.168.75.102"
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+# Test Pair Definition
+# --------------------
+# Define which nodes form a test pair for cross-node diagnosis.
+#
+# The test pair specifies:
+#   - server: Node that receives traffic (runs receiver-side tools first)
+#   - client: Node that sends traffic
+
+test_pairs:
+  vm:
+    server: "vm-receiver"            # Receiver (started first)
+    client: "vm-sender"              # Sender (started after receiver)
+
+# Discovery Hints (Optional)
+# --------------------------
+# Hints to help the L2 environment discovery.
+
+discovery_hints:
+  internal_port_type: "mgt"          # OVS internal port type to filter
+
+# =============================================================================
+# IMPORTANT: test_ip vs SSH IP
+# =============================================================================
+#
+# The `test_ip` field is CRITICAL and may differ from the SSH IP address!
+#
+# Example scenarios:
+#
+# 1. Management vs Business Network:
+#    - SSH IP: 192.168.2.100 (management VLAN)
+#    - test_ip: 10.0.0.1 (business VLAN where latency issues occur)
+#
+# 2. Multi-NIC VM:
+#    - SSH IP: 192.168.2.100 (eth0 - management)
+#    - test_ip: 172.16.0.1 (eth1 - storage network under test)
+#
+# The BPF measurement tools use `test_ip` for packet filtering, so it MUST
+# match the actual IP used in the traffic you're diagnosing.
+# =============================================================================

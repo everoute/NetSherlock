@@ -9,6 +9,7 @@ This repository is the **design and planning workspace** for an AI-driven networ
 ### Related Repositories
 
 This workspace has access to two companion repositories:
+
 - `~/workspace/troubleshooting-tools` - eBPF-based network monitoring tools (84 tools: BCC Python, bpftrace, shell scripts)
 - `~/workspace/network-measurement-analyzer` - Network measurement data analysis tools
 
@@ -36,12 +37,12 @@ This workspace has access to two companion repositories:
 
 ### MCP Tool Layers
 
-| Layer | Tools | Purpose |
-|-------|-------|---------|
-| L1 | `grafana_query_metrics`, `loki_query_logs`, `read_pingmesh_logs` | Base monitoring data |
-| L2 | `collect_vm_network_env`, `collect_system_network_env` | Environment and topology |
-| L3 | `execute_coordinated_measurement`, `measure_vm_latency_breakdown` | eBPF measurement execution |
-| L4 | `analyze_latency_segments`, `generate_diagnosis_report` | Analysis and reporting |
+| Layer | Tools                                                                  | Purpose                    |
+| ----- | ---------------------------------------------------------------------- | -------------------------- |
+| L1    | `grafana_query_metrics`, `loki_query_logs`, `read_pingmesh_logs` | Base monitoring data       |
+| L2    | `collect_vm_network_env`, `collect_system_network_env`             | Environment and topology   |
+| L3    | `execute_coordinated_measurement`, `measure_vm_latency_breakdown`  | eBPF measurement execution |
+| L4    | `analyze_latency_segments`, `generate_diagnosis_report`            | Analysis and reporting     |
 
 ### Key Design Constraint
 
@@ -51,12 +52,12 @@ This workspace has access to two companion repositories:
 
 ### Grafana (http://192.168.79.79/grafana)
 
-| ID | Source | Type | Metrics |
-|----|--------|------|---------|
-| 1 | VictoriaMetrics | Prometheus | 5641 metrics |
-| 2 | Clickhouse | ClickHouse | Log analysis |
-| 3 | Loki | Loki | Log aggregation |
-| 8 | traffic-visualization-query-api | JSON API | Traffic visualization |
+| ID | Source                          | Type       | Metrics               |
+| -- | ------------------------------- | ---------- | --------------------- |
+| 1  | VictoriaMetrics                 | Prometheus | 5641 metrics          |
+| 2  | Clickhouse                      | ClickHouse | Log analysis          |
+| 3  | Loki                            | Loki       | Log aggregation       |
+| 8  | traffic-visualization-query-api | JSON API   | Traffic visualization |
 
 ### Key Network Metrics
 
@@ -68,6 +69,7 @@ This workspace has access to two companion repositories:
 ### Node Local Logs (SSH)
 
 Path: `/var/log/zbs/`
+
 - `network-high-latency` - High latency events
 - `l2ping` - L2 ping probe results
 - `pingmesh` - Mesh ping statistics
@@ -87,19 +89,20 @@ docs/
 
 ## Reusable Components from troubleshooting-tools
 
-| Component | Path | Purpose |
-|-----------|------|---------|
-| network_env_collector | test/tools/ | L2 environment collection |
-| ssh_manager | test/automate-performance-test/src/core/ | Remote execution pool |
-| bpf_remote_executor | test/tools/ | L3 remote BPF execution |
-| latency-analysis skill | .claude/skills/ | L4 analysis reference |
-| grafana_cpu_stats.py | scripts/ | L1 query reference |
+| Component              | Path                                     | Purpose                   |
+| ---------------------- | ---------------------------------------- | ------------------------- |
+| network_env_collector  | test/tools/                              | L2 environment collection |
+| ssh_manager            | test/automate-performance-test/src/core/ | Remote execution pool     |
+| bpf_remote_executor    | test/tools/                              | L3 remote BPF execution   |
+| latency-analysis skill | .claude/skills/                          | L4 analysis reference     |
+| grafana_cpu_stats.py   | scripts/                                 | L1 query reference        |
 
 ## Framework Decision
 
 **Recommended**: Pure Claude Agent SDK with layered MCP tools
 
 Rationale:
+
 1. Fast MVP validation without LangGraph learning curve
 2. Native Subagent support for four-layer responsibility separation
 3. Tool encapsulation guarantees critical constraints (receiver-first)
@@ -110,7 +113,35 @@ Rationale:
 Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
 
 Core workflow:
+
 1. `agent-browser open <url>` - Navigate to page
 2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
 3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
 4. Re-snapshot after page changes
+
+## planning-with-files Directory Convention
+
+When using the planning-with-files skill for complex tasks:
+
+1. **Create task directory**: `docs/planning-with-files/{task-name}/`
+2. **All planning files go in this directory**:
+   - `task_plan.md` - Phase tracking and decisions
+   - `findings.md` - Research and discoveries
+   - `progress.md` - Session log and test results
+3. **Task name should be kebab-case** (e.g., `tcp-udp-drop-detector`)
+
+Example structure:
+
+```
+docs/planning-with-files/
+├── tcp-udp-drop-detector/
+│   ├── task_plan.md
+│   ├── findings.md
+│   └── progress.md
+└── traffic-analyzer-impl/
+    ├── task_plan.md
+    ├── findings.md
+    └── progress.md
+```
+
+**Important**: Always create files in the task subdirectory, never in the project root.
