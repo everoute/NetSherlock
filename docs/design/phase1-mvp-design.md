@@ -1,9 +1,9 @@
 # Phase 1 MVP 详细设计
 
-> 基于 `framework-selection-plan.md` 和 `research-plan.md` 调研结论整理
-> 版本: 3.1
-> 日期: 2026-01-20
-> 变更: CLI 参数重构完成 (src/dst 语义)，316 测试通过
+> 版本: 4.0
+> 日期: 2026-01-22
+> 状态: **MVP 功能完成** - Skill 驱动架构
+> 变更: 根据实际实现重写，修正 L2/L3/L4 为 Skill 驱动模式
 
 ---
 
@@ -16,102 +16,87 @@
 | **入口** | CLI + Alertmanager Webhook | Grafana 面板集成 |
 | **问题类型** | VM 网络延迟诊断 | 丢包、吞吐、OVS、vhost 等 9 类 |
 | **网络范围** | VM 网络 (virtio → vhost → OVS → 物理) | 系统网络 (OVS internal port) |
-| **工具数量** | 3-5 个核心工具 | 全部 57+ BPF 工具 |
-| **运行模式** | 全自主模式 + 人机协作模式 | 多步诊断、checkpoint |
-| **状态管理** | 单次诊断，内存状态 | 持久化、历史查询 |
+| **执行方式** | Skill 驱动 (Claude Code Skills) | 直接工具调用 |
+| **运行模式** | 手动模式 + 自动模式 | 更多模式 |
+| **配置方式** | YAML 配置文件 (MinimalInputConfig) | API 配置 |
 
-### 1.2 双模式控制循环 (核心设计)
+### 1.2 核心输入要求
 
-MVP 必须支持两种运行模式，可通过配置切换：
+**关键变化**: 诊断执行需要配置文件作为输入，提供 SSH 连接信息和测试参数。
 
-#### 模式 1: 全自主模式 (Autonomous Mode)
+| 模式 | 配置文件 | 说明 |
+|------|----------|------|
+| **手动模式** | `minimal-input.yaml` | 用户手动定义节点 SSH、test_ip、测试配对 |
+| **自动模式** | `global-inventory.yaml` | 预配置资产清单，从告警参数自动构建配置 |
 
-```
-┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│ 告警触发 │ → │ 环境收集 │ → │ 场景初筛 │ → │ 测量部署 │ → │ 数据收集 │ → │ 诊断报告 │
-└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
-     ↑                                                                               │
-     └───────────────────────── (可选: 深入诊断循环) ─────────────────────────────────┘
-```
+### 1.3 双模式控制循环
 
-**前置条件**:
-- 配置了基础告警/监控触发规则
-- 开启 `auto_agent_loop: true` 选项
-- 告警类型在已知问题分类中
-
-**适用场景**:
-- 已知问题类型，流程标准化
-- 夜间/无人值守运维
-- 高频告警快速响应
-
-**行为特征**:
-- 收到告警后自动启动诊断流程
-- 全流程无需人工干预
-- 完成后输出诊断报告
-- 支持中途中断/人工介入
-
-#### 模式 2: 人机协作模式 (Interactive Mode) - 默认
+#### 模式 1: 手动模式 (Manual Mode) - 默认
 
 ```
-┌────────────┐    ┌──────────┐    ┌──────────┐    ┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│ 告警/手动  │ → │ 环境收集 │ → │ 问题归类 │ → │ [人工确认]  │ → │ 测量计划 │ → │ 执行测量 │ → │ 分析报告 │
-│   触发    │    │          │    │          │    │ 补充信息    │    │          │    │          │    │          │
-└────────────┘    └──────────┘    └──────────┘    └─────────────┘    └──────────┘    └──────────┘    └──────────┘
-                                                        ↑
-                                                   等待用户输入
+用户准备配置文件 (minimal-input.yaml)
+        │
+        ▼
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ CLI 触发 │ → │ L2 环境  │ → │ L3 测量  │ → │ L4 分析  │ → │ 诊断报告 │
+│ --config │    │  Skill   │    │  Skill   │    │  Skill   │    │          │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+                     ↑               ↑               ↑
+                     └───── MinimalInputConfig ──────┘
 ```
 
-**前置条件**: 无 (默认模式)
+**配置文件作用**:
+- 提供 SSH 连接信息给 Skills
+- 定义 `test_ip`（测试流量 IP，可能与 SSH IP 不同）
+- 定义测试配对 (server/client)
 
-**适用场景**:
-- 新问题类型，需要人工判断
-- 需要补充告警信息中缺失的上下文
-- 用户希望确认诊断方向
+#### 模式 2: 自动模式 (Auto Mode)
 
-**人工确认点 (Checkpoints)**:
-1. **问题归类确认**: Agent 初筛后，用户确认/修正问题分类
-2. **测量计划确认**: Agent 提出测量计划，用户确认执行
-3. **结果确认** (可选): 用户可要求进一步诊断
+```
+告警触发 (Alertmanager Webhook)
+        │
+        ▼
+┌──────────────┐    ┌──────────────────┐    ┌──────────────┐
+│ 接收告警参数  │ → │ GlobalInventory  │ → │ 构建          │
+│ src_host_ip  │    │ 资产清单查询      │    │ MinimalInput │
+│ src_vm_uuid  │    │                  │    │ Config       │
+└──────────────┘    └──────────────────┘    └──────────────┘
+                                                    │
+                                                    ▼
+                                            (同手动模式流程)
+```
 
-### 1.3 核心用户场景
+### 1.4 核心用户场景
 
-**场景 A - 全自主模式**:
-Grafana 告警 "VMNetworkLatency" 触发 → Agent 自动完成全流程诊断 → 输出报告
-
-**场景 B - 人机协作模式**:
+**场景 A - 手动模式 CLI**:
 ```bash
-# CLI 手动触发 (VM 间诊断)
-netsherlock diagnose \
-  --network-type vm \
-  --src-host 192.168.1.10 \
-  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
-  --dst-host 192.168.1.20 \
-  --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2
+# 1. 准备配置文件
+cp config/minimal-input-template.yaml my-diagnosis.yaml
+# 编辑 my-diagnosis.yaml，填入实际 SSH 和 test_ip
 
-# Agent 响应
-> 已收集环境信息，初步判断为 VM 网络延迟问题
-> 检测到以下异常:
->   - vhost worker CPU 使用率 85%
->   - OVS 端口 tx_errors 增加
->
-> 建议执行以下测量:
->   1. VM 延迟分段测量 (vm_network_latency_summary.py)
->   2. vhost 调度延迟采样 (vhost_sched_latency.py)
->
-> 是否继续? [Y/n]
+# 2. 执行诊断
+netsherlock diagnose \
+  --config my-diagnosis.yaml \
+  --network-type vm \
+  --src-host 192.168.75.101 \
+  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
+  --dst-host 192.168.75.102 \
+  --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2
 ```
 
-**输出**: 结构化诊断报告，包含：
-- 延迟分段数据 (各阶段 P50/P95/P99)
-- 异常阶段识别
-- 根因定位 (vm_internal / vhost_processing / host_internal / physical_network)
-- 处置建议
+**场景 B - 自动模式 Webhook**:
+```bash
+# 预先配置 global-inventory.yaml
+netsherlock server --inventory config/global-inventory.yaml
+
+# Alertmanager 发送告警，自动触发诊断
+```
 
 ---
 
 ## 二、系统架构
 
-### 2.1 双模式控制器架构
+### 2.1 Skill 驱动架构 (核心设计)
 
 ```
                                     ┌─────────────────────────────────┐
@@ -122,6 +107,22 @@ netsherlock diagnose \
                                     └───────┬────────┴───────┬────────┘
                                             │                │
                                             ▼                ▼
+                                    ┌───────────────────────────────┐
+                                    │       配置文件加载            │
+                                    ├───────────────┬───────────────┤
+                                    │ --config      │ --inventory   │
+                                    │ (手动模式)    │ (自动模式)    │
+                                    └───────┬───────┴───────┬───────┘
+                                            │               │
+                                            ▼               ▼
+                                    ┌───────────────────────────────┐
+                                    │      MinimalInputConfig       │
+                                    │  • nodes (SSH 连接)           │
+                                    │  • test_ip (测试流量 IP)      │
+                                    │  • test_pairs (配对关系)      │
+                                    └───────────────┬───────────────┘
+                                                    │
+                                                    ▼
                             ┌───────────────────────────────────────────┐
                             │           DiagnosisController             │
                             │  ┌─────────────────────────────────────┐  │
@@ -131,316 +132,826 @@ netsherlock diagnose \
                             │  │  │   Loop      │  │    Loop      │  │  │
                             │  │  └─────────────┘  └──────────────┘  │  │
                             │  └─────────────────────────────────────┘  │
-                            │                    │                      │
-                            │         ┌──────────┴──────────┐          │
-                            │         ▼                     ▼          │
-                            │  ┌─────────────┐     ┌─────────────┐     │
-                            │  │ auto_run()  │     │ step_run()  │     │
-                            │  │ 全流程执行   │     │ 单步+确认    │     │
-                            │  └─────────────┘     └─────────────┘     │
                             └───────────────────────────────────────────┘
                                             │
                                             ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    Network Troubleshooting Agent                         │
-│                       (Main Orchestrator)                                │
-├─────────────────────────────────────────────────────────────────────────┤
-│                          System Prompt                                   │
-│  - 问题类型识别规则                                                      │
-│  - 分层诊断方法论 (L1→L2→L3→L4)                                        │
-│  - 诊断流程约束                                                          │
-│  - 运行模式感知 (autonomous / interactive)                              │
-├─────────────────────────────────────────────────────────────────────────┤
-│                         Subagents                                        │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                   │
-│  │ L2 Subagent │   │ L3 Subagent │   │ L4 Subagent │                   │
-│  │ (环境收集)  │ → │ (测量执行)  │ → │ (分析报告)  │                   │
-│  └─────────────┘   └─────────────┘   └─────────────┘                   │
-├─────────────────────────────────────────────────────────────────────────┤
-│                         MCP Tool Layer                                   │
-│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌─────────────┐│
-│  │   L1 Tools    │ │   L2 Tools    │ │   L3 Tools    │ │  L4 Tools   ││
-│  │ grafana_*     │ │ collect_*     │ │ measure_*     │ │ analyze_*   ││
-│  │ loki_*        │ │ resolve_path  │ │ (receiver-    │ │ report_*    ││
-│  │ read_logs     │ │               │ │  first内置)   │ │             ││
-│  └───────────────┘ └───────────────┘ └───────────────┘ └─────────────┘│
-├─────────────────────────────────────────────────────────────────────────┤
-│                        Infrastructure                                    │
-│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐        │
-│  │   GrafanaClient  │ │   SSHManager     │ │   BPFExecutor    │        │
-│  │   (HTTP API)     │ │   (连接池)        │ │   (远程执行)      │        │
-│  └──────────────────┘ └──────────────────┘ └──────────────────┘        │
-└─────────────────────────────────────────────────────────────────────────┘
+                            ┌───────────────────────────────────────────┐
+                            │              SkillExecutor                │
+                            │     (Claude Code Skills 调用器)           │
+                            └───────────────────────────────────────────┘
+                                            │
+            ┌───────────────────────────────┼───────────────────────────┐
+            ▼                               ▼                           ▼
+┌───────────────────────┐   ┌───────────────────────┐   ┌───────────────────────┐
+│  network-env-collector│   │ vm-latency-measurement│   │  vm-latency-analysis  │
+│       (L2 Skill)      │   │       (L3 Skill)      │   │       (L4 Skill)      │
+├───────────────────────┤   ├───────────────────────┤   ├───────────────────────┤
+│ • SSH 收集网络拓扑    │   │ • 部署 BPF 工具       │   │ • 解析测量日志        │
+│ • virsh/OVS/proc 查询 │   │ • receiver-first 保证 │   │ • 计算分段延迟        │
+│ • 输出 VMNetworkEnv   │   │ • 8 点协调测量        │   │ • 根因归因分析        │
+└───────────────────────┘   └───────────────────────┘   └───────────────────────┘
 ```
 
-### 2.2 DiagnosisController 详细设计
+### 2.2 DiagnosisController 核心流程
 
 ```python
 class DiagnosisController:
-    """诊断控制器 - 管理双模式运行"""
-
-    def __init__(self, config: DiagnosisConfig):
-        self.config = config
-        self.orchestrator = NetworkTroubleshootingOrchestrator()
-        self.mode = config.mode  # "autonomous" | "interactive"
+    def __init__(
+        self,
+        config: DiagnosisConfig,
+        checkpoint_callback: CheckpointCallback | None = None,
+        skill_executor: SkillExecutorProtocol | None = None,
+        global_inventory_path: str | Path | None = None,  # 自动模式
+        minimal_input_path: str | Path | None = None,     # 手动模式
+    ):
+        pass
 
     async def run(self, request: DiagnosisRequest) -> DiagnosisResult:
-        """根据模式执行诊断"""
-        if self.mode == "autonomous":
+        # 1. 加载配置
+        self._minimal_input = self._load_minimal_input(request)
+
+        # 2. 根据模式执行
+        if mode == DiagnosisMode.AUTONOMOUS:
             return await self._run_autonomous(request)
         else:
             return await self._run_interactive(request)
 
-    async def _run_autonomous(self, request: DiagnosisRequest) -> DiagnosisResult:
-        """全自主模式 - 完整流程无中断"""
-        # L1: 查询监控数据
-        l1_context = await self.orchestrator.query_monitoring(request)
-        # L2: 收集环境
-        environment = await self.orchestrator.collect_environment(l1_context)
-        # L3: 执行测量
-        measurements = await self.orchestrator.execute_measurement(environment)
-        # L4: 分析报告
-        return await self.orchestrator.analyze_and_report(measurements)
+    def _load_minimal_input(self, request) -> MinimalInputConfig:
+        """配置加载逻辑"""
+        if self._minimal_input_path:
+            # 手动模式: 从 YAML 加载
+            return MinimalInputConfig.load(self._minimal_input_path)
 
-    async def _run_interactive(self, request: DiagnosisRequest) -> DiagnosisResult:
-        """人机协作模式 - 关键节点等待确认"""
-        # Phase 1: 环境收集 + 问题归类
-        l1_context = await self.orchestrator.query_monitoring(request)
-        environment = await self.orchestrator.collect_environment(l1_context)
-        classification = await self.orchestrator.classify_problem(environment)
+        if self._global_inventory_path:
+            # 自动模式: 从 inventory + request 构建
+            inventory = GlobalInventory.load(self._global_inventory_path)
+            return inventory.build_minimal_input(
+                src_host_ip=request.src_host,
+                src_vm_uuid=request.src_vm,
+                dst_host_ip=request.dst_host,
+                dst_vm_uuid=request.dst_vm,
+            )
 
-        # Checkpoint 1: 用户确认问题分类
-        if not await self._confirm_classification(classification):
-            classification = await self._get_user_input("请提供问题分类或补充信息")
-
-        # Phase 2: 测量计划
-        measurement_plan = await self.orchestrator.plan_measurement(classification)
-
-        # Checkpoint 2: 用户确认测量计划
-        if not await self._confirm_plan(measurement_plan):
-            return DiagnosisResult(status="cancelled")
-
-        # Phase 3: 执行测量 + 分析
-        measurements = await self.orchestrator.execute_measurement(measurement_plan)
-        return await self.orchestrator.analyze_and_report(measurements)
+        # 回退: 从 request 创建简化配置 (功能有限)
+        return self._create_minimal_from_request(request)
 ```
 
 ### 2.3 关键设计决策
 
 | 决策 | 选择 | 理由 |
 |------|------|------|
-| Agent 框架 | Claude Agent SDK | MVP 最优，MCP 原生支持，快速迭代 |
-| 架构模式 | 单 Main Agent + 3 Subagents | 自然实现四层职责分离 |
-| 控制循环 | DiagnosisController 双模式 | 满足全自主和人机协作两种需求 |
-| receiver-first | 工具层封装 | 在 `execute_coordinated_measurement` 内部保证时序 |
-| 数据类型 | Pydantic 模型 | 类型安全，JSON 序列化方便 |
+| 执行方式 | Skill 驱动 | 复用 Claude Code Skills，避免重复实现 |
+| 配置输入 | MinimalInputConfig YAML | 明确 SSH 和 test_ip，避免歧义 |
+| 自动模式 | GlobalInventory | 预配置资产，告警自动匹配 |
+| receiver-first | Skill 内部保证 | `vm-latency-measurement` Skill 内置时序 |
 | 默认模式 | Interactive (人机协作) | 保守策略，避免自动执行意外操作 |
+
+### 2.4 外部系统集成架构
+
+NetSherlock 需要与外部监控系统集成。以下明确各组件的归属和集成方式。
+
+#### 2.4.1 组件归属
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     外部监控系统 (用户已有/自行管理)                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐      ┌─────────────────┐      ┌─────────────────┐        │
+│  │ Prometheus  │ ───► │  Alertmanager   │      │     Grafana     │        │
+│  │ (指标采集)   │      │  (告警路由)     │      │  (可视化/告警)   │        │
+│  └─────────────┘      └────────┬────────┘      └────────┬────────┘        │
+│                                │                        │                  │
+│                                │ Webhook                │ Webhook          │
+└────────────────────────────────┼────────────────────────┼──────────────────┘
+                                 │                        │
+                                 │   两种告警源均可触发    │
+                                 ▼                        ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        NetSherlock (本项目)                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │               Webhook Server (api/webhook.py) 内置组件               │   │
+│  │                                                                      │   │
+│  │  POST /webhook/alertmanager  ← Alertmanager 标准格式                 │   │
+│  │  POST /diagnose              ← 通用诊断请求 (Grafana/手动)            │   │
+│  │  GET  /diagnose/{id}         ← 查询诊断结果                          │   │
+│  └──────────────────────────────────┬──────────────────────────────────┘   │
+│                                     │                                       │
+│                                     ▼                                       │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    DiagnosisController                               │   │
+│  │                    (L1 → L2 → L3 → L4 Skills)                        │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 2.4.2 组件说明
+
+| 组件 | 归属 | 说明 |
+|------|------|------|
+| **Prometheus** | 外部系统 | 指标采集，用户自行部署和管理 |
+| **Alertmanager** | 外部系统 | Prometheus 告警路由组件，可选 |
+| **Grafana** | 外部系统 | 可视化和告警，可作为告警源替代 Alertmanager |
+| **Webhook Server** | **NetSherlock 内置** | `netsherlock.api.webhook` 模块 |
+| **DiagnosisController** | **NetSherlock 内置** | 诊断执行核心 |
+
+#### 2.4.3 告警源选择
+
+**方式 A: Alertmanager (推荐)**
+
+Alertmanager 是 Prometheus 生态的标准告警管理组件，支持告警去重、分组、静默。
+
+```yaml
+# alertmanager.yml
+receivers:
+  - name: 'netsherlock'
+    webhook_configs:
+      - url: 'http://<netsherlock-host>:8080/webhook/alertmanager'
+        http_config:
+          headers:
+            X-API-Key: 'your-secret-key'
+
+route:
+  routes:
+    - match:
+        alertname: 'VMNetworkLatency'
+      receiver: 'netsherlock'
+```
+
+**方式 B: Grafana 告警**
+
+Grafana 自带告警功能，可直接配置 Webhook 通知。
+
+```yaml
+# Grafana Contact Point 配置
+contact_points:
+  - name: netsherlock
+    type: webhook
+    settings:
+      url: http://<netsherlock-host>:8080/diagnose
+      httpMethod: POST
+      httpHeader:
+        X-API-Key: 'your-secret-key'
+```
+
+**方式 C: 手动 API 调用**
+
+直接调用 API 触发诊断，适用于集成到其他系统。
+
+```bash
+curl -X POST http://localhost:8080/diagnose \
+  -H "X-API-Key: your-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "network_type": "vm",
+    "src_host": "192.168.75.101",
+    "src_vm": "ae6aa164-...",
+    "dst_host": "192.168.75.102",
+    "dst_vm": "bf7bb275-..."
+  }'
+```
+
+#### 2.4.4 集成数据流
+
+```
+┌─────────────┐
+│ 监控系统    │  (Prometheus/Grafana 检测到网络延迟)
+└──────┬──────┘
+       │
+       ▼ 触发告警
+┌─────────────┐
+│ 告警源      │  Alertmanager 或 Grafana Alerting
+└──────┬──────┘
+       │
+       ▼ HTTP POST (Webhook)
+┌─────────────────────────────────────────────────────────────────┐
+│                    NetSherlock Webhook Server                    │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 1. 认证: 验证 X-API-Key                                  │    │
+│  │ 2. 解析: 提取 labels (src_host, src_vm, dst_host, ...)  │    │
+│  │ 3. 模式判断: auto_agent_loop + 已知告警类型 → autonomous │    │
+│  │ 4. 入队: diagnosis_queue.put(request)                   │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└──────┬──────────────────────────────────────────────────────────┘
+       │
+       ▼ diagnosis_worker 异步处理
+┌─────────────────────────────────────────────────────────────────┐
+│                    DiagnosisController                           │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 1. GlobalInventory 查找:                                 │    │
+│  │    find_host_by_ip(src_host) → HostConfig               │    │
+│  │    find_vm_by_uuid(src_vm)   → VMConfig (含 test_ip)    │    │
+│  │                                                          │    │
+│  │ 2. 构建 MinimalInputConfig:                              │    │
+│  │    nodes: host-sender, vm-sender, host-receiver, ...    │    │
+│  │    test_pairs: {vm: {server: vm-receiver, client: ...}} │    │
+│  │                                                          │    │
+│  │ 3. 执行诊断:                                             │    │
+│  │    L1 查询 → L2 Skill → L3 Skill → L4 Skill            │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└──────┬──────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────┐
+│ 诊断报告    │  DiagnosisResult (summary, root_cause, recommendations)
+└─────────────┘
+```
+
+#### 2.4.5 告警 Labels 要求
+
+为了让 GlobalInventory 能正确查找节点，告警规则必须包含以下 labels：
+
+| Label | 必需 | 说明 |
+|-------|------|------|
+| `alertname` | 是 | 告警名称，用于模式判断 |
+| `src_host` | 是 | 源宿主机管理 IP |
+| `src_vm` | VM 诊断必需 | 源 VM UUID |
+| `dst_host` | 跨节点诊断必需 | 目标宿主机管理 IP |
+| `dst_vm` | 跨 VM 诊断必需 | 目标 VM UUID |
+
+**Prometheus 告警规则示例**:
+
+```yaml
+groups:
+  - name: network
+    rules:
+      - alert: VMNetworkLatency
+        expr: vm_network_latency_ms{quantile="0.99"} > 5
+        for: 2m
+        labels:
+          severity: warning
+          src_host: "{{ $labels.host_ip }}"
+          src_vm: "{{ $labels.vm_uuid }}"
+          dst_host: "{{ $labels.peer_host_ip }}"
+          dst_vm: "{{ $labels.peer_vm_uuid }}"
+        annotations:
+          summary: "VM {{ $labels.vm_name }} 到 {{ $labels.peer_vm_name }} 延迟 {{ $value | printf \"%.2f\" }}ms"
+```
+
+### 2.5 VM 网络告警规则设计
+
+NetSherlock 自动模式依赖告警触发。现有 Grafana/Prometheus 告警可能不足以支持 VM 网络诊断场景，需要专门添加。
+
+#### 2.5.1 现有指标分析
+
+| 指标族 | 数量 | 示例 | 局限性 |
+|--------|------|------|--------|
+| `elf_vm_network_*` | 12 | `transmit_speed_bitps`, `drop`, `errors` | 仅基础流量/丢包，无延迟 |
+| `host_network_ping_time_ns` | 1 | 主机间 ping 延迟 | 主机级别，非 VM 粒度 |
+| `openvswitch_*` | 9 | `port_tx_bytes`, `flow_count` | OVS 聚合数据，无 VM 关联 |
+
+**核心缺口**: 缺乏 **VM 粒度的网络延迟指标**，无法自动触发 VM 延迟诊断。
+
+#### 2.5.2 需新增的指标采集
+
+需要在现有监控基础设施中添加 VM 网络延迟指标导出。
+
+**方案 A: 基于 Pingmesh 扩展 (推荐)**
+
+利用现有 pingmesh 探测机制，添加 VM 粒度的延迟采集。
+
+```yaml
+# prometheus-exporter 新增采集项
+vm_network_latency_ms:
+  type: histogram
+  help: "VM to VM network latency in milliseconds"
+  labels:
+    - src_vm_uuid
+    - src_host
+    - dst_vm_uuid
+    - dst_host
+    - network_type    # mgt/storage/access
+  buckets: [0.5, 1, 2, 5, 10, 20, 50, 100]
+
+vm_network_ping_loss_ratio:
+  type: gauge
+  help: "VM to VM ping packet loss ratio"
+  labels:
+    - src_vm_uuid
+    - dst_vm_uuid
+```
+
+**方案 B: 基于 eBPF 实时采集**
+
+部署轻量级 eBPF 探测，直接在内核层面采集延迟。
+
+```python
+# bpf_vm_latency_exporter.py 概念
+# 挂载点: tcp_rcv_established, tcp_sendmsg
+# 输出: vm_tcp_latency_us{vm_uuid, direction, quantile}
+```
+
+**推荐**: MVP 阶段采用方案 A (扩展 Pingmesh)，后续可增加方案 B。
+
+#### 2.5.3 Prometheus Recording Rules
+
+为了提高告警计算效率，预计算常用聚合：
+
+```yaml
+# recording_rules.yml
+groups:
+  - name: vm_network_aggregations
+    interval: 30s
+    rules:
+      # VM 延迟 P99
+      - record: vm_network_latency:p99_5m
+        expr: |
+          histogram_quantile(0.99,
+            sum by (src_vm_uuid, dst_vm_uuid, le) (
+              rate(vm_network_latency_ms_bucket[5m])
+            )
+          )
+
+      # VM 丢包率
+      - record: vm_network_loss:rate_5m
+        expr: |
+          avg_over_time(vm_network_ping_loss_ratio[5m])
+
+      # 按主机聚合的 VM 延迟
+      - record: vm_network_latency:by_host_p99_5m
+        expr: |
+          max by (src_host, dst_host) (
+            vm_network_latency:p99_5m
+          )
+```
+
+#### 2.5.4 Alert Rules 定义
+
+**核心告警规则** (触发 NetSherlock 诊断):
+
+```yaml
+# alerts/vm_network_alerts.yml
+groups:
+  - name: vm_network_diagnosis_triggers
+    rules:
+      # 告警 1: VM 网络延迟 - 单 VM 对
+      - alert: VMNetworkLatencyHigh
+        expr: vm_network_latency:p99_5m > 5  # 阈值 5ms
+        for: 2m
+        labels:
+          severity: warning
+          diagnosis_type: latency
+          # NetSherlock 所需 labels
+          src_host: "{{ $labels.src_host }}"
+          src_vm: "{{ $labels.src_vm_uuid }}"
+          dst_host: "{{ $labels.dst_host }}"
+          dst_vm: "{{ $labels.dst_vm_uuid }}"
+        annotations:
+          summary: "VM {{ $labels.src_vm_uuid }} → {{ $labels.dst_vm_uuid }} 延迟 {{ $value | printf \"%.2f\" }}ms"
+          runbook_url: "https://wiki/runbook/vm-network-latency"
+
+      # 告警 2: VM 网络延迟 - 主机级别
+      - alert: VMNetworkLatencyByHost
+        expr: vm_network_latency:by_host_p99_5m > 10  # 主机对聚合阈值
+        for: 3m
+        labels:
+          severity: critical
+          diagnosis_type: latency
+          src_host: "{{ $labels.src_host }}"
+          dst_host: "{{ $labels.dst_host }}"
+        annotations:
+          summary: "主机 {{ $labels.src_host }} → {{ $labels.dst_host }} 多个 VM 延迟异常"
+
+      # 告警 3: VM 网络丢包
+      - alert: VMNetworkPacketLoss
+        expr: vm_network_loss:rate_5m > 0.01  # 丢包率 > 1%
+        for: 2m
+        labels:
+          severity: warning
+          diagnosis_type: drop
+          src_host: "{{ $labels.src_host }}"
+          src_vm: "{{ $labels.src_vm_uuid }}"
+          dst_host: "{{ $labels.dst_host }}"
+          dst_vm: "{{ $labels.dst_vm_uuid }}"
+        annotations:
+          summary: "VM {{ $labels.src_vm_uuid }} 丢包率 {{ $value | printf \"%.2f%%\" }}"
+
+      # 告警 4: OVS CPU 高负载 (关联 VM)
+      - alert: OVSCPUHighWithVMTraffic
+        expr: |
+          host_service_cpu_usage_percent{_service="ovs_vswitchd_svc"} > 80
+          and on(hostname)
+          sum by (hostname) (rate(elf_vm_network_transmit_speed_bitps[5m])) > 1e9
+        for: 5m
+        labels:
+          severity: warning
+          diagnosis_type: latency
+          src_host: "{{ $labels.hostname }}"
+        annotations:
+          summary: "{{ $labels.hostname }} OVS CPU {{ $value | printf \"%.1f\" }}%，VM 流量高"
+```
+
+#### 2.5.5 告警路由配置
+
+配置 Alertmanager 将 VM 网络告警路由到 NetSherlock:
+
+```yaml
+# alertmanager.yml
+route:
+  receiver: 'default'
+  routes:
+    # VM 网络告警 → NetSherlock
+    - match_re:
+        alertname: 'VMNetwork.*'
+      receiver: 'netsherlock-vm-network'
+      group_by: ['alertname', 'src_host', 'src_vm']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+
+receivers:
+  - name: 'netsherlock-vm-network'
+    webhook_configs:
+      - url: 'http://netsherlock:8080/webhook/alertmanager'
+        send_resolved: false  # 仅发送 firing
+        http_config:
+          headers:
+            X-API-Key: '${WEBHOOK_API_KEY}'
+```
+
+#### 2.5.6 Grafana Alert 配置 (替代方案)
+
+如果使用 Grafana Alerting 替代 Alertmanager:
+
+```yaml
+# Grafana Alert Rule (UI 配置对应的 JSON)
+{
+  "title": "VM Network Latency High",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "datasourceUid": "prometheus",
+      "model": {
+        "expr": "vm_network_latency:p99_5m{} > 5",
+        "intervalMs": 30000
+      }
+    }
+  ],
+  "for": "2m",
+  "labels": {
+    "diagnosis_type": "latency"
+  },
+  "annotations": {
+    "summary": "VM {{ $labels.src_vm_uuid }} 延迟异常"
+  },
+  "notification_settings": {
+    "receiver": "netsherlock-webhook"
+  }
+}
+```
+
+#### 2.5.7 集成检查清单
+
+部署 VM 网络告警需要完成以下步骤:
+
+| 步骤 | 组件 | 操作 | 负责方 |
+|------|------|------|--------|
+| 1 | Exporter | 添加 `vm_network_latency_ms` 指标采集 | 监控团队 |
+| 2 | Prometheus | 添加 Recording Rules | 监控团队 |
+| 3 | Prometheus | 添加 Alert Rules | 监控团队 |
+| 4 | Alertmanager/Grafana | 配置 Webhook 路由 | 监控团队 |
+| 5 | NetSherlock | 启动 Webhook Server | 运维/用户 |
+| 6 | GlobalInventory | 配置资产清单 | 运维/用户 |
+
+**验证命令**:
+
+```bash
+# 1. 检查指标是否可用
+curl -s "http://prometheus:9090/api/v1/query?query=vm_network_latency:p99_5m" | jq .
+
+# 2. 检查告警规则是否加载
+curl -s "http://prometheus:9090/api/v1/rules" | jq '.data.groups[].rules[] | select(.name | startswith("VMNetwork"))'
+
+# 3. 测试 NetSherlock Webhook
+curl -X POST http://netsherlock:8080/webhook/alertmanager \
+  -H "X-API-Key: test-key" \
+  -H "Content-Type: application/json" \
+  -d '{"alerts":[{"labels":{"alertname":"VMNetworkLatencyHigh","src_host":"192.168.75.101","src_vm":"test-uuid"}}]}'
+```
 
 ---
 
 ## 三、层级职责与接口定义
 
-### 3.1 L1: 基础监控层
+### 3.1 L1: 基础监控层 (直接实现)
 
 **职责**: 查询现有监控数据，建立问题上下文
 
-**工具定义**:
+**实现方式**: DiagnosisController 直接调用 Grafana/Loki API
 
-| 工具 | 输入 | 输出 | 数据源 |
+| 方法 | 输入 | 输出 | 数据源 |
 |------|------|------|--------|
-| `grafana_query_metrics` | PromQL query, time range | MetricsResult | VictoriaMetrics |
-| `loki_query_logs` | LogQL query, time range | LogsResult | Loki |
-| `read_node_logs` | node_ip, log_type | NodeLogsResult | SSH (/var/log/zbs/) |
+| `_query_monitoring()` | DiagnosisRequest | dict (L1Context) | Grafana/Loki |
 
 **关键指标 (MVP)**:
 - `host_network_ping_time_ns` - 主机网络延迟
 - `elf_vm_network_*` - VM 网络流量/丢包
 - `host_service_cpu_usage_percent{_service="ovs_vswitchd_svc"}` - OVS CPU
 
-### 3.2 L2: 环境感知层
+### 3.2 L2: 环境感知层 (Skill 驱动)
 
-**职责**: 收集网络拓扑和环境信息，为 L3 测量提供参数
+**职责**: 收集网络拓扑和环境信息
 
-**工具定义**:
+**实现方式**: 调用 `network-env-collector` Skill
 
-| 工具 | 输入 | 输出 |
-|------|------|------|
-| `collect_vm_network_env` | node_ip, vm_identifier | VMNetworkEnv |
-| `collect_system_network_env` | node_ip, network_type | SystemNetworkEnv |
-| `resolve_network_path` | src_env, dst_env | NetworkPath |
-
-**输出数据结构 (VMNetworkEnv)**:
 ```python
-@dataclass
-class VMNetworkEnv:
-    vm_uuid: str
-    vm_name: str
-    host: str                    # 宿主机 IP
-    qemu_pid: int
-    nics: list[VMNicInfo]        # 网络设备列表
-        # VMNicInfo:
-        #   - mac, host_vnet, ovs_bridge
-        #   - vhost_pids, tap_fds
-        #   - physical_nics (bond info)
+async def _collect_environment(self, request, l1_context) -> dict:
+    """通过 Skill 收集环境"""
+    executor = self._get_skill_executor()
+
+    # 从 MinimalInputConfig 获取 SSH 信息
+    src_vm_node = self._minimal_input.get_node("vm-sender")
+    src_host_node = self._minimal_input.get_node("host-sender")
+
+    # 调用 Skill
+    result = await executor.invoke(
+        skill_name="network-env-collector",
+        parameters={
+            "mode": "vm",
+            "uuid": request.src_vm,
+            "host_ip": src_host_node.ssh.host,
+            "host_user": src_host_node.ssh.user,
+            "vm_host": src_vm_node.ssh.host,
+            "vm_user": src_vm_node.ssh.user,
+        },
+    )
+    return result.data
 ```
 
-**收集步骤**:
-1. SSH 连接宿主机
-2. `virsh dominfo` / `virsh dumpxml` 获取 VM 信息
-3. `/proc/<qemu_pid>/fd` 获取 vhost TID
-4. `ovs-vsctl` 获取 OVS 拓扑
-5. `/sys/class/net` 获取物理网卡/bond 信息
+**Skill 输出 (VMNetworkEnv)**:
+```json
+{
+  "vm_uuid": "ae6aa164-...",
+  "host": "192.168.75.101",
+  "qemu_pid": 12345,
+  "nics": [
+    {
+      "mac": "fa:16:3e:xx:xx:xx",
+      "host_vnet": "vnet0",
+      "ovs_bridge": "br-int",
+      "vhost_pids": [12346, 12347]
+    }
+  ]
+}
+```
 
-### 3.3 L3: 精确测量层
+### 3.3 L3: 精确测量层 (Skill 驱动)
 
 **职责**: 执行 BPF 工具，收集分段延迟数据
 
-**核心约束**: **receiver-first 时序** - 接收端必须先于发送端启动
+**实现方式**: 调用 `vm-latency-measurement` Skill
 
-**工具定义**:
+**核心约束**: **receiver-first 时序** - Skill 内部保证接收端先于发送端启动
 
-| 工具 | 输入 | 输出 | 约束 |
-|------|------|------|------|
-| `execute_coordinated_measurement` | receiver, sender, duration | MeasurementResult | 内部保证 receiver-first |
-| `measure_vm_latency_breakdown` | src_env, dst_env, flow | MeasurementResult | 调用 vm_network_latency_summary.py |
-| `measure_system_latency_breakdown` | src_env, dst_env | MeasurementResult | 调用 system_network_latency_summary.py |
-
-**receiver-first 实现**:
 ```python
-async def execute_coordinated_measurement(receiver, sender, duration):
-    # 1. 启动 receiver
-    recv_proc = await ssh_manager.execute_async(receiver.node_ip, recv_cmd)
+async def _execute_measurement(self, plan, environment) -> dict:
+    """通过 Skill 执行测量"""
+    executor = self._get_skill_executor()
 
-    # 2. 等待 receiver ready (解析 stdout 或固定延迟)
-    await wait_for_ready(recv_proc, timeout=10)
-
-    # 3. 启动 sender (此时 receiver 已就绪)
-    send_proc = await ssh_manager.execute_async(sender.node_ip, send_cmd)
-
-    # 4. 等待测量完成
-    await asyncio.sleep(duration)
-
-    # 5. 收集双端数据
-    return MeasurementResult(
-        receiver_data=parse_output(recv_proc),
-        sender_data=parse_output(send_proc),
+    result = await executor.invoke(
+        skill_name="vm-latency-measurement",
+        parameters=plan.get("parameters", {}),
     )
+
+    return {
+        "status": "success" if result.is_success else "error",
+        "data": result.data,
+        "segments": result.data.get("segments", {}),
+    }
 ```
 
-**输出数据结构 (MeasurementResult)**:
-```python
-@dataclass
-class MeasurementResult:
-    measurement_id: str
-    measurement_type: str        # "vm_latency", "system_latency"
-    timestamp: str
-    duration_seconds: float
-    sample_count: int
-    segments: list[LatencySegment]   # 各阶段延迟
-    total_latency: LatencyHistogram  # 总延迟直方图
+**Skill 执行的 8 个测量点**:
 
-@dataclass
-class LatencySegment:
-    name: str                    # e.g., "virtio_tx_to_vhost"
-    layer: str                   # "vm_internal", "vhost_processing", ...
-    histogram: LatencyHistogram  # P50, P95, P99, max
-```
+| 位置 | 工具 | 测量内容 |
+|------|------|----------|
+| Sender VM | `kernel_icmp_rtt.py` | Segments A, M |
+| Sender Host | `icmp_drop_detector.py` | Segments B, K |
+| Sender Host | `kvm_vhost_tun_latency_details.py` | Segment B_1 |
+| Sender Host | `tun_tx_to_kvm_irq.py` | Segment L |
+| Receiver VM | `kernel_icmp_rtt.py` | Segments F, G, H |
+| Receiver Host | `icmp_drop_detector.py` | Segments D, I |
+| Receiver Host | `tun_tx_to_kvm_irq.py` | Segment E |
+| Receiver Host | `kvm_vhost_tun_latency_details.py` | Segment I_1 |
 
-### 3.4 L4: 诊断分析层
+### 3.4 L4: 诊断分析层 (Skill 驱动)
 
 **职责**: 分析测量数据，识别根因，生成报告
 
-**工具定义**:
+**实现方式**: 调用 `vm-latency-analysis` Skill
 
-| 工具 | 输入 | 输出 |
-|------|------|------|
-| `analyze_latency_segments` | segments, thresholds | AnomalyReport |
-| `identify_root_cause` | anomalies, environment | RootCause |
-| `generate_diagnosis_report` | root_cause, measurements | DiagnosisResult |
-
-**根因分类 (RootCauseCategory)**:
 ```python
-class RootCauseCategory(Enum):
-    VM_INTERNAL = "vm_internal"           # Guest VM 问题
-    VHOST_PROCESSING = "vhost_processing" # vhost-net 处理延迟
-    HOST_INTERNAL = "host_internal"       # Host 网络 (OVS, kernel)
-    PHYSICAL_NETWORK = "physical_network" # 物理网络
+async def _analyze_and_report(self, measurements, environment) -> dict:
+    """两阶段分析"""
+    # Phase 1: 数据计算 (确定性)
+    breakdown = self._calculate_breakdown(measurements)
+
+    # Phase 2: LLM 推理 (via Skill)
+    executor = self._get_skill_executor()
+    result = await executor.invoke(
+        skill_name="vm-latency-analysis",
+        parameters={
+            "breakdown": breakdown.to_dict(),
+            "environment": environment,
+        },
+    )
+
+    return {
+        "root_cause": result.data.get("primary_contributor"),
+        "confidence": result.data.get("confidence"),
+        "recommendations": result.data.get("recommendations", []),
+    }
 ```
 
-**异常阈值 (MVP 默认)**:
-| 层级 | 正常 P95 | 异常阈值 |
-|------|---------|----------|
-| VM Internal | <50μs | >200μs |
-| vhost Processing | <100μs | >500μs |
-| Host Internal | <100μs | >1ms |
-| Physical Network | <500μs | >5ms |
+**根因分类 (LayerType)**:
+```python
+class LayerType(str, Enum):
+    SENDER_VM = "sender_vm"           # 发送端 VM 内部
+    SENDER_HOST = "sender_host"       # 发送端宿主机
+    NETWORK = "network"               # 物理网络
+    RECEIVER_HOST = "receiver_host"   # 接收端宿主机
+    RECEIVER_VM = "receiver_vm"       # 接收端 VM 内部
+```
 
 ---
 
-## 四、数据流设计
+## 四、配置文件设计
 
-### 4.1 模式 1: 全自主模式数据流
+### 4.1 MinimalInputConfig (手动模式)
 
-**触发条件**: Alertmanager Webhook + `auto_agent_loop: true`
+**用途**: 定义诊断所需的节点 SSH 信息和测试参数
+
+```yaml
+# config/minimal-input.yaml
+nodes:
+  vm-sender:
+    ssh: "root@192.168.2.100"        # SSH 连接 (管理网络)
+    workdir: "/tmp/netsherlock"
+    role: "vm"
+    host_ref: "host-sender"          # 关联宿主机
+    uuid: "ae6aa164-604c-4cb0-84b8-2dea034307f1"
+    test_ip: "10.0.0.1"              # 关键: 测试流量 IP!
+
+  vm-receiver:
+    ssh: "root@192.168.2.101"
+    workdir: "/tmp/netsherlock"
+    role: "vm"
+    host_ref: "host-receiver"
+    uuid: "bf7bb275-715d-5dc1-95c9-3feb045418g2"
+    test_ip: "10.0.0.2"
+
+  host-sender:
+    ssh: "smartx@192.168.75.101"     # 宿主机 SSH
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+  host-receiver:
+    ssh: "smartx@192.168.75.102"
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+test_pairs:
+  vm:
+    server: "vm-receiver"            # 接收端 (先启动)
+    client: "vm-sender"              # 发送端
+```
+
+**关键字段说明**:
+
+| 字段 | 说明 | 重要性 |
+|------|------|--------|
+| `ssh` | SSH 连接字符串 (user@host) | 必需 |
+| `test_ip` | 测试流量 IP，可能与 SSH IP 不同! | **关键** |
+| `host_ref` | VM 关联的宿主机节点名 | VM 必需 |
+| `uuid` | VM UUID | VM 必需 |
+| `test_pairs` | 定义 server/client 配对 | 跨节点诊断必需 |
+
+### 4.2 GlobalInventory (自动模式)
+
+**用途**: 预配置资产清单，从告警参数自动构建 MinimalInputConfig
+
+```yaml
+# config/global-inventory.yaml
+hosts:
+  host-192-168-75-101:
+    mgmt_ip: "192.168.75.101"
+    ssh:
+      user: "smartx"
+      key_file: "/root/.ssh/host_key"
+    network_types: ["mgt", "storage", "access"]
+
+vms:
+  vm-ae6aa164:
+    uuid: "ae6aa164-604c-4cb0-84b8-2dea034307f1"
+    host_ref: "host-192-168-75-101"
+    ssh:
+      user: "root"
+      host: "192.168.2.100"
+    test_ip: "10.0.0.1"
+```
+
+**自动模式工作流**:
+```
+1. 告警包含: src_host_ip=192.168.75.101, src_vm_uuid=ae6aa164-...
+2. GlobalInventory.find_host_by_ip() 查找主机
+3. GlobalInventory.find_vm_by_uuid() 查找 VM
+4. GlobalInventory.build_minimal_input() 构建配置
+5. 执行诊断流程
+```
+
+### 4.3 test_ip vs SSH IP
+
+**重要**: `test_ip` 可能与 SSH 管理 IP 不同!
+
+| 场景 | SSH IP | test_ip | 说明 |
+|------|--------|---------|------|
+| 管理网 vs 业务网 | 192.168.2.100 | 10.0.0.1 | 延迟问题在业务网 |
+| 多网卡 VM | 192.168.2.100 (eth0) | 172.16.0.1 (eth1) | 测试存储网络 |
+
+BPF 工具使用 `test_ip` 过滤数据包，必须是实际测试流量的 IP!
+
+---
+
+## 五、数据流设计
+
+### 5.1 手动模式数据流
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ Alertmanager Webhook                                                     │
-│ ────────────────────                                                    │
-│ POST /api/v1/alert                                                      │
-│ {                                                                       │
-│   "alerts": [{                                                          │
-│     "status": "firing",                                                 │
-│     "labels": {"alertname": "VMNetworkLatency", "vm_name": "vm-123"},  │
-│     "annotations": {"summary": "VM network latency > 5ms"}             │
-│   }]                                                                    │
-│ }                                                                       │
+│ 用户准备配置文件                                                         │
+│ ────────────────                                                        │
+│ config/minimal-input.yaml                                               │
+│   • nodes: SSH 连接信息                                                  │
+│   • test_ip: 测试流量 IP                                                │
+│   • test_pairs: server/client 配对                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CLI 触发诊断                                                             │
+│ ────────────                                                            │
+│ netsherlock diagnose \                                                  │
+│   --config minimal-input.yaml \                                         │
+│   --network-type vm \                                                   │
+│   --src-host 192.168.75.101 --src-vm <UUID> \                          │
+│   --dst-host 192.168.75.102 --dst-vm <UUID>                            │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
                     ┌───────────────────────────────┐
                     │   DiagnosisController         │
-                    │   mode = "autonomous"         │
-                    │   auto_agent_loop = true      │
+                    │   _load_minimal_input()       │
+                    │   → MinimalInputConfig        │
                     └───────────────────────────────┘
                                     │
-        ┌───────────────────────────┴───────────────────────────┐
-        │                    自动执行全流程                        │
-        └───────────────────────────────────────────────────────┘
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ L1: 监控数据查询 (直接实现)                                              │
+│ ─────────────────────────                                               │
+│ • GrafanaClient.query_metrics()                                         │
+│ • LokiClient.query_logs()                                               │
+│ → L1Context                                                             │
+└─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ Step 1: L1 监控数据查询                                                  │
-│ ──────────────────────────                                              │
-│ • grafana_query_metrics("host_network_ping_time_ns{vm='vm-123'}")      │
-│ • loki_query_logs("{service='elf-vm-monitor'} |= 'vm-123'")            │
-│ → L1Context: 指标趋势, 日志事件                                          │
+│ L2: 环境收集 (via network-env-collector Skill)                          │
+│ ──────────────────────────────────────────────                          │
+│ SkillExecutor.invoke("network-env-collector", {                         │
+│   "mode": "vm",                                                         │
+│   "uuid": request.src_vm,                                               │
+│   "host_ip": MinimalInput.host-sender.ssh.host,                        │
+│   "host_user": MinimalInput.host-sender.ssh.user,                      │
+│   "vm_host": MinimalInput.vm-sender.ssh.host,                          │
+│   "vm_user": MinimalInput.vm-sender.ssh.user,                          │
+│ })                                                                      │
+│ → VMNetworkEnv                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
-                                    │ (自动继续)
+                                    │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ Step 2: L2 环境收集 + 问题分类                                           │
-│ ───────────────────────────────                                         │
-│ • collect_vm_network_env() → VMNetworkEnv                               │
-│ • classify_problem() → ProblemClassification                            │
-│ → 自动判断: VM网络延迟问题, 建议测量方案                                   │
+│ L3: 精确测量 (via vm-latency-measurement Skill)                         │
+│ ──────────────────────────────────────────────                          │
+│ SkillExecutor.invoke("vm-latency-measurement", {                        │
+│   "sender_vm_ssh": MinimalInput.vm-sender.ssh,                         │
+│   "sender_vm_test_ip": MinimalInput.vm-sender.test_ip,                 │
+│   "receiver_vm_ssh": MinimalInput.vm-receiver.ssh,                     │
+│   "receiver_vm_test_ip": MinimalInput.vm-receiver.test_ip,             │
+│   ...                                                                   │
+│ })                                                                      │
+│ → MeasurementResult (segments, total_rtt)                              │
 └─────────────────────────────────────────────────────────────────────────┘
-                                    │ (自动继续)
+                                    │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ Step 3: L3 精确测量 (receiver-first)                                     │
-│ ────────────────────────────────────                                    │
-│ • measure_vm_latency_breakdown(src_env, dst_env, flow, duration=30s)   │
-│ → MeasurementResult: 分段延迟数据                                        │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │ (自动继续)
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Step 4: L4 分析报告                                                      │
-│ ─────────────────────                                                   │
-│ • analyze_latency_segments() → AnomalyReport                           │
-│ • identify_root_cause() → RootCause                                    │
-│ • generate_diagnosis_report() → DiagnosisResult                        │
+│ L4: 分析报告 (via vm-latency-analysis Skill)                            │
+│ ────────────────────────────────────────────                            │
+│ 1. 数据计算: _calculate_breakdown(measurements)                         │
+│ 2. LLM 推理: SkillExecutor.invoke("vm-latency-analysis", {...})        │
+│ → AnalysisResult (root_cause, confidence, recommendations)             │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -448,408 +959,166 @@ class RootCauseCategory(Enum):
 │ 输出: DiagnosisResult                                                    │
 │ ───────────────────                                                     │
 │ {                                                                       │
-│   "mode": "autonomous",                                                 │
 │   "diagnosis_id": "diag-abc12345",                                     │
-│   "summary": "VM 网络延迟异常，瓶颈在 vhost 处理阶段",                   │
-│   "root_cause": {...},                                                  │
-│   "recommendations": [...]                                              │
-│ }                                                                       │
-│                                                                         │
-│ → 通知渠道: Webhook callback / 日志 / 告警系统                           │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### 4.2 模式 2: 人机协作模式数据流
-
-**触发条件**: CLI 手动触发 或 Webhook + `auto_agent_loop: false` (默认)
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ 入口 (CLI 或 Webhook)                                                    │
-│ ────────────────────                                                    │
-│ CLI: netsherlock diagnose -n vm --src-host 192.168.1.10 --src-vm <UUID>│
-│  或                                                                     │
-│ Webhook: auto_agent_loop=false (需人工确认)                             │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                    ┌───────────────────────────────┐
-                    │   DiagnosisController         │
-                    │   mode = "interactive"        │
-                    └───────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Phase 1: 环境收集 + 问题归类 (自动执行)                                   │
-│ ─────────────────────────────────────                                   │
-│ • L1 监控数据查询                                                        │
-│ • L2 环境信息收集                                                        │
-│ • 问题分类和初筛                                                         │
-│                                                                         │
-│ 输出给用户:                                                              │
-│ ┌─────────────────────────────────────────────────────────────────────┐│
-│ │ 已收集环境信息，初步判断为 VM 网络延迟问题                            ││
-│ │                                                                     ││
-│ │ 检测到以下异常:                                                      ││
-│ │   • vhost worker CPU 使用率 85%                                     ││
-│ │   • OVS 端口 vnet0 tx_errors 近1小时增加 2340                       ││
-│ │   • 目标节点 192.168.1.20 延迟 P95=12ms (正常<5ms)                  ││
-│ │                                                                     ││
-│ │ 问题分类: [VM网络延迟] (置信度: 90%)                                 ││
-│ └─────────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                    ╔═══════════════════════════════╗
-                    ║   Checkpoint 1: 问题确认       ║
-                    ║   ────────────────────        ║
-                    ║   问题分类是否正确?            ║
-                    ║   [确认] [修改] [补充信息]     ║
-                    ╚═══════════════════════════════╝
-                                    │
-                        ┌───────────┴───────────┐
-                        │                       │
-                        ▼                       ▼
-                   [用户确认]              [用户修改]
-                        │                       │
-                        │      ┌────────────────┘
-                        │      │ 用户提供新的分类或补充信息
-                        │      │ → 重新执行环境收集
-                        │      │
-                        ▼      ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Phase 2: 测量计划 (Agent 提出)                                           │
-│ ───────────────────────────────                                         │
-│ 根据问题分类，Agent 生成测量计划:                                        │
-│                                                                         │
-│ ┌─────────────────────────────────────────────────────────────────────┐│
-│ │ 建议执行以下测量:                                                    ││
-│ │                                                                     ││
-│ │ 1. VM 延迟分段测量 (vm_network_latency_summary.py)                  ││
-│ │    - 测量时长: 30秒                                                  ││
-│ │    - 采样点: virtio_tx, vhost_handle, tap_rx, ovs_process, phy_tx  ││
-│ │                                                                     ││
-│ │ 2. vhost 调度延迟采样 (vhost_sched_latency.py)                      ││
-│ │    - 测量时长: 30秒                                                  ││
-│ │    - 目标 PID: 12345 (vhost-12345 worker)                           ││
-│ │                                                                     ││
-│ │ 预计影响: 测量期间可能增加少量 CPU 开销 (<5%)                        ││
-│ └─────────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                    ╔═══════════════════════════════╗
-                    ║   Checkpoint 2: 测量确认       ║
-                    ║   ────────────────────        ║
-                    ║   是否执行测量?                ║
-                    ║   [执行] [调整参数] [取消]     ║
-                    ╚═══════════════════════════════╝
-                                    │
-                        ┌───────────┼───────────┐
-                        │           │           │
-                        ▼           ▼           ▼
-                   [执行]      [调整参数]     [取消]
-                        │           │           │
-                        │           │           └→ DiagnosisResult(status="cancelled")
-                        │           │
-                        │           └→ 用户调整测量参数 → 返回 Phase 2
-                        ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Phase 3: 执行测量 + 分析 (自动执行)                                      │
-│ ─────────────────────────────────                                       │
-│ • L3 精确测量 (receiver-first)                                          │
-│ • L4 分析报告生成                                                        │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│ 输出: DiagnosisResult                                                    │
-│ ───────────────────                                                     │
-│ {                                                                       │
-│   "mode": "interactive",                                                │
-│   "diagnosis_id": "diag-abc12345",                                     │
-│   "summary": "VM 网络延迟异常，瓶颈在 vhost 处理阶段",                   │
-│   "root_cause": {                                                       │
-│     "category": "vhost_processing",                                    │
-│     "component": "vhost worker thread",                                │
-│     "confidence": 85,                                                   │
-│     "evidence": ["vhost_handle P99=2.3ms (阈值 500μs)"]                │
-│   },                                                                    │
+│   "status": "completed",                                                │
+│   "summary": "VM 网络延迟异常，瓶颈在 sender_host 层",                  │
+│   "root_cause": {"category": "sender_host", "confidence": 0.85},       │
 │   "recommendations": [                                                  │
-│     {"priority": 1, "action": "检查 vhost worker CPU 亲和性"},          │
-│     {"priority": 2, "action": "检查 VM vCPU 调度延迟"}                  │
+│     {"action": "检查 vhost worker CPU 亲和性", "priority": "high"}      │
 │   ]                                                                     │
 │ }                                                                       │
 └─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                    ╔═══════════════════════════════╗
-                    ║   Checkpoint 3 (可选): 继续?   ║
-                    ║   ──────────────────────      ║
-                    ║   是否需要进一步诊断?          ║
-                    ║   [完成] [深入诊断]            ║
-                    ╚═══════════════════════════════╝
-```
-
-### 4.3 模式切换逻辑
-
-```python
-def determine_mode(request: DiagnosisRequest, config: DiagnosisConfig) -> str:
-    """确定诊断模式"""
-
-    # 规则 1: CLI 手动触发 → 默认 interactive
-    if request.source == "cli" and not request.force_autonomous:
-        return "interactive"
-
-    # 规则 2: Webhook 触发 + auto_agent_loop 开启 + 已知问题类型 → autonomous
-    if request.source == "webhook":
-        if config.auto_agent_loop and is_known_problem_type(request.alert):
-            return "autonomous"
-
-    # 规则 3: 其他情况 → interactive (默认)
-    return "interactive"
-
-
-def is_known_problem_type(alert: AlertData) -> bool:
-    """判断是否为已知问题类型 (可自动处理)"""
-    known_types = {
-        "VMNetworkLatency",      # VM 网络延迟
-        "HostNetworkLatency",    # 主机网络延迟
-        # 后续扩展更多类型
-    }
-    return alert.labels.get("alertname") in known_types
 ```
 
 ---
 
-## 五、目录结构
+## 六、Checkpoint 设计 (Interactive Mode)
+
+### 6.1 检查点类型
+
+| Checkpoint | 触发时机 | 用户操作 |
+|------------|----------|----------|
+| `PROBLEM_CLASSIFICATION` | L2 完成后 | 确认/修改问题分类 |
+| `MEASUREMENT_PLAN` | L3 执行前 | 确认/取消测量计划 |
+| `FURTHER_DIAGNOSIS` | L4 完成后 | 是否深入诊断 |
+
+### 6.2 交互流程
 
 ```
-src/netsherlock/
-├── __init__.py                 # 包入口
-├── main.py                     # CLI 入口 (Click)
-│
-├── agents/                     # Agent SDK 架构
-│   ├── __init__.py             # 导出 orchestrator, subagents
-│   ├── base.py                 # Agent 层数据类型 (dataclass)
-│   ├── orchestrator.py         # 主编排器
-│   ├── subagents.py            # L2/L3/L4 子代理
-│   └── prompts/                # 系统提示词
-│       ├── __init__.py
-│       ├── main_orchestrator.py
-│       ├── l2_environment_awareness.py
-│       ├── l3_precise_measurement.py
-│       └── l4_diagnostic_analysis.py
-│
-├── tools/                      # MCP 工具实现
-│   ├── __init__.py
-│   ├── l1_monitoring.py        # grafana_*, loki_*, read_logs
-│   ├── l2_environment.py       # collect_*, resolve_path
-│   ├── l3_measurement.py       # measure_*, execute_coordinated
-│   └── l4_analysis.py          # analyze_*, report_*
-│
-├── core/                       # 基础设施
-│   ├── __init__.py
-│   ├── grafana_client.py       # Grafana/Loki HTTP 客户端
-│   ├── ssh_manager.py          # SSH 连接池
-│   └── bpf_executor.py         # BPF 工具远程执行
-│
-├── schemas/                    # Pydantic 数据模型
-│   ├── __init__.py
-│   ├── alert.py                # AlertContext, DiagnosisRequest
-│   ├── environment.py          # VMNetworkEnv, SystemNetworkEnv
-│   ├── measurement.py          # MeasurementResult, LatencySegment
-│   └── report.py               # DiagnosisResult, RootCause
-│
-├── config/                     # 配置
-│   └── settings.py             # Pydantic Settings
-│
-└── api/                        # API 层 (P2)
-    ├── __init__.py
-    └── webhook.py              # FastAPI webhook
+Phase 1: L1 + L2 (自动执行)
+        │
+        ▼
+╔═══════════════════════════════════════╗
+║   Checkpoint 1: PROBLEM_CLASSIFICATION ║
+║   ─────────────────────────────────── ║
+║   检测到 VM 网络延迟问题               ║
+║   置信度: 90%                          ║
+║                                       ║
+║   [1] 确认  [2] 修改  [3] 取消        ║
+╚═══════════════════════════════════════╝
+        │
+        ▼ (用户确认)
+Phase 2: 测量计划
+        │
+        ▼
+╔═══════════════════════════════════════╗
+║   Checkpoint 2: MEASUREMENT_PLAN       ║
+║   ─────────────────────────────────── ║
+║   计划: vm-latency-measurement        ║
+║   时长: 30 秒                          ║
+║   影响: CPU < 5%                       ║
+║                                       ║
+║   [1] 执行  [2] 修改  [3] 取消        ║
+╚═══════════════════════════════════════╝
+        │
+        ▼ (用户确认)
+Phase 3: L3 执行
+Phase 4: L4 分析
+        │
+        ▼
+输出诊断报告
 ```
 
 ---
 
-## 六、配置项
+## 七、Skills 定义
 
-### 6.1 环境变量
+### 7.1 network-env-collector
 
-| 变量 | 必需 | 默认值 | 说明 |
-|------|------|--------|------|
-| `NETSHERLOCK_GRAFANA_URL` | 是 | - | Grafana 地址 |
-| `NETSHERLOCK_GRAFANA_USER` | 是 | - | Grafana 用户名 |
-| `NETSHERLOCK_GRAFANA_PASSWORD` | 是 | - | Grafana 密码 |
-| `NETSHERLOCK_SSH_USER` | 否 | root | SSH 用户名 |
-| `NETSHERLOCK_SSH_KEY_PATH` | 否 | ~/.ssh/id_rsa | SSH 私钥路径 |
-| `NETSHERLOCK_BPF_TOOLS_PATH` | 是 | - | BPF 工具目录路径 |
-| `ANTHROPIC_API_KEY` | 是 | - | Claude API 密钥 |
+**位置**: `.claude/skills/network-env-collector/`
 
-### 6.2 模式控制配置 (重要)
+**功能**: 收集 KVM 虚拟化主机的网络环境信息
 
-| 变量 | 必需 | 默认值 | 说明 |
-|------|------|--------|------|
-| `NETSHERLOCK_MODE` | 否 | interactive | 默认运行模式 (`autonomous`/`interactive`) |
-| `NETSHERLOCK_AUTO_AGENT_LOOP` | 否 | false | 是否开启全自主 Agent 循环 |
-| `NETSHERLOCK_KNOWN_ALERT_TYPES` | 否 | VMNetworkLatency | 允许自动处理的告警类型 (逗号分隔) |
-| `NETSHERLOCK_INTERRUPT_ENABLED` | 否 | true | autonomous 模式下是否允许中断 |
-
-**模式切换规则**:
-
+**输入参数**:
 ```yaml
-# 配置示例: config.yaml
-diagnosis:
-  # 默认模式
-  default_mode: interactive  # "autonomous" | "interactive"
-
-  # 全自主模式配置
-  autonomous:
-    enabled: true              # 是否允许自动模式
-    auto_agent_loop: false     # 是否自动启动 agent loop (需手动开启)
-    interrupt_enabled: true    # 是否允许中途中断
-    known_alert_types:         # 允许自动处理的告警类型
-      - VMNetworkLatency
-      - HostNetworkLatency
-
-  # 人机协作模式配置
-  interactive:
-    checkpoints:               # 需要用户确认的检查点
-      - problem_classification # 问题分类确认
-      - measurement_plan       # 测量计划确认
-      - further_diagnosis      # 是否继续诊断 (可选)
-    timeout_seconds: 300       # 等待用户输入超时时间
+mode: "vm" | "system"
+uuid: "VM UUID"           # mode=vm 时
+host_ip: "宿主机 IP"
+host_user: "SSH 用户"
+vm_host: "VM SSH IP"      # 可选
+vm_user: "VM SSH 用户"    # 可选
 ```
 
-### 6.3 配置文件 (.env)
+**输出**: VMNetworkEnv (JSON)
 
-```env
-# ===== 基础设施配置 =====
-NETSHERLOCK_GRAFANA_URL=http://192.168.79.79/grafana
-NETSHERLOCK_GRAFANA_USER=o11y
-NETSHERLOCK_GRAFANA_PASSWORD=HC!r0cks
-NETSHERLOCK_SSH_USER=root
-NETSHERLOCK_SSH_KEY_PATH=/root/.ssh/id_rsa
-NETSHERLOCK_BPF_TOOLS_PATH=/opt/troubleshooting-tools/measurement-tools
-ANTHROPIC_API_KEY=sk-ant-xxxxx
+### 7.2 vm-latency-measurement
 
-# ===== 模式控制配置 =====
-# 默认使用人机协作模式
-NETSHERLOCK_MODE=interactive
-# 是否开启全自主 agent loop (开启后 webhook 触发会自动完成全流程)
-NETSHERLOCK_AUTO_AGENT_LOOP=false
-# 允许自动处理的告警类型
-NETSHERLOCK_KNOWN_ALERT_TYPES=VMNetworkLatency,HostNetworkLatency
-# 允许在 autonomous 模式下中断
-NETSHERLOCK_INTERRUPT_ENABLED=true
+**位置**: `.claude/skills/vm-latency-measurement/`
+
+**功能**: 协调 8 点延迟测量，保证 receiver-first 时序
+
+**输入参数**:
+```yaml
+sender:
+  vm:
+    ssh: "root@10.0.0.1"
+    ip: "10.0.0.1"
+  host:
+    ssh: "root@192.168.1.10"
+    vnet_interface: "vnet0"
+receiver:
+  vm:
+    ssh: "root@10.0.0.2"
+    ip: "10.0.0.2"
+  host:
+    ssh: "root@192.168.1.20"
+    vnet_interface: "vnet0"
+measurement:
+  duration: 30
 ```
 
-### 6.4 CLI 参数覆盖
+**输出**: MeasurementResult (segments, total_rtt, log_files)
 
-```bash
-# 默认使用 interactive 模式 (单 VM 诊断)
-netsherlock diagnose \
-  --network-type vm \
-  --src-host 192.168.1.10 \
-  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1
+### 7.3 vm-latency-analysis
 
-# 强制使用 autonomous 模式 (覆盖配置)
-netsherlock diagnose \
-  --network-type vm \
-  --src-host 192.168.1.10 \
-  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
-  --autonomous
+**位置**: `.claude/skills/vm-latency-analysis/`
 
-# VM 间诊断 (interactive 模式)
-netsherlock diagnose \
-  --network-type vm \
-  --src-host 192.168.1.10 \
-  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
-  --dst-host 192.168.1.20 \
-  --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2 \
-  --interactive
+**功能**: 分析测量数据，识别根因，生成报告
 
-# 设置测量时长
-netsherlock diagnose \
-  --network-type vm \
-  --src-host 192.168.1.10 \
-  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
-  --duration 60
+**输入参数**:
+```yaml
+breakdown:
+  total_rtt_us: 5000
+  segments:
+    A: {p50: 100, p95: 200}
+    B: {p50: 500, p95: 1000}
+    ...
+environment:
+  src_env: {...}
+  dst_env: {...}
 ```
+
+**输出**: AnalysisResult (primary_contributor, confidence, recommendations)
 
 ---
 
-## 七、错误处理
+## 八、测试覆盖
 
-### 7.1 错误分类
+### 8.1 测试统计
 
-| 错误类型 | 处理策略 |
-|----------|----------|
-| SSH 连接失败 | 重试 3 次，失败后降级（跳过该节点） |
-| BPF 工具执行失败 | 记录错误，返回部分结果 |
-| Grafana 查询超时 | 重试，使用缓存数据 |
-| Agent 解析错误 | 返回原始输出，标记 confidence=0 |
+| 类别 | 测试文件 | 测试数 |
+|------|----------|--------|
+| MinimalInputConfig | `test_minimal_input.py` | 45 |
+| GlobalInventory | `test_global_inventory.py` | 40 |
+| SkillExecutor | `test_skill_executor.py` | 35 |
+| DiagnosisController | `test_controller_skills.py` | 60 |
+| 集成测试 | `test_integration_workflow.py` | 50 |
+| **总计** | | **642** |
 
-### 7.2 降级策略
+### 8.2 关键测试场景
 
-- **L2 收集失败**: 使用告警 labels 中的最小信息
-- **L3 测量失败**: 仅返回 L1 指标分析
-- **L4 分析失败**: 返回原始测量数据
-
----
-
-## 八、测试策略
-
-### 8.1 单元测试
-
-- tools/ 各工具的输入输出验证
-- schemas/ 数据模型序列化测试
-- core/ 基础设施 mock 测试
-
-### 8.2 集成测试
-
-- L1→L2→L3→L4 完整流程 (使用真实测试集群)
-- receiver-first 时序验证
-- 多种告警类型处理
-
-### 8.3 端到端测试
-
-- CLI 命令执行
-- 模拟 Grafana 告警
-- 诊断结果准确性验证
+1. **MinimalInputConfig 加载**: YAML 解析、节点查找、验证
+2. **GlobalInventory 构建**: IP/UUID 查找、MinimalInput 生成
+3. **Skill 调用**: 参数构建、结果解析、错误处理
+4. **端到端流程**: 手动模式、自动模式、Checkpoint 交互
 
 ---
 
-## 九、实现里程碑
+## 九、版本历史
 
-| 阶段 | 内容 | 状态 |
+| 版本 | 日期 | 变更 |
 |------|------|------|
-| **Phase 0** | 基础设施 (core/, schemas/, config/) | ✅ 完成 |
-| **Phase 1** | L1 工具 (grafana, loki, logs) | ✅ 完成 |
-| **Phase 2** | L2 工具 (环境收集) | ✅ 完成 |
-| **Phase 3** | L3 工具 (测量执行, receiver-first) | ✅ 完成 |
-| **Phase 4** | L4 工具 (分析报告) | ✅ 完成 |
-| **Phase 5** | Agent 架构 (orchestrator, subagents) | ✅ 完成 |
-| **Phase 6** | 双模式控制 (DiagnosisController) | ✅ 完成 |
-| **Phase 7** | API/Webhook (FastAPI, 认证, 验证) | ✅ 完成 |
-| **Phase 8** | 单元测试 (184 tests) | ✅ 完成 |
-| **Phase 9** | 集成测试 (78 tests) | ✅ 完成 |
-| **Phase 10** | CLI 集成 (42 tests) | ✅ 完成 |
-| **Phase 10.1** | CLI 参数重构 (src/dst 语义) | ✅ 完成 |
-| **Phase 11** | 端到端测试 | ⏳ 待开始 |
-
-### 测试统计
-
-| 测试类别 | 数量 |
-|----------|------|
-| 单元测试 | 196 |
-| 集成测试 | 120 |
-| **总计** | **316** |
-
----
-
-## 十、参考资料
-
-- [框架选型计划](../framework-selection-plan.md)
-- [调研计划](../research-plan.md)
-- [Claude Agent SDK 文档](https://platform.claude.com/docs/en/agent-sdk/overview)
-- [troubleshooting-tools 仓库](~/workspace/troubleshooting-tools)
+| 4.0 | 2026-01-22 | 根据实际实现重写，Skill 驱动架构 |
+| 3.2 | 2026-01-22 | 功能 review，添加架构演进说明 |
+| 3.1 | 2026-01-20 | CLI 参数重构 |
+| 3.0 | 2026-01-19 | MVP 实现完成 |
