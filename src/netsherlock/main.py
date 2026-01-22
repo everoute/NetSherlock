@@ -293,6 +293,13 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
 
 @cli.command()
 @click.option(
+    "--config",
+    "-c",
+    "config_path",
+    type=click.Path(exists=True),
+    help="Path to MinimalInputConfig YAML file (recommended for manual mode)",
+)
+@click.option(
     "--network-type",
     "-n",
     required=True,
@@ -353,6 +360,7 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
 @click.pass_context
 def diagnose(
     ctx: click.Context,
+    config_path: str | None,
     network_type: str,
     src_host: str,
     src_vm: str | None,
@@ -448,6 +456,8 @@ def diagnose(
         # Display request info
         if not json_output:
             click.echo(f"Diagnosis Request: {request_id}")
+            if config_path:
+                click.echo(f"  Config: {config_path}")
             click.echo(f"  Network Type: {network_type}")
             click.echo(f"  Source Host: {src_host}")
             if src_vm:
@@ -474,6 +484,7 @@ def diagnose(
         controller = DiagnosisController(
             config=config,
             checkpoint_callback=checkpoint_callback,
+            minimal_input_path=config_path,
         )
 
         if not json_output:
