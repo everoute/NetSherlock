@@ -943,6 +943,14 @@ class DiagnosisController:
         if analysis_result.is_success:
             data = analysis_result.data
 
+            # Ensure data is a dict (skill may return non-dict data)
+            if not isinstance(data, dict):
+                self._log.warning(
+                    "l4_analysis_data_not_dict",
+                    data_type=type(data).__name__,
+                )
+                data = {}
+
             # Parse LLM analysis
             if "primary_contributor" in data:
                 try:
@@ -955,6 +963,8 @@ class DiagnosisController:
 
             # Add probable causes
             for cause_data in data.get("probable_causes", []):
+                if not isinstance(cause_data, dict):
+                    continue
                 layer = None
                 if cause_data.get("layer"):
                     try:
@@ -970,6 +980,8 @@ class DiagnosisController:
 
             # Add recommendations
             for rec_data in data.get("recommendations", []):
+                if not isinstance(rec_data, dict):
+                    continue
                 self._analysis_result.add_recommendation(
                     action=rec_data.get("action", ""),
                     priority=rec_data.get("priority", "medium"),

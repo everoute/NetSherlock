@@ -1,0 +1,42 @@
+# Test Environment Configuration for End-to-End Diagnosis
+# Sender VM: 192.168.77.83 on host 192.168.70.32
+# Receiver VM: 192.168.76.244 on host 192.168.70.31
+
+nodes:
+  # VM Sender
+  vm-sender:
+    ssh: "root@192.168.77.83"
+    workdir: "/tmp/netsherlock"
+    role: "vm"
+    host_ref: "host-sender"
+    uuid: "97846fd3-2907-4293-b794-7122e031b6ec"
+    test_ip: "192.168.77.83"
+
+  # VM Receiver
+  vm-receiver:
+    ssh: "root@192.168.76.244"
+    workdir: "/tmp/netsherlock"
+    role: "vm"
+    host_ref: "host-receiver"
+    uuid: "54ad7f28-8efa-48d9-b71a-9f03f29e7326"
+    test_ip: "192.168.76.244"
+
+  # Host Sender
+  host-sender:
+    ssh: "smartx@192.168.70.32"
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+  # Host Receiver
+  host-receiver:
+    ssh: "smartx@192.168.70.31"
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+test_pairs:
+  vm:
+    server: "vm-receiver"
+    client: "vm-sender"
+
+discovery_hints:
+  internal_port_type: "mgt"
