@@ -1,0 +1,63 @@
+[2026-01-26 11:51:49] Cycle 1 - Interval drops: 68 [showing top 10, grouped by: all]
+------------------------------------------------------------
+
+  Stack trace failures by device:
+    port-mgt: 5 failed
+  Found 18 unique stack+flow combinations, showing top 10:
+
+  #1 Count: 16 calls [device: port-mgt] [stack_id: 127]
+     Flow: 192.168.70.34 -> 192.168.70.31 (ICMP)
+  Stack trace:
+    Stack depth: 12 frames
+    kfree_skb+0x1 [kernel]
+    icmp_rcv+0x177 [kernel]
+    ip_local_deliver_finish+0x60 [kernel]
+    ip_local_deliver+0xe0 [kernel]
+    ip_rcv+0xbc [kernel]
+    ... (7 more frames)
+
+  #2 Count: 12 calls [device: port-mgt] [stack_id: 305]
+     Flow: 192.168.70.31 -> 192.168.70.32 (UDP:53)
+  Stack trace:
+    Stack depth: 15 frames
+    kfree_skb+0x1 [kernel]
+    queue_userspace_packet+0x305 [openvswitch]
+    ovs_dp_upcall+0x38 [openvswitch]
+    clone_execute+0x1c3 [openvswitch]
+    do_execute_actions+0x5a8 [openvswitch]
+    ... (10 more frames)
+
+  #3 Count: 10 calls [device: port-mgt] [stack_id: 234]
+     Flow: 224.0.0.18 -> 224.0.0.18 (UDP:3222)
+  Stack trace:
+    Stack depth: 11 frames
+    kfree_skb+0x1 [kernel]
+    ip_rcv_finish_core.isra.17+0x191 [kernel]
+    ip_rcv+0xbc [kernel]
+    __netif_receive_skb_one_core+0x60 [kernel]
+    netif_receive_skb_internal+0x34 [kernel]
+    ... (6 more frames)
+
+  #4 Count: 8 calls [device: port-mgt] [stack_id: 456]
+     Flow: 192.168.70.31:22 -> 192.168.70.100:54321 (TCP)
+  Stack trace:
+    Stack depth: 13 frames
+    kfree_skb+0x1 [kernel]
+    tcp_v4_rcv+0x48 [kernel]
+    ip_local_deliver_finish+0x60 [kernel]
+    ip_local_deliver+0xe0 [kernel]
+    ip_rcv+0xbc [kernel]
+    ... (8 more frames)
+
+  #5 Count: 6 calls [device: port-mgt] [stack_id: 789]
+     Flow: fe80::1 -> ff02::1 (ICMPv6)
+  Stack trace:
+    Stack depth: 14 frames
+    kfree_skb+0x1 [kernel]
+    icmpv6_rcv+0x17d [kernel]
+    ip6_protocol_deliver_rcu+0x1a5 [kernel]
+    ip6_input_finish+0x48 [kernel]
+    ip6_input+0x64 [kernel]
+    ... (9 more frames)
+
+============================================================

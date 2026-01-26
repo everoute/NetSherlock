@@ -35,6 +35,9 @@ set -e
 RECEIVER_WARMUP=${RECEIVER_WARMUP:-2}
 SHUTDOWN_WAIT=${SHUTDOWN_WAIT:-3}
 
+# Array to track SSH background process PIDs
+declare -a SSH_PIDS=()
+
 # Check required variables
 REQUIRED_VARS=(
     SENDER_VM_SSH SENDER_VM_IP SENDER_HOST_SSH
@@ -77,56 +80,72 @@ echo "[1/8] recv-host: kvm_vhost_tun_latency_no_discovery"
 CMD="sudo python3 /tmp/kvm_vhost_tun_latency_no_discovery.py --device ${RECV_VNET_IF} --flow 'proto=icmp,src=${RECEIVER_VM_IP},dst=${SENDER_VM_IP}'"
 echo "      CMD: ssh ${RECEIVER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${RECEIVER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/recv-host-kvm-tun.log 2>&1 &
-echo "      PID: $!, LOG: recv-host-kvm-tun.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: recv-host-kvm-tun.log" >> ${CMDLOG}
 
 # [2/8] Sender Host - kvm_vhost_tun_latency (no discovery needed)
 echo "[2/8] send-host: kvm_vhost_tun_latency_no_discovery"
 CMD="sudo python3 /tmp/kvm_vhost_tun_latency_no_discovery.py --device ${SEND_VNET_IF} --flow 'proto=icmp,src=${SENDER_VM_IP},dst=${RECEIVER_VM_IP}'"
 echo "      CMD: ssh ${SENDER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${SENDER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/send-host-kvm-tun.log 2>&1 &
-echo "      PID: $!, LOG: send-host-kvm-tun.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: send-host-kvm-tun.log" >> ${CMDLOG}
 
 # [3/8] Receiver Host - icmp_drop_detector
 echo "[3/8] recv-host: icmp_drop_detector"
 CMD="sudo python3 /tmp/icmp_drop_detector.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --rx-iface ${RECV_PHY_IF} --tx-iface ${RECV_VNET_IF} --verbose"
 echo "      CMD: ssh ${RECEIVER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${RECEIVER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/recv-host-icmp.log 2>&1 &
-echo "      PID: $!, LOG: recv-host-icmp.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: recv-host-icmp.log" >> ${CMDLOG}
 
 # [4/8] Sender Host - icmp_drop_detector
 echo "[4/8] send-host: icmp_drop_detector"
 CMD="sudo python3 /tmp/icmp_drop_detector.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --rx-iface ${SEND_VNET_IF} --tx-iface ${SEND_PHY_IF} --verbose"
 echo "      CMD: ssh ${SENDER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${SENDER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/send-host-icmp.log 2>&1 &
-echo "      PID: $!, LOG: send-host-icmp.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: send-host-icmp.log" >> ${CMDLOG}
 
 # [5/8] Receiver Host - tun_tx_to_kvm_irq
 echo "[5/8] recv-host: tun_tx_to_kvm_irq"
 CMD="sudo python3 /tmp/tun_tx_to_kvm_irq.py --device ${RECV_VNET_IF} --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --protocol icmp"
 echo "      CMD: ssh ${RECEIVER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${RECEIVER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/recv-host-vhost-rx.log 2>&1 &
-echo "      PID: $!, LOG: recv-host-vhost-rx.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: recv-host-vhost-rx.log" >> ${CMDLOG}
 
 # [6/8] Sender Host - tun_tx_to_kvm_irq
 echo "[6/8] send-host: tun_tx_to_kvm_irq"
 CMD="sudo python3 /tmp/tun_tx_to_kvm_irq.py --device ${SEND_VNET_IF} --src-ip ${RECEIVER_VM_IP} --dst-ip ${SENDER_VM_IP} --protocol icmp"
 echo "      CMD: ssh ${SENDER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${SENDER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/send-host-vhost-rx.log 2>&1 &
-echo "      PID: $!, LOG: send-host-vhost-rx.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: send-host-vhost-rx.log" >> ${CMDLOG}
 
 # [7/8] Receiver VM - kernel_icmp_rtt
 echo "[7/8] recv-vm: kernel_icmp_rtt (interface=${RECV_VM_IF})"
 CMD="sudo python3 /tmp/kernel_icmp_rtt.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --interface ${RECV_VM_IF} --direction rx --disable-kernel-stacks"
 echo "      CMD: ssh ${RECEIVER_VM_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${RECEIVER_VM_SSH} "${CMD}" > ${MEASUREMENT_DIR}/recv-vm-icmp.log 2>&1 &
-echo "      PID: $!, LOG: recv-vm-icmp.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: recv-vm-icmp.log" >> ${CMDLOG}
 
 # [8/8] Sender VM - kernel_icmp_rtt
 echo "[8/8] send-vm: kernel_icmp_rtt (interface=${SEND_VM_IF})"
 CMD="sudo python3 /tmp/kernel_icmp_rtt.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --interface ${SEND_VM_IF} --direction tx --disable-kernel-stacks"
 echo "      CMD: ssh ${SENDER_VM_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${SENDER_VM_SSH} "${CMD}" > ${MEASUREMENT_DIR}/send-vm-icmp.log 2>&1 &
-echo "      PID: $!, LOG: send-vm-icmp.log" >> ${CMDLOG}
+PID_TMP=$!
+SSH_PIDS+=($PID_TMP)
+echo "      PID: $PID_TMP, LOG: send-vm-icmp.log" >> ${CMDLOG}
 
 echo ""
 echo "=== All 8 tools started ==="
@@ -151,14 +170,44 @@ echo ""
 echo "=== Stopping measurement tools ==="
 echo "=== Stopping Tools ===" >> ${CMDLOG}
 
-# Stop tools gracefully (SIGINT)
-ssh ${SENDER_VM_SSH} "pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
-ssh ${RECEIVER_VM_SSH} "pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
-ssh ${SENDER_HOST_SSH} "pkill -INT -f 'icmp_drop_detector.py|tun_tx_to_kvm_irq.py|kvm_vhost_tun_latency_no_discovery'" 2>/dev/null || true
-ssh ${RECEIVER_HOST_SSH} "pkill -INT -f 'icmp_drop_detector.py|tun_tx_to_kvm_irq.py|kvm_vhost_tun_latency_no_discovery'" 2>/dev/null || true
+# Stop tools gracefully (SIGINT) on remote hosts
+# Note: BPF tools run as root via sudo, so we need sudo for pkill
+ssh ${SENDER_VM_SSH} "sudo pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
+ssh ${RECEIVER_VM_SSH} "sudo pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
+ssh ${SENDER_HOST_SSH} "sudo pkill -INT -f icmp_drop_detector.py; sudo pkill -INT -f tun_tx_to_kvm_irq.py; sudo pkill -INT -f kvm_vhost_tun_latency" 2>/dev/null || true
+ssh ${RECEIVER_HOST_SSH} "sudo pkill -INT -f icmp_drop_detector.py; sudo pkill -INT -f tun_tx_to_kvm_irq.py; sudo pkill -INT -f kvm_vhost_tun_latency" 2>/dev/null || true
 
 echo "Waiting ${SHUTDOWN_WAIT}s for graceful shutdown..."
 sleep ${SHUTDOWN_WAIT}
+
+# Wait for SSH processes to exit with timeout (they should exit after remote tools are killed)
+echo "Waiting for SSH processes to flush output (max 10s)..."
+WAIT_COUNT=0
+MAX_WAIT=10
+while [ ${WAIT_COUNT} -lt ${MAX_WAIT} ]; do
+    ALL_DONE=true
+    for PID in "${SSH_PIDS[@]}"; do
+        if kill -0 ${PID} 2>/dev/null; then
+            ALL_DONE=false
+            break
+        fi
+    done
+    if [ "${ALL_DONE}" = true ]; then
+        break
+    fi
+    sleep 1
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+done
+
+# If any SSH processes are still running, terminate them
+for PID in "${SSH_PIDS[@]}"; do
+    if kill -0 ${PID} 2>/dev/null; then
+        echo "  Terminating SSH PID ${PID}..."
+        kill ${PID} 2>/dev/null || true
+    fi
+done
+sleep 1
+echo "All SSH processes completed."
 
 ########################################
 # Verify Logs
