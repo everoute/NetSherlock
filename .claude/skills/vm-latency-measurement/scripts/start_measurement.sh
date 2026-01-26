@@ -21,12 +21,12 @@
 #   Sender side:
 #     1. sender-vm: kernel_icmp_rtt.py (Segments A, M)
 #     2. sender-host: icmp_drop_detector.py (Segments B, K)
-#     3. sender-host: kvm_vhost_tun_latency_details.py (Segment B_1)
+#     3. sender-host: kvm_vhost_tun_latency_no_discovery.py (Segment B_1)
 #     4. sender-host: tun_tx_to_kvm_irq.py (Segment L)
 #   Receiver side:
 #     5. receiver-vm: kernel_icmp_rtt.py (Segments F, G, H)
 #     6. receiver-host: icmp_drop_detector.py (Segments D, I)
-#     7. receiver-host: kvm_vhost_tun_latency_details.py (Segment I_1)
+#     7. receiver-host: kvm_vhost_tun_latency_no_discovery.py (Segment I_1)
 #     8. receiver-host: tun_tx_to_kvm_irq.py (Segment E)
 
 set -e
@@ -60,31 +60,28 @@ CMDLOG="${MEASUREMENT_DIR}/commands.log"
 echo "" >> ${CMDLOG}
 echo "=== Starting 8 Measurement Tools ===" >> ${CMDLOG}
 echo "Timestamp: $(date)" >> ${CMDLOG}
-echo "DURATION=${DURATION}s, INLINE_DISCOVER=${INLINE_DISCOVER_DURATION}s, RECEIVER_WARMUP=${RECEIVER_WARMUP}s, SHUTDOWN_WAIT=${SHUTDOWN_WAIT}s" >> ${CMDLOG}
+echo "DURATION=${DURATION}s, RECEIVER_WARMUP=${RECEIVER_WARMUP}s, SHUTDOWN_WAIT=${SHUTDOWN_WAIT}s" >> ${CMDLOG}
 echo "" >> ${CMDLOG}
 
 ########################################
-# Start ALL 8 tools in parallel (no receiver-first, all simultaneous)
-# kvm_vhost_tun_latency: discover + measure in SINGLE SSH session
-# to avoid vhost queue drift between separate SSH connections
+# Start ALL 8 tools in parallel
+# kvm_vhost_tun_latency_no_discovery: no discover phase needed,
+# auto-detects QEMU PID and vhost threads at startup
 ########################################
 echo ""
 echo "=== Starting ALL 8 measurement tools in parallel ==="
 
-# Discovery duration for inline discover (shorter since it's per-tool)
-INLINE_DISCOVER_DURATION=${INLINE_DISCOVER_DURATION:-15}
-
-# [1/8] Receiver Host - kvm_vhost_tun_latency (discover + measure in single SSH)
-echo "[1/8] recv-host: kvm_vhost_tun_latency (inline discover + measure)"
-# Combine discover and measure in one SSH command to avoid queue drift
-CMD="sudo python3 /tmp/kvm_vhost_tun_latency_details.py --mode discover --device ${RECV_VNET_IF} --flow 'proto=icmp,src=${RECEIVER_VM_IP},dst=${SENDER_VM_IP}' --duration ${INLINE_DISCOVER_DURATION} --out /tmp/kvm-tun-recv-profile.json && sudo python3 /tmp/kvm_vhost_tun_latency_details.py --mode measure --profile /tmp/kvm-tun-recv-profile.json"
+# [1/8] Receiver Host - kvm_vhost_tun_latency (no discovery needed)
+echo "[1/8] recv-host: kvm_vhost_tun_latency_no_discovery"
+# New tool auto-detects QEMU PID and vhost threads, no discovery phase needed
+CMD="sudo python3 /tmp/kvm_vhost_tun_latency_no_discovery.py --device ${RECV_VNET_IF} --flow 'proto=icmp,src=${RECEIVER_VM_IP},dst=${SENDER_VM_IP}'"
 echo "      CMD: ssh ${RECEIVER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${RECEIVER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/recv-host-kvm-tun.log 2>&1 &
 echo "      PID: $!, LOG: recv-host-kvm-tun.log" >> ${CMDLOG}
 
-# [2/8] Sender Host - kvm_vhost_tun_latency (discover + measure in single SSH)
-echo "[2/8] send-host: kvm_vhost_tun_latency (inline discover + measure)"
-CMD="sudo python3 /tmp/kvm_vhost_tun_latency_details.py --mode discover --device ${SEND_VNET_IF} --flow 'proto=icmp,src=${SENDER_VM_IP},dst=${RECEIVER_VM_IP}' --duration ${INLINE_DISCOVER_DURATION} --out /tmp/kvm-tun-send-profile.json && sudo python3 /tmp/kvm_vhost_tun_latency_details.py --mode measure --profile /tmp/kvm-tun-send-profile.json"
+# [2/8] Sender Host - kvm_vhost_tun_latency (no discovery needed)
+echo "[2/8] send-host: kvm_vhost_tun_latency_no_discovery"
+CMD="sudo python3 /tmp/kvm_vhost_tun_latency_no_discovery.py --device ${SEND_VNET_IF} --flow 'proto=icmp,src=${SENDER_VM_IP},dst=${RECEIVER_VM_IP}'"
 echo "      CMD: ssh ${SENDER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${SENDER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/send-host-kvm-tun.log 2>&1 &
 echo "      PID: $!, LOG: send-host-kvm-tun.log" >> ${CMDLOG}
@@ -139,16 +136,13 @@ echo "=== All 8 tools started ===" >> ${CMDLOG}
 
 ########################################
 # Wait for measurement duration
-# Total wait = INLINE_DISCOVER_DURATION + DURATION
-# - kvm_vhost_tun_latency tools need INLINE_DISCOVER_DURATION for discover
-# - Then DURATION for actual measurement
+# No discovery phase needed with kvm_vhost_tun_latency_no_discovery.py
 ########################################
-TOTAL_WAIT=$((INLINE_DISCOVER_DURATION + DURATION))
 echo ""
-echo "=== Waiting ${TOTAL_WAIT}s (${INLINE_DISCOVER_DURATION}s discover + ${DURATION}s measure) ==="
+echo "=== Waiting ${DURATION}s for measurement ==="
 echo "=== Measurement Duration ===" >> ${CMDLOG}
-echo "Waiting ${TOTAL_WAIT}s (${INLINE_DISCOVER_DURATION}s discover + ${DURATION}s measure)..." >> ${CMDLOG}
-sleep ${TOTAL_WAIT}
+echo "Waiting ${DURATION}s for measurement..." >> ${CMDLOG}
+sleep ${DURATION}
 
 ########################################
 # Stop Tools
@@ -160,8 +154,8 @@ echo "=== Stopping Tools ===" >> ${CMDLOG}
 # Stop tools gracefully (SIGINT)
 ssh ${SENDER_VM_SSH} "pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
 ssh ${RECEIVER_VM_SSH} "pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
-ssh ${SENDER_HOST_SSH} "pkill -INT -f 'icmp_drop_detector.py|tun_tx_to_kvm_irq.py|kvm_vhost_tun_latency'" 2>/dev/null || true
-ssh ${RECEIVER_HOST_SSH} "pkill -INT -f 'icmp_drop_detector.py|tun_tx_to_kvm_irq.py|kvm_vhost_tun_latency'" 2>/dev/null || true
+ssh ${SENDER_HOST_SSH} "pkill -INT -f 'icmp_drop_detector.py|tun_tx_to_kvm_irq.py|kvm_vhost_tun_latency_no_discovery'" 2>/dev/null || true
+ssh ${RECEIVER_HOST_SSH} "pkill -INT -f 'icmp_drop_detector.py|tun_tx_to_kvm_irq.py|kvm_vhost_tun_latency_no_discovery'" 2>/dev/null || true
 
 echo "Waiting ${SHUTDOWN_WAIT}s for graceful shutdown..."
 sleep ${SHUTDOWN_WAIT}

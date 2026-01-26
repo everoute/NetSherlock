@@ -9,7 +9,7 @@
 #   - kernel_icmp_rtt.py: performance/system-network/
 #   - icmp_drop_detector.py: linux-network-stack/packet-drop/
 #   - tun_tx_to_kvm_irq.py: kvm-virt-network/tun/
-#   - kvm_vhost_tun_latency_details.py: kvm-virt-network/vhost-net/
+#   - kvm_vhost_tun_latency_no_discovery.py: kvm-virt-network/vhost-net/
 
 set -e
 
@@ -28,7 +28,7 @@ done
 KERNEL_ICMP_RTT="${LOCAL_TOOLS}/performance/system-network/kernel_icmp_rtt.py"
 ICMP_DROP_DETECTOR="${LOCAL_TOOLS}/linux-network-stack/packet-drop/icmp_drop_detector.py"
 TUN_TX_TO_KVM_IRQ="${LOCAL_TOOLS}/kvm-virt-network/tun/tun_tx_to_kvm_irq.py"
-KVM_VHOST_TUN_LATENCY="${LOCAL_TOOLS}/kvm-virt-network/vhost-net/kvm_vhost_tun_latency_details.py"
+KVM_VHOST_TUN_LATENCY="${LOCAL_TOOLS}/kvm-virt-network/vhost-net/kvm_vhost_tun_latency_no_discovery.py"
 
 # Verify tools exist
 for TOOL in "${KERNEL_ICMP_RTT}" "${ICMP_DROP_DETECTOR}" "${TUN_TX_TO_KVM_IRQ}" "${KVM_VHOST_TUN_LATENCY}"; do
@@ -55,7 +55,7 @@ scp -q "${TUN_TX_TO_KVM_IRQ}" "${SENDER_HOST_SSH}:/tmp/"
 scp -q "${KVM_VHOST_TUN_LATENCY}" "${SENDER_HOST_SSH}:/tmp/"
 echo "  - icmp_drop_detector.py -> /tmp/"
 echo "  - tun_tx_to_kvm_irq.py -> /tmp/"
-echo "  - kvm_vhost_tun_latency_details.py -> /tmp/"
+echo "  - kvm_vhost_tun_latency_no_discovery.py -> /tmp/"
 
 echo ""
 echo "[4/4] Deploying to Receiver Host (${RECEIVER_HOST_SSH})..."
@@ -64,7 +64,7 @@ scp -q "${TUN_TX_TO_KVM_IRQ}" "${RECEIVER_HOST_SSH}:/tmp/"
 scp -q "${KVM_VHOST_TUN_LATENCY}" "${RECEIVER_HOST_SSH}:/tmp/"
 echo "  - icmp_drop_detector.py -> /tmp/"
 echo "  - tun_tx_to_kvm_irq.py -> /tmp/"
-echo "  - kvm_vhost_tun_latency_details.py -> /tmp/"
+echo "  - kvm_vhost_tun_latency_no_discovery.py -> /tmp/"
 
 echo ""
 echo "Tool deployment complete."

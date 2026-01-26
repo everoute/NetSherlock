@@ -5,12 +5,11 @@ This script orchestrates the complete measurement workflow:
 1. Validate SSH connectivity
 2. Start background traffic (if --generate-traffic)
 3. Deploy BPF tools to targets
-4. Run discovery phase for kvm_vhost_tun_latency
-5. Start 8 measurement tools (receiver-first)
-6. Wait for measurement duration
-7. Stop tools and collect logs
-8. Stop background traffic (if started)
-9. Parse logs and output JSON
+4. Start 8 measurement tools in parallel
+5. Wait for measurement duration
+6. Stop tools and collect logs
+7. Stop background traffic (if started)
+8. Parse logs and output JSON
 
 Usage:
     python measure.py --sender-vm-ssh root@10.0.0.1 --sender-vm-ip 10.0.0.1 \\
@@ -81,7 +80,6 @@ def create_env_dict(args: argparse.Namespace) -> dict:
         # Global configuration parameters
         "DURATION": str(args.duration),
         "GENERATE_TRAFFIC": "true" if args.generate_traffic else "false",
-        "DISCOVERY_DURATION": str(args.discovery_duration),
         "RECEIVER_WARMUP": str(args.receiver_warmup),
         "SHUTDOWN_WAIT": str(args.shutdown_wait),
         "PING_INTERVAL": str(args.ping_interval),
@@ -136,14 +134,13 @@ def start_background_traffic(env: dict, quiet: bool = False) -> subprocess.Popen
     receiver_vm_ip = env["RECEIVER_VM_IP"]
     ping_interval = env.get("PING_INTERVAL", "1")
 
-    # Calculate total traffic duration: discovery + measurement + buffer
-    discovery_duration = int(env.get("DISCOVERY_DURATION", "5"))
+    # Calculate total traffic duration: measurement + buffer
     duration = int(env.get("DURATION", "30"))
     receiver_warmup = int(env.get("RECEIVER_WARMUP", "2"))
     shutdown_wait = int(env.get("SHUTDOWN_WAIT", "3"))
 
-    # Total time = 2 * discovery + warmup + duration + shutdown + buffer
-    total_time = 2 * (discovery_duration + 2) + receiver_warmup + duration + shutdown_wait + 10
+    # Total time = warmup + duration + shutdown + buffer
+    total_time = receiver_warmup + duration + shutdown_wait + 10
     ping_count = int(total_time / float(ping_interval)) + 10
 
     if not quiet:
@@ -257,8 +254,6 @@ Example:
                               help="Measurement duration in seconds (default: 30)")
     config_group.add_argument("--generate-traffic", action="store_true",
                               help="Generate test traffic (ping) from sender VM")
-    config_group.add_argument("--discovery-duration", type=int, default=30,
-                              help="Discovery phase duration in seconds (default: 30)")
     config_group.add_argument("--receiver-warmup", type=int, default=2,
                               help="Receiver tools warmup time in seconds (default: 2)")
     config_group.add_argument("--shutdown-wait", type=int, default=3,
@@ -270,8 +265,6 @@ Example:
     skip_group = parser.add_argument_group("Skip Options")
     skip_group.add_argument("--skip-deploy", action="store_true",
                             help="Skip tool deployment (tools already deployed)")
-    skip_group.add_argument("--skip-discovery", action="store_true",
-                            help="Skip discovery phase (profiles already exist)")
     skip_group.add_argument("--skip-validate", action="store_true",
                             help="Skip SSH validation")
 
@@ -327,25 +320,18 @@ def main():
                 print("\nError: Tool deployment failed", file=sys.stderr)
                 sys.exit(1)
 
-        # Step 4: Run discovery phase
-        if not args.skip_discovery:
-            result = run_script("run_discovery.sh", env, "Running discovery phase", quiet)
-            if result.returncode != 0:
-                print("\nError: Discovery phase failed", file=sys.stderr)
-                sys.exit(1)
-
-        # Step 5: Start measurement (receiver-first)
+        # Step 4: Start measurement (all 8 tools in parallel)
         result = run_script("start_measurement.sh", env, "Starting 8 measurement tools", quiet)
         if result.returncode != 0:
             print("\nError: Measurement failed", file=sys.stderr)
             sys.exit(1)
 
     finally:
-        # Step 6: Stop background traffic (if started)
+        # Step 5: Stop background traffic (if started)
         if traffic_started:
             stop_background_traffic(env, quiet)
 
-    # Step 7: Parse logs
+    # Step 6: Parse logs
     if not quiet:
         print(f"\n{'='*60}")
         print("[Step] Parsing measurement logs")

@@ -51,12 +51,10 @@ python3 .claude/skills/vm-latency-measurement/scripts/measure.py $ARGUMENTS
 |------|--------|------|
 | `--duration` | 30 | 测量持续时间 (秒) |
 | `--generate-traffic` | false | 是否生成测试流量 |
-| `--discovery-duration` | 30 | discovery 阶段持续时间 (秒) |
 | `--receiver-warmup` | 2 | receiver 工具预热时间 (秒) |
 | `--shutdown-wait` | 3 | 优雅关闭等待时间 (秒) |
 | `--ping-interval` | 1 | ping 间隔，仅 --generate-traffic 时有效 |
 | `--skip-deploy` | false | 跳过工具部署 (工具已部署时使用) |
-| `--skip-discovery` | false | 跳过 discovery 阶段 (profile 已存在时使用) |
 | `--skip-validate` | false | 跳过 SSH 连接验证 |
 | `--output-dir` | auto | 输出目录，默认 ./measurement-TIMESTAMP |
 | `--json-only` | false | 只输出 JSON，不显示进度 |
@@ -92,13 +90,12 @@ python3 .../measure.py \
     --duration 60
 ```
 
-### 跳过部署和发现 (工具已部署，profile 已存在)
+### 跳过部署 (工具已部署)
 
 ```bash
 python3 .../measure.py \
     ... (L2 参数) ... \
-    --skip-deploy \
-    --skip-discovery
+    --skip-deploy
 ```
 
 ## 流量生成模式
@@ -108,7 +105,7 @@ python3 .../measure.py \
 | **默认** | (无) | 不生成流量，依赖背景流量 |
 | **生成** | `--generate-traffic` | 整个流程开始时启动 ping，结束时停止 |
 
-**注意**: Discovery 阶段需要流量才能识别 vhost 线程。如果没有背景流量，必须使用 `--generate-traffic`。
+**注意**: kvm_vhost_tun_latency 工具需要有流量才能匹配。如果没有背景流量，使用 `--generate-traffic`。
 
 ## 8 个测量工具
 
@@ -116,11 +113,11 @@ python3 .../measure.py \
 |---|------|------|--------|
 | 1 | Sender VM | kernel_icmp_rtt.py | A, M, Total RTT |
 | 2 | Sender Host | icmp_drop_detector.py | B, K |
-| 3 | Sender Host | kvm_vhost_tun_latency_details.py | B_1 |
+| 3 | Sender Host | kvm_vhost_tun_latency_no_discovery.py | B_1 |
 | 4 | Sender Host | tun_tx_to_kvm_irq.py | L |
 | 5 | Receiver VM | kernel_icmp_rtt.py | F, G, H |
 | 6 | Receiver Host | icmp_drop_detector.py | D, I |
-| 7 | Receiver Host | kvm_vhost_tun_latency_details.py | I_1 |
+| 7 | Receiver Host | kvm_vhost_tun_latency_no_discovery.py | I_1 |
 | 8 | Receiver Host | tun_tx_to_kvm_irq.py | E |
 
 详见 [reference/measurement-tools.md](reference/measurement-tools.md)。
@@ -163,24 +160,6 @@ python3 .../measure.py \
 - SSH 密钥认证到所有 4 台机器
 - 目标机器有 root/sudo 权限
 - BPF 工具在 `--local-tools-path` 路径下
-
-## 已知问题
-
-### B_1/I_1 段 (kvm_vhost_tun_latency_details) 可能为 0
-
-**现象**: kvm_vhost_tun_latency_details.py 测量的 B_1 和 I_1 段可能返回 0，即使其他测量正常。
-
-**原因**: 该工具采用两阶段设计 (discover + measure)：
-1. **discover 阶段**: 通过 BPF 追踪识别 vhost worker 线程与 eventfd_ctx 的映射关系
-2. **measure 阶段**: 使用 discover 获得的 eventfd_ctx 过滤并测量延迟
-
-问题在于 eventfd_ctx 是内核指针，在 vhost 线程调度变化时可能改变。即使 discover 和 measure 在同一 SSH 会话中执行，指针值仍可能在两阶段之间发生变化，导致 measure 阶段的 eventfd 过滤器无法匹配任何事件。
-
-**影响**: 不影响其他段的测量。B_1/I_1 仅是 B/I 段的细分，主要延迟信息仍可从其他段获取。
-
-**后续优化方向** (工具层面):
-- 考虑在 measure 阶段放宽 eventfd 过滤条件
-- 或实现 discover/measure 并行执行模式
 
 ## 相关 Skill
 
