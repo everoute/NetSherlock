@@ -3,160 +3,67 @@ name: vm-latency-analysis
 description: |
   Analyze cross-node VM ICMP ping latency by parsing measurement logs,
   calculating derived segments, and building attribution tables.
+  Outputs diagnosis report in Markdown format.
 
   Trigger keywords: analyzing latency logs, latency breakdown, compare latency,
   analyze measurement data, 延迟分析, 延迟分解, 延迟归因, ICMP RTT analysis
 
-allowed-tools: Read, Grep, Glob, Write, Edit, Bash
+allowed-tools: Read, Bash
 ---
 
-# Latency Analysis Skill
+# VM Latency Analysis Skill
 
-## Overview
+## 执行
 
-This skill provides a systematic methodology for analyzing end-to-end network latency in virtualized environments. It focuses on cross-node VM ICMP ping latency, decomposing the total RTT into measurable and derived segments.
-
-## Applicable Scenarios
-
-- Cross-node VM ICMP ping latency analysis
-- Latency comparison between two environments
-- Root cause analysis for latency issues
-- Latency attribution by layer (VM/Host/Network/Virtualization)
-
-## Data Path Model
-
-The ICMP request-reply path is divided into 13 segments (A-M). See [data-path-model.md](data-path-model.md) for the complete diagram and definitions.
-
-**Quick Reference**:
-- **Request Path**: A → B → C → D → E → F → G
-- **Reply Path**: H → I → J → K → L → M
-
-## Measurement Tools
-
-Four tools provide latency measurements at different layers:
-
-| Tool | Location | Measures |
-|------|----------|----------|
-| `kernel_icmp_rtt.py` | VM kernel | Path 1, Path 2, Inter-Path, Total RTT |
-| `icmp_drop_detector.py` | Host | ReqInternal, External, RepInternal, Total |
-| `tun_tx_to_kvm_irq.py` | Host | TUN→KVM IRQ injection (VM RX path: S1-S5) |
-| `kvm_vhost_tun_latency_details.py` | Host | KVM→TUN latency (VM TX path: S0-S2) |
-
-See [tool-mapping.md](tool-mapping.md) for detailed output field mappings.
-
-## Analysis Methodology
-
-### Step 1: Identify Data Sources
-
-Confirm the following log files are available (8 measurement points):
-
-**Sender Side**:
-- Sender VM: `kernel_icmp_rtt` output (Path 1, Path 2, Inter-Path, Total RTT)
-- Sender Host: `icmp_drop_detector` output (ReqInternal, External, RepInternal)
-- Sender Host: `kvm_vhost_tun_latency_details` output (S0-S2 for sending request) → B_1
-- Sender Host: `tun_tx_to_kvm_irq` output (S1-S5 for receiving reply) → L
-
-**Receiver Side**:
-- Receiver VM: `kernel_icmp_rtt` output (Path 1, Path 2, Inter-Path)
-- Receiver Host: `icmp_drop_detector` output (ReqInternal, External, RepInternal)
-- Receiver Host: `tun_tx_to_kvm_irq` output (S1-S5 for receiving request) → E
-- Receiver Host: `kvm_vhost_tun_latency_details` output (S0-S2 for sending reply) → I_1
-
-### Step 2: Parse Log Data
-
-Extract key metrics from each log file and calculate averages:
-
-```
-# Example: Parse Total RTT from VM log
-grep "Total RTT" sfsvm-send.log | awk '{sum+=$NF; count++} END {print sum/count}'
-
-# Example: Parse External latency from Host log
-grep "External" oshost-send.log | awk -F'[=|]' '{sum+=$2; count++} END {print sum/count}'
+```bash
+python3 .claude/skills/vm-latency-analysis/scripts/generate_report.py <measurement_dir>
 ```
 
-### Step 3: Map Measurements to Segments
+脚本功能：
+1. 解析 8 个测量日志文件
+2. 计算 14 个分段的统计数据
+3. 生成层级归因分析
+4. 保存 Markdown 报告到 `<measurement_dir>/diagnosis_report.md`
+5. 输出 JSON 结果
 
-Using the tool output mappings, populate the directly measured segments:
+## 输入参数
 
-| Segment | Source | Field |
-|---------|--------|-------|
-| A | Sender VM | Path 1 |
-| B | Sender Host icmp_drop_detector | ReqInternal |
-| B_1 | Sender Host kvm_vhost_tun_latency | Total (S0+S1+S2) |
-| C+J | Derived | (see Step 4) |
-| D | Receiver Host icmp_drop_detector | ReqInternal |
-| E | Receiver Host tun_tx_to_kvm_irq | Total (S1→S5) |
-| F | Receiver VM | Path 1 |
-| G | Receiver VM | Inter-Path |
-| H | Receiver VM | Path 2 |
-| I | Receiver Host icmp_drop_detector | RepInternal |
-| I_1 | Receiver Host kvm_vhost_tun_latency | Total (S0+S1+S2) |
-| K | Sender Host icmp_drop_detector | RepInternal |
-| L | Sender Host tun_tx_to_kvm_irq | Total (S1→S5) |
-| M | Sender VM | Path 2 |
+| 参数 | 说明 |
+|------|------|
+| `measurement_dir` | 测量目录路径，包含 8 个日志文件 |
 
-### Step 4: Calculate Derived Segments
+## 输出
 
-Apply calculation formulas for segments that cannot be directly measured.
-See [formulas.md](formulas.md) for complete derivation.
+脚本输出 JSON 格式：
 
-**Key Formula - Physical Network Latency**:
-```
-Physical_Network (C + J) = Sender_External - Receiver_Host_Total
-```
-
-Where:
-- `Sender_External` = Sender Host icmp_drop_detector External field
-- `Receiver_Host_Total` = Receiver Host icmp_drop_detector Total field
-
-### Step 5: Validate Calculations
-
-Cross-check with validation equations:
-
-```
-# End-to-end validation
-VM_Total_RTT ≈ A + B + C + D + E + F + G + H + I + J + K + L + M
-
-# Three-segment model validation
-VM_Total_RTT ≈ Sender_Host_Total + Physical_Network + Receiver_Host_Total
+```json
+{
+  "report_path": "measurement-xxx/diagnosis_report.md",
+  "markdown_report": "# VM Cross-Node ICMP Latency Diagnosis Report\n...",
+  "detailed_report": {
+    "summary": { "total_rtt_us": 632.11, "primary_contributor": "host_ovs", ... },
+    "segments": { ... },
+    "layer_attribution": { ... },
+    "validation": { ... },
+    "findings": [ ... ],
+    "data_path_diagram": "..."
+  }
+}
 ```
 
-### Step 6: Attribution Analysis
+## 报告文件
 
-Group segments by layer and calculate percentages:
+生成的 `diagnosis_report.md` 包含：
 
-| Layer | Segments | Description |
-|-------|----------|-------------|
-| VM Internal | A + F + G + H + M | Kernel stack processing |
-| Host Internal | B + D + I + K | OVS/bridge forwarding |
-| Physical Network | C + J | Wire/switch latency |
-| Virt RX (TUN→KVM) | E + L | vhost→KVM IRQ injection (packet entering VM) |
-| Virt TX (KVM→TUN) | B_1 + I_1 | KVM→vhost→TUN (packet leaving VM) |
+1. **Summary** - Total RTT, Primary Contributor, Sample Count
+2. **Layer Attribution** - 5 层归因表 (按贡献比例排序)
+3. **Segment Breakdown** - 14 个分段的详细统计
+4. **Data Path Diagram** - ASCII 数据流图
+5. **Key Findings** - 分析结论
+6. **Validation** - 数据一致性检查
 
-**Note**: With all 8 measurement points, virtualization overhead is fully measurable. The "Virt Unmeasured" category from earlier versions should now be minimal or zero.
+## 调用示例
 
-### Step 7: Generate Report
-
-Use the report template to produce structured output.
-See [report-template.md](report-template.md) for the standard format.
-
-## Output
-
-The analysis produces:
-1. **Data Path Diagram**: Visual representation of latency segments
-2. **Raw Data Summary**: Parsed values from all log files
-3. **Segment Breakdown Table**: Each segment with source and value
-4. **Attribution Table**: Latency grouped by layer with percentages
-5. **Key Findings**: Notable observations and potential issues
-
-## Related Files
-
-- [data-path-model.md](data-path-model.md) - Segment definitions and diagram
-- [tool-mapping.md](tool-mapping.md) - Tool output to segment mappings
-- [formulas.md](formulas.md) - Calculation formulas and derivations
-- [report-template.md](report-template.md) - Output report template
-
-## Measurement Integration
-
-For running measurements remotely (not just analyzing existing logs), use the
-[vm-latency-measurement](../vm-latency-measurement/SKILL.md) skill.
+```bash
+python3 .claude/skills/vm-latency-analysis/scripts/generate_report.py measurement-20260126-140444
+```

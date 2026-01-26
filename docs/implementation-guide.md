@@ -1,7 +1,7 @@
 # NetSherlock Implementation Guide
 
-> 版本: 2.0
-> 日期: 2026-01-22
+> 版本: 2.1
+> 日期: 2026-01-26
 > 状态: MVP 完成 (Skill-Driven Architecture)
 
 NetSherlock is an AI-driven network troubleshooting agent built with Claude Agent SDK, integrating with internal Grafana monitoring data sources. The system uses a **Skill-driven architecture** where diagnostic phases are executed through Claude Code Skills.
@@ -73,7 +73,7 @@ NetSherlock's core innovation is the **Skill-driven diagnostic architecture**. I
 
 1. **Skill-based Execution**: L2/L3/L4 phases are implemented as Claude Code Skills, not direct tool calls
 2. **MinimalInputConfig Required**: All diagnosis operations require SSH and test configuration
-3. **Receiver-First Timing**: Guaranteed within `vm-latency-measurement` Skill, not by controller
+3. **Coordinated Measurement**: 8-point measurement executed via `vm-latency-measurement` Skill
 4. **Dual Configuration Modes**: Manual (YAML file) or Auto (GlobalInventory-based)
 
 ### Directory Structure
@@ -121,9 +121,10 @@ src/netsherlock/
     └── l4_analysis.py             # L4: Analysis helpers
 
 .claude/skills/                    # ★ Claude Code Skills (核心)
-├── network-env-collector.md       # L2 Skill
-├── vm-latency-measurement.md      # L3 Skill
-└── vm-latency-analysis.md         # L4 Skill
+├── network-env-collector/         # L2 Skill: 网络环境收集
+├── vm-latency-measurement/        # L3 Skill: 延迟测量
+├── vm-latency-analysis/           # L4 Skill: 延迟分析
+└── kernel-stack-analyzer/         # L4-Extended: 内核调用栈分析
 
 config/                            # 配置模板
 ├── minimal-input-template.yaml    # 手动模式配置模板
@@ -140,8 +141,9 @@ config/                            # 配置模板
 |-------|-----------|----------------|---------|
 | **L1** | Base Monitoring | Direct tool calls | Grafana/Loki 查询、节点日志读取 |
 | **L2** | Environment Awareness | `network-env-collector` Skill | SSH 环境收集 (OVS, vhost, NIC mapping) |
-| **L3** | Precise Measurement | `vm-latency-measurement` Skill | BPF 工具部署、协调测量、receiver-first |
+| **L3** | Precise Measurement | `vm-latency-measurement` Skill | BPF 工具部署、8 点协调测量 |
 | **L4** | Diagnostic Analysis | `vm-latency-analysis` Skill | 日志解析、延迟归因、报告生成 |
+| **L4-Ext** | Kernel Stack Analysis | `kernel-stack-analyzer` Skill | kfree_skb 堆栈追踪、丢包原因分析 |
 
 ### L1: Base Monitoring (Direct Tools)
 
@@ -240,7 +242,6 @@ L3 层通过 `vm-latency-measurement` Skill 执行协调测量。
 
 **关键特性**:
 - **8 个测量点**: 发送端/接收端 VM 和 Host 各 4 个
-- **Receiver-first 保证**: Skill 内部保证接收端先启动
 - **BPF 工具部署**: 自动部署到目标节点
 
 **DiagnosisController 调用方式**:
@@ -307,6 +308,42 @@ async def _analyze_and_report(self, request, l3_context) -> DiagnosisReport:
 - 归因表格 (AttributionTable)
 - 根因分析 (RootCause)
 - 改进建议 (Recommendations)
+
+### L4-Extended: Kernel Stack Analysis (`kernel-stack-analyzer` Skill)
+
+L4 扩展层通过 `kernel-stack-analyzer` Skill 分析内核调用栈，用于丢包原因分析。
+
+**Skill 定义**: `.claude/skills/kernel-stack-analyzer/SKILL.md`
+
+**功能**:
+- 分析 `kfree_skb` 追踪工具的输出
+- 解析内核调用栈地址到源码行号（使用 GDB 或 addr2line）
+- 区分真正的丢包和正常的数据包处理完成
+- 分类调用栈：真正丢包 vs 正常完成
+
+**使用场景**:
+- 诊断 TCP/UDP 丢包问题
+- 分析 OVS/虚拟化层的数据包丢弃
+- 追踪网络栈中的异常路径
+
+**调用示例**:
+
+```python
+result = await executor.invoke(
+    skill_name="kernel-stack-analyzer",
+    parameters={
+        "stack_trace_file": "/path/to/kfree_skb_output.txt",
+        "vmlinux_path": "/usr/lib/debug/boot/vmlinux-$(uname -r)",
+        "kernel_src_path": "/usr/src/linux",
+    },
+)
+
+# 输出包含:
+# - classified_stacks: 分类后的调用栈列表
+# - true_drops: 真正丢包的栈追踪
+# - normal_completions: 正常处理完成的栈追踪
+# - summary: 分析摘要
+```
 
 ---
 

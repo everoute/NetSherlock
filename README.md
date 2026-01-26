@@ -25,7 +25,7 @@ NetSherlock is an intelligent network diagnosis tool that combines Claude AI wit
 
 - **Skill-Driven Architecture**: L2/L3/L4 diagnostic phases executed through Claude Code Skills
 - **8-Point Coordinated Measurement**: BPF tools deployed across sender/receiver VMs and hosts
-- **Receiver-First Timing**: Guaranteed measurement accuracy through proper tool sequencing
+- **Coordinated Measurement**: 8-point BPF measurement with automatic tool coordination
 - **Dual-Mode Operation**: Interactive (human-in-the-loop) and Autonomous (fully automated) modes
 - **Grafana Integration**: Query metrics and logs from existing monitoring infrastructure
 - **Webhook API**: Automatic diagnosis triggered by Alertmanager alerts

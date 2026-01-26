@@ -59,7 +59,7 @@ For a typical diagnosis request:
 
 ## Important Constraints
 
-- **receiver-first timing**: For coordinated measurements, the receiver must start before the sender. This is enforced in L3 tools.
+- **Coordinated measurement**: L3 tools handle measurement tool coordination automatically.
 - **SSH connectivity**: All remote operations require SSH access to target hosts.
 - **BPF tools**: Measurement tools require root/sudo access on target hosts.
 

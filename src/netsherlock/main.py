@@ -194,7 +194,8 @@ def _format_diagnosis_result(result: DiagnosisResult, json_output: bool) -> None
             "mode": result.mode.value,
             "summary": result.summary,
             "root_cause": result.root_cause,
-            "recommendations": result.recommendations,
+            "detailed_report": result.detailed_report,
+            "report_path": result.report_path,
             "started_at": result.started_at.isoformat() if result.started_at else None,
             "completed_at": result.completed_at.isoformat() if result.completed_at else None,
             "error": result.error,
@@ -202,41 +203,50 @@ def _format_diagnosis_result(result: DiagnosisResult, json_output: bool) -> None
         click.echo(json.dumps(output, indent=2, default=str))
     else:
         click.echo()
-        click.echo("=" * 60)
-        click.echo("DIAGNOSIS RESULT")
-        click.echo("=" * 60)
-        click.echo()
-        click.echo(f"Diagnosis ID: {result.diagnosis_id}")
-        click.echo(f"Status: {result.status.value}")
-        click.echo(f"Mode: {result.mode.value}")
 
-        if result.summary:
-            click.echo(f"Summary: {result.summary}")
+        # Display Markdown report if available
+        if result.markdown_report:
+            click.echo(result.markdown_report)
+        elif result.detailed_report:
+            # Fallback: display summary from detailed report
+            report = result.detailed_report
+            summary = report.get("summary", {})
 
-        if result.root_cause:
+            click.echo("=" * 70)
+            click.echo("DIAGNOSIS RESULT")
+            click.echo("=" * 70)
             click.echo()
-            click.echo("Root Cause:")
-            for key, value in result.root_cause.items():
-                click.echo(f"  {key}: {value}")
-
-        if result.recommendations:
+            click.echo(f"Diagnosis ID: {result.diagnosis_id}")
+            click.echo(f"Status: {result.status.value}")
+            click.echo(f"Total RTT: {summary.get('total_rtt_us', 0):.2f} µs")
+            click.echo(f"Primary Contributor: {summary.get('primary_contributor_name', 'Unknown')} ({summary.get('primary_contributor_pct', 0):.1f}%)")
+        else:
+            # Minimal output
+            click.echo("=" * 70)
+            click.echo("DIAGNOSIS RESULT")
+            click.echo("=" * 70)
             click.echo()
-            click.echo("Recommendations:")
-            for i, rec in enumerate(result.recommendations, 1):
-                if isinstance(rec, dict):
-                    action = rec.get("action", "Unknown")
-                    priority = rec.get("priority", "")
-                    click.echo(f"  {i}. {action} (priority: {priority})")
-                else:
-                    click.echo(f"  {i}. {rec}")
+            click.echo(f"Diagnosis ID: {result.diagnosis_id}")
+            click.echo(f"Status: {result.status.value}")
+            if result.summary:
+                click.echo(f"Summary: {result.summary}")
+            if result.root_cause:
+                click.echo(f"Root Cause: {result.root_cause.get('category', 'Unknown')}")
 
+        # Show report file path
+        if result.report_path:
+            click.echo()
+            click.echo("-" * 70)
+            click.echo(f"Report saved to: {result.report_path}")
+
+        # Show error if any
         if result.error:
             click.echo()
             click.echo(f"Error: {result.error}", err=True)
 
+        # Show duration
         if result.started_at and result.completed_at:
             duration = (result.completed_at - result.started_at).total_seconds()
-            click.echo()
             click.echo(f"Duration: {duration:.1f}s")
 
 
@@ -357,6 +367,12 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
     is_flag=True,
     help="Shortcut for --mode interactive",
 )
+@click.option(
+    "--generate-traffic",
+    "generate_traffic",
+    is_flag=True,
+    help="Generate ICMP test traffic from sender VM (default: use background traffic)",
+)
 @click.pass_context
 def diagnose(
     ctx: click.Context,
@@ -371,6 +387,7 @@ def diagnose(
     mode: str | None,
     mode_autonomous: bool,
     mode_interactive: bool,
+    generate_traffic: bool,
 ) -> None:
     """Run network diagnosis on a target host.
 
@@ -437,7 +454,11 @@ def diagnose(
         src_vm=src_vm,
         dst_host=dst_host,
         dst_vm=dst_vm,
-        options={"duration": duration, "mode": effective_mode.value},
+        options={
+            "duration": duration,
+            "mode": effective_mode.value,
+            "generate_traffic": generate_traffic,
+        },
     )
 
     log = logger.bind(

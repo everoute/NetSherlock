@@ -2,7 +2,7 @@
 name: vm-latency-measurement
 description: |
   Execute coordinated latency measurement across sender and receiver VMs and hosts.
-  Deploys BPF tools to 8 measurement points, starts them with receiver-first timing,
+  Deploys BPF tools to 8 measurement points, coordinates their execution,
   collects logs, and outputs structured JSON with segment latencies.
 
   Trigger keywords: measure VM latency, run latency measurement, collect latency data,

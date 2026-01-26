@@ -120,6 +120,9 @@ class DiagnosisResult:
     recommendations: list[dict[str, Any]] = field(default_factory=list)
     measurements: dict[str, Any] = field(default_factory=dict)
     analysis_result: AnalysisResult | None = None
+    detailed_report: dict[str, Any] = field(default_factory=dict)  # Full analysis report
+    markdown_report: str = ""  # Markdown formatted report
+    report_path: str = ""  # Path to saved report file
     started_at: datetime | None = None
     completed_at: datetime | None = None
     error: str | None = None
@@ -136,6 +139,9 @@ class DiagnosisResult:
             recommendations=state.analysis.get("recommendations", []),
             measurements=state.measurements,
             analysis_result=analysis_result,
+            detailed_report=state.analysis.get("detailed_report", {}),
+            markdown_report=state.analysis.get("markdown_report", ""),
+            report_path=state.analysis.get("report_path", ""),
             started_at=state.started_at,
             completed_at=state.completed_at,
             error=state.error,
@@ -766,6 +772,8 @@ class DiagnosisController:
         params: dict[str, Any] = {
             # Duration
             "duration": request.options.get("duration", 30),
+            # Generate ICMP traffic from sender VM (default: False, use background traffic)
+            "generate_traffic": request.options.get("generate_traffic", False),
         }
 
         # BPF tools paths
@@ -890,18 +898,14 @@ class DiagnosisController:
         measurements: dict[str, Any],
         environment: dict[str, Any],
     ) -> dict[str, Any]:
-        """Analyze results and generate report.
-
-        Two-phase analysis:
-        1. Data calculation (deterministic)
-        2. LLM reasoning (intelligent)
+        """Analyze results and generate report via analysis skill.
 
         Args:
             measurements: Measurement data
             environment: Environment data
 
         Returns:
-            Analysis results
+            Analysis results including detailed report
         """
         self._log.info(
             "l4_analysis_starting",
@@ -914,95 +918,87 @@ class DiagnosisController:
                 "reason": f"Measurement failed: {measurements.get('error', 'unknown')}",
             }
 
-        # Phase 1: Data calculation (deterministic)
-        breakdown = self._calculate_breakdown(measurements)
+        # Find measurement directory - try from skill output or find latest
+        measurement_dir = measurements.get("data", {}).get("measurement_dir", "")
+        if not measurement_dir:
+            # Find the most recently modified measurement-* directory
+            measurement_dirs = sorted(
+                self._project_path.glob("measurement-*"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if measurement_dirs:
+                measurement_dir = str(measurement_dirs[0])
+                self._log.info(
+                    "l4_using_latest_measurement_dir",
+                    measurement_dir=measurement_dir,
+                )
 
-        # Log L3→L4 data flow
-        self._log.info(
-            "l3_to_l4_breakdown_calculated",
-            total_rtt_us=breakdown.total_rtt_us,
-            primary_contributor=breakdown.get_primary_contributor().value if breakdown.get_primary_contributor() else None,
-        )
+        if not measurement_dir:
+            return {
+                "status": "error",
+                "reason": "No measurement_dir found",
+            }
 
-        # Phase 2: LLM reasoning via skill
+        # Invoke analysis skill
         executor = self._get_skill_executor()
         analysis_result = await executor.invoke(
             skill_name="vm-latency-analysis",
             parameters={
-                "breakdown": breakdown.to_dict(),
-                "environment": environment,
+                "measurement_dir": measurement_dir,
             },
         )
 
-        # Build AnalysisResult
+        if not analysis_result.is_success:
+            self._log.error(
+                "l4_analysis_skill_failed",
+                error=analysis_result.error,
+            )
+            return {
+                "status": "error",
+                "reason": f"Analysis skill failed: {analysis_result.error}",
+            }
+
+        # Extract results from skill output
+        data = analysis_result.data
+        detailed_report = data.get("detailed_report", {})
+        markdown_report = data.get("markdown_report", "")
+        report_path = data.get("report_path", "")
+
+        # Get summary info
+        summary = detailed_report.get("summary", {})
+        primary_contributor = summary.get("primary_contributor", "unknown")
+
+        self._log.info(
+            "l4_analysis_completed",
+            total_rtt_us=summary.get("total_rtt_us", 0),
+            primary_contributor=primary_contributor,
+            report_path=report_path,
+        )
+
+        # Build AnalysisResult for internal use
+        breakdown = self._calculate_breakdown(measurements)
         self._analysis_result = AnalysisResult(
             breakdown=breakdown,
             primary_contributor=breakdown.get_primary_contributor(),
         )
 
-        if analysis_result.is_success:
-            data = analysis_result.data
-
-            # Ensure data is a dict (skill may return non-dict data)
-            if not isinstance(data, dict):
-                self._log.warning(
-                    "l4_analysis_data_not_dict",
-                    data_type=type(data).__name__,
-                )
-                data = {}
-
-            # Parse LLM analysis
-            if "primary_contributor" in data:
-                try:
-                    self._analysis_result.primary_contributor = LayerType(data["primary_contributor"])
-                except ValueError:
-                    pass
-
-            self._analysis_result.confidence = data.get("confidence", 0.0)
-            self._analysis_result.reasoning = data.get("reasoning", "")
-
-            # Add probable causes
-            for cause_data in data.get("probable_causes", []):
-                if not isinstance(cause_data, dict):
-                    continue
-                layer = None
-                if cause_data.get("layer"):
-                    try:
-                        layer = LayerType(cause_data["layer"])
-                    except ValueError:
-                        pass
-                self._analysis_result.add_probable_cause(
-                    cause=cause_data.get("cause", ""),
-                    confidence=cause_data.get("confidence", 0.0),
-                    evidence=cause_data.get("evidence", []),
-                    layer=layer,
-                )
-
-            # Add recommendations
-            for rec_data in data.get("recommendations", []):
-                if not isinstance(rec_data, dict):
-                    continue
-                self._analysis_result.add_recommendation(
-                    action=rec_data.get("action", ""),
-                    priority=rec_data.get("priority", "medium"),
-                    rationale=rec_data.get("rationale", ""),
-                )
+        if primary_contributor and primary_contributor != "unknown":
+            try:
+                self._analysis_result.primary_contributor = LayerType(primary_contributor)
+            except ValueError:
+                pass
 
         return {
             "status": "success",
             "root_cause": {
-                "category": (
-                    self._analysis_result.primary_contributor.value
-                    if self._analysis_result.primary_contributor
-                    else "unknown"
-                ),
-                "confidence": self._analysis_result.confidence,
+                "category": primary_contributor,
+                "confidence": summary.get("confidence", 0.85),
             },
-            "recommendations": [
-                {"action": r.action, "priority": r.priority}
-                for r in self._analysis_result.recommendations
-            ],
             "breakdown": breakdown.to_dict(),
+            "detailed_report": detailed_report,
+            "markdown_report": markdown_report,
+            "report_path": report_path,
         }
 
     def _calculate_breakdown(self, measurements: dict[str, Any]) -> LatencyBreakdown:

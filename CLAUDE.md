@@ -24,7 +24,6 @@ This workspace has access to two companion repositories:
 ├─────────────────────────────────────────────────────────────┤
 │ Layer 3: Precise Measurement                                │
 │   - BCC/eBPF tool execution, coordinated multi-point        │
-│   - Critical constraint: receiver-first timing              │
 ├─────────────────────────────────────────────────────────────┤
 │ Layer 2: Environment Awareness                              │
 │   - Problem type identification, environment collection     │
@@ -43,10 +42,6 @@ This workspace has access to two companion repositories:
 | L2    | `collect_vm_network_env`, `collect_system_network_env`             | Environment and topology   |
 | L3    | `execute_coordinated_measurement`, `measure_vm_latency_breakdown`  | eBPF measurement execution |
 | L4    | `analyze_latency_segments`, `generate_diagnosis_report`            | Analysis and reporting     |
-
-### Key Design Constraint
-
-**receiver-first timing**: For coordinated measurements, the receiver-side tool must start before the sender. This constraint is enforced in the L3 tool implementation (`execute_coordinated_measurement`), not by AI decision.
 
 ## Data Sources
 
@@ -105,7 +100,7 @@ Rationale:
 
 1. Fast MVP validation without LangGraph learning curve
 2. Native Subagent support for four-layer responsibility separation
-3. Tool encapsulation guarantees critical constraints (receiver-first)
+3. Tool encapsulation handles measurement coordination
 4. Prompt modification enables rapid iteration
 
 ## Browser Automation
