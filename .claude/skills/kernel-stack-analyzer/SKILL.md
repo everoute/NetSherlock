@@ -20,7 +20,7 @@ allowed-tools: Read, Write, Bash, Grep, Glob
 This skill analyzes kernel call stacks from the `kernel_drop_stack_stats_summary_all.py` BPF tool output. It distinguishes between:
 
 - **TRUE_DROP**: Actual packet drops (errors, policy, resource limits)
-- **NORMAL_PROCESSING**: Normal packet handling where `kfree_skb` is called on clones/copies
+- **NORMAL_PROCESSING**: Normal packet handling where `kfree_skb` is called as part of normal processing completion (e.g., packet delivered to socket, clones/copies freed, helper buffers cleaned up)
 
 ## Usage
 
@@ -144,7 +144,7 @@ Summary: 81 TRUE_DROP, 42 NORMAL_PROCESSING
 |-----------|----------|
 | Labels | `out:`, `done:`, `success:`, `free:` |
 | Returns | `NET_RX_SUCCESS`, `0` |
-| Context | Operating on `skb_clone()`, `skb_copy()`, helper buffers |
+| Context | Processing completed normally: packet consumed/delivered, `skb_clone()`/`skb_copy()` freed, helper buffers cleaned up |
 
 ## Prerequisites
 
