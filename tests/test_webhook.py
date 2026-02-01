@@ -330,10 +330,10 @@ class TestAlertmanagerWebhookEndpoint:
         return TestClient(app, raise_server_exceptions=False)
 
     @pytest.fixture
-    def mock_orchestrator(self):
-        """Mock the orchestrator."""
-        with patch("netsherlock.api.webhook.orchestrator") as mock:
-            mock.diagnose_alert = MagicMock()
+    def mock_engine(self):
+        """Mock the engine."""
+        with patch("netsherlock.api.webhook.engine") as mock:
+            mock.execute = AsyncMock()
             yield mock
 
     def test_alertmanager_webhook_returns_mode(self, client):
@@ -756,30 +756,28 @@ class TestDiagnosisWorkerErrorHandling:
         # Put a request in the queue
         await diagnosis_queue.put(("alert", test_id, test_data))
 
-        with patch("netsherlock.api.webhook.orchestrator", None):
+        with patch("netsherlock.api.webhook.engine", None):
             # Run worker for one iteration
             # We'll simulate the worker loop manually
             request_type, request_id, request_data = await diagnosis_queue.get()
 
             from datetime import datetime, timezone
 
-            from netsherlock.agents import DiagnosisResult
+            from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 
             # Simulate worker behavior when orchestrator is None
             diagnosis_store[request_id] = DiagnosisResult(
                 diagnosis_id=request_id,
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                alert_source=None,
-                summary="Diagnosis failed: Orchestrator not initialized",
-                root_cause=None,
-                recommendations=[],
+                status=DiagnosisStatus.ERROR,
+                summary="Diagnosis failed: engine not initialized",
+                error="engine not initialized",
             )
             diagnosis_queue.task_done()
 
             # Verify error result was stored
             assert test_id in diagnosis_store
             result = diagnosis_store[test_id]
-            assert "Orchestrator not initialized" in result.summary
+            assert "engine not initialized" in result.summary
 
             # Cleanup
             del diagnosis_store[test_id]
@@ -801,28 +799,26 @@ class TestDiagnosisWorkerErrorHandling:
         # Put a request in the queue
         await diagnosis_queue.put(("alert", test_id, test_data))
 
-        mock_orchestrator = MagicMock()
-        mock_orchestrator.diagnose_alert = AsyncMock(side_effect=Exception("Test error"))
+        mock_engine = MagicMock()
+        mock_engine.execute = AsyncMock(side_effect=Exception("Test error"))
 
-        with patch("netsherlock.api.webhook.orchestrator", mock_orchestrator):
+        with patch("netsherlock.api.webhook.engine", mock_engine):
             # Run worker for one iteration (simulate manually)
             request_type, request_id, request_data = await diagnosis_queue.get()
 
             from datetime import datetime, timezone
 
-            from netsherlock.agents import DiagnosisResult
+            from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 
             try:
-                await mock_orchestrator.diagnose_alert(request_data)
+                await mock_engine.execute(request_data)
             except Exception as e:
                 # Simulate worker error handling
                 diagnosis_store[request_id] = DiagnosisResult(
                     diagnosis_id=request_id,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
-                    alert_source=None,
+                    status=DiagnosisStatus.ERROR,
                     summary=f"Diagnosis failed: {str(e)}",
-                    root_cause=None,
-                    recommendations=[],
+                    error=str(e),
                 )
             finally:
                 diagnosis_queue.task_done()

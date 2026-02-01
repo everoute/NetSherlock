@@ -1,0 +1,28 @@
+{
+  "vm_latency_cross_node": {
+    "request_type": "latency",
+    "network_type": "vm",
+    "src_host": "192.168.75.101",
+    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    "dst_host": "192.168.75.102",
+    "dst_vm": "bf7bb275-715d-4cb1-95a9-3efa045308f2"
+  },
+  "vm_latency_single_node": {
+    "request_type": "latency",
+    "network_type": "vm",
+    "src_host": "192.168.75.101",
+    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1"
+  },
+  "system_latency": {
+    "request_type": "latency",
+    "network_type": "system",
+    "src_host": "192.168.75.101",
+    "dst_host": "192.168.75.102"
+  },
+  "packet_drop_vm": {
+    "request_type": "packet_drop",
+    "network_type": "vm",
+    "src_host": "192.168.75.101",
+    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1"
+  }
+}

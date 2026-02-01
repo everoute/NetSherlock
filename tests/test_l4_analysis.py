@@ -5,7 +5,7 @@ Tests for latency analysis, drop analysis, and report generation.
 
 import pytest
 
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.schemas.request import DiagnosisRequest
 from netsherlock.schemas.measurement import (
     DropPoint,
     LatencyBreakdown,

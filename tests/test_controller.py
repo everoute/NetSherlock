@@ -12,7 +12,7 @@ from netsherlock.controller import (
     CheckpointStatus,
     DiagnosisController,
 )
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.schemas.request import DiagnosisRequest
 from netsherlock.schemas.config import (
     AutonomousConfig,
     CheckpointType,
@@ -483,9 +483,9 @@ class TestDiagnosisResult:
 
     def test_cancelled_factory(self):
         """Cancelled factory creates correct result."""
-        from netsherlock.controller.diagnosis_controller import DiagnosisResult, DiagnosisStatus
+        from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 
-        result = DiagnosisResult.cancelled("test-123", DiagnosisMode.INTERACTIVE)
+        result = DiagnosisResult.create_cancelled("test-123", mode=DiagnosisMode.INTERACTIVE)
 
         assert result.diagnosis_id == "test-123"
         assert result.status == DiagnosisStatus.CANCELLED
@@ -493,9 +493,9 @@ class TestDiagnosisResult:
 
     def test_error_factory(self):
         """Error factory creates correct result."""
-        from netsherlock.controller.diagnosis_controller import DiagnosisResult, DiagnosisStatus
+        from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 
-        result = DiagnosisResult.create_error("test-123", DiagnosisMode.AUTONOMOUS, "Something failed")
+        result = DiagnosisResult.create_error("test-123", error="Something failed", mode=DiagnosisMode.AUTONOMOUS)
 
         assert result.diagnosis_id == "test-123"
         assert result.status == DiagnosisStatus.ERROR

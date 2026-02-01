@@ -11,13 +11,9 @@ import pytest
 mock_sdk = MagicMock()
 sys.modules["claude_code_sdk"] = mock_sdk
 
-from netsherlock.agents.base import (
-    AlertContext,
-    DiagnosisResult,
-    Recommendation,
-    RootCause,
-    RootCauseCategory,
-)
+from netsherlock.agents.base import AlertContext
+from netsherlock.schemas.report import Recommendation, RootCause, RootCauseCategory
+from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 from netsherlock.agents.orchestrator import (
     NetworkTroubleshootingOrchestrator,
     create_orchestrator,
@@ -254,12 +250,12 @@ class TestSynthesizeDiagnosis:
 
         assert isinstance(result, DiagnosisResult)
         assert result.diagnosis_id == "diag-test123"
-        assert result.timestamp == "2024-01-15T10:00:00Z"
+        assert result.status == DiagnosisStatus.COMPLETED
 
     def test_synthesize_diagnosis_with_alert_context(
         self, mock_settings: MagicMock
     ) -> None:
-        """Diagnosis includes alert context when provided."""
+        """Diagnosis includes summary when provided."""
         orchestrator = NetworkTroubleshootingOrchestrator(settings=mock_settings)
 
         alert_context = AlertContext(
@@ -275,19 +271,23 @@ class TestSynthesizeDiagnosis:
             agent_result=None,
         )
 
-        assert result.alert_source == alert_context
+        # Unified result doesn't store alert_source directly;
+        # verify it's a valid result
+        assert result.diagnosis_id == "diag-test"
+        assert result.status == DiagnosisStatus.COMPLETED
 
     def test_synthesize_diagnosis_has_root_cause(
         self, mock_settings: MagicMock
     ) -> None:
-        """Synthesized diagnosis includes root cause."""
+        """Synthesized diagnosis includes root cause when agent returns JSON."""
         orchestrator = NetworkTroubleshootingOrchestrator(settings=mock_settings)
 
+        agent_output = '{"summary": "OVS bridge delay", "root_cause": {"category": "host_internal", "component": "ovs", "confidence": 0.8, "evidence": ["high delay"]}}'
         result = orchestrator._synthesize_diagnosis(
             diagnosis_id="diag-test",
             timestamp="2024-01-15T10:00:00Z",
             alert_context=None,
-            agent_result=None,
+            agent_result=agent_output,
         )
 
         assert isinstance(result.root_cause, RootCause)
@@ -296,14 +296,15 @@ class TestSynthesizeDiagnosis:
     def test_synthesize_diagnosis_has_recommendations(
         self, mock_settings: MagicMock
     ) -> None:
-        """Synthesized diagnosis includes recommendations."""
+        """Synthesized diagnosis includes recommendations when agent returns JSON."""
         orchestrator = NetworkTroubleshootingOrchestrator(settings=mock_settings)
 
+        agent_output = '{"summary": "High latency", "recommendations": [{"priority": 1, "action": "Check OVS flows"}]}'
         result = orchestrator._synthesize_diagnosis(
             diagnosis_id="diag-test",
             timestamp="2024-01-15T10:00:00Z",
             alert_context=None,
-            agent_result=None,
+            agent_result=agent_output,
         )
 
         assert len(result.recommendations) >= 1

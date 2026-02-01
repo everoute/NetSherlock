@@ -22,8 +22,14 @@ from netsherlock.core.skill_executor import (
     SkillExecutor,
     SkillExecutorProtocol,
 )
-from netsherlock.schemas.alert import DiagnosisRequest
-from netsherlock.schemas.analysis import AnalysisResult, LatencyBreakdown, LayerType, SegmentData
+from netsherlock.schemas.analysis import (
+    AnalysisResult,
+    LatencyBreakdown,
+    LayerType,
+    ProbableCause,
+    Recommendation as AnalysisRecommendation,
+    SegmentData,
+)
 from netsherlock.schemas.config import (
     CheckpointType,
     DiagnosisConfig,
@@ -31,12 +37,13 @@ from netsherlock.schemas.config import (
     DiagnosisRequestSource,
 )
 from netsherlock.schemas.minimal_input import MinimalInputConfig
+from netsherlock.schemas.request import DiagnosisRequest
+from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 
 from .checkpoints import (
     CheckpointCallback,
     CheckpointData,
     CheckpointManager,
-    CheckpointResult,
     CheckpointStatus,
 )
 
@@ -57,18 +64,6 @@ class DiagnosisPhase(str, Enum):
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     ERROR = "error"
-
-
-class DiagnosisStatus(str, Enum):
-    """Status of diagnosis execution."""
-
-    PENDING = "pending"
-    RUNNING = "running"
-    WAITING = "waiting"  # Waiting at checkpoint
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-    ERROR = "error"
-    INTERRUPTED = "interrupted"
 
 
 @dataclass
@@ -108,67 +103,9 @@ class DiagnosisState:
         }
 
 
-@dataclass
-class DiagnosisResult:
-    """Result of a diagnosis session."""
 
-    diagnosis_id: str
-    status: DiagnosisStatus
-    mode: DiagnosisMode
-    summary: str = ""
-    root_cause: dict[str, Any] = field(default_factory=dict)
-    recommendations: list[dict[str, Any]] = field(default_factory=list)
-    measurements: dict[str, Any] = field(default_factory=dict)
-    analysis_result: AnalysisResult | None = None
-    detailed_report: dict[str, Any] = field(default_factory=dict)  # Full analysis report
-    markdown_report: str = ""  # Markdown formatted report
-    report_path: str = ""  # Path to saved report file
-    started_at: datetime | None = None
-    completed_at: datetime | None = None
-    error: str | None = None
-    checkpoint_history: list[CheckpointResult] = field(default_factory=list)
-
-    @classmethod
-    def from_state(cls, state: DiagnosisState, analysis_result: AnalysisResult | None = None) -> DiagnosisResult:
-        """Create result from diagnosis state."""
-        result = cls(
-            diagnosis_id=state.diagnosis_id,
-            status=state.status,
-            mode=state.mode,
-            root_cause=state.analysis.get("root_cause", {}),
-            recommendations=state.analysis.get("recommendations", []),
-            measurements=state.measurements,
-            analysis_result=analysis_result,
-            detailed_report=state.analysis.get("detailed_report", {}),
-            markdown_report=state.analysis.get("markdown_report", ""),
-            report_path=state.analysis.get("report_path", ""),
-            started_at=state.started_at,
-            completed_at=state.completed_at,
-            error=state.error,
-        )
-        if analysis_result:
-            result.summary = analysis_result.summary()
-        return result
-
-    @classmethod
-    def cancelled(cls, diagnosis_id: str, mode: DiagnosisMode) -> DiagnosisResult:
-        """Create a cancelled result."""
-        return cls(
-            diagnosis_id=diagnosis_id,
-            status=DiagnosisStatus.CANCELLED,
-            mode=mode,
-            summary="Diagnosis cancelled by user",
-        )
-
-    @classmethod
-    def create_error(cls, diagnosis_id: str, mode: DiagnosisMode, error_msg: str) -> DiagnosisResult:
-        """Create an error result."""
-        return cls(
-            diagnosis_id=diagnosis_id,
-            status=DiagnosisStatus.ERROR,
-            mode=mode,
-            error=error_msg,
-        )
+# DiagnosisResult is now imported from schemas.result.
+# The following helper functions create results adapted from controller state.
 
 
 class DiagnosisController:
@@ -369,7 +306,7 @@ class DiagnosisController:
             self._minimal_input = self._load_minimal_input(request)
         except Exception as e:
             self._log.error("failed_to_load_config", error=str(e))
-            return DiagnosisResult.create_error(self._state.diagnosis_id, mode, f"Config error: {e}")
+            return DiagnosisResult.create_error(self._state.diagnosis_id, error=f"Config error: {e}", mode=mode)
 
         # Initialize checkpoint manager for interactive mode
         if mode == DiagnosisMode.INTERACTIVE:
@@ -394,7 +331,7 @@ class DiagnosisController:
                 return await self._run_interactive(request)
         except asyncio.CancelledError:
             self._log.info("diagnosis_cancelled", diagnosis_id=self._state.diagnosis_id)
-            return DiagnosisResult.cancelled(self._state.diagnosis_id, mode)
+            return DiagnosisResult.create_cancelled(self._state.diagnosis_id, mode=mode)
         except Exception as e:
             self._log.error(
                 "diagnosis_error",
@@ -403,7 +340,7 @@ class DiagnosisController:
             )
             self._state.status = DiagnosisStatus.ERROR
             self._state.error = str(e)
-            return DiagnosisResult.create_error(self._state.diagnosis_id, mode, str(e))
+            return DiagnosisResult.create_error(self._state.diagnosis_id, error=str(e), mode=mode)
         finally:
             self._state.completed_at = datetime.now()
 
@@ -468,7 +405,7 @@ class DiagnosisController:
             mode="autonomous",
         )
 
-        return DiagnosisResult.from_state(state, self._analysis_result)
+        return DiagnosisResult.from_controller_state(state, analysis_result=self._analysis_result)
 
     async def _run_interactive(self, request: DiagnosisRequest) -> DiagnosisResult:
         """Run in interactive mode - with checkpoints.
@@ -511,7 +448,7 @@ class DiagnosisController:
         if checkpoint_result.is_cancelled:
             state.status = DiagnosisStatus.CANCELLED
             state.phase = DiagnosisPhase.CANCELLED
-            return DiagnosisResult.cancelled(state.diagnosis_id, state.mode)
+            return DiagnosisResult.create_cancelled(state.diagnosis_id, mode=state.mode)
 
         if checkpoint_result.status == CheckpointStatus.MODIFIED:
             # User modified classification
@@ -539,7 +476,7 @@ class DiagnosisController:
         if checkpoint_result.is_cancelled:
             state.status = DiagnosisStatus.CANCELLED
             state.phase = DiagnosisPhase.CANCELLED
-            return DiagnosisResult.cancelled(state.diagnosis_id, state.mode)
+            return DiagnosisResult.create_cancelled(state.diagnosis_id, mode=state.mode)
 
         state.status = DiagnosisStatus.RUNNING
 
@@ -563,9 +500,11 @@ class DiagnosisController:
             mode="interactive",
         )
 
-        result = DiagnosisResult.from_state(state, self._analysis_result)
-        result.checkpoint_history = self._checkpoint_manager.history
-        return result
+        return DiagnosisResult.from_controller_state(
+            state,
+            analysis_result=self._analysis_result,
+            checkpoint_history=self._checkpoint_manager.history,
+        )
 
     # === Phase Implementation ===
 
@@ -965,9 +904,16 @@ class DiagnosisController:
         markdown_report = data.get("markdown_report", "")
         report_path = data.get("report_path", "")
 
-        # Get summary info
+        # Get summary info — try nested path first, then flat data
         summary = detailed_report.get("summary", {})
-        primary_contributor = summary.get("primary_contributor", "unknown")
+        primary_contributor = (
+            summary.get("primary_contributor")
+            or data.get("primary_contributor", "unknown")
+        )
+        confidence = (
+            summary.get("confidence")
+            or data.get("confidence", 0.0)
+        )
 
         self._log.info(
             "l4_analysis_completed",
@@ -981,6 +927,7 @@ class DiagnosisController:
         self._analysis_result = AnalysisResult(
             breakdown=breakdown,
             primary_contributor=breakdown.get_primary_contributor(),
+            confidence=confidence,
         )
 
         if primary_contributor and primary_contributor != "unknown":
@@ -989,11 +936,42 @@ class DiagnosisController:
             except ValueError:
                 pass
 
+        # Populate probable causes from skill output
+        raw_causes = data.get("probable_causes", [])
+        for raw_cause in raw_causes:
+            if isinstance(raw_cause, dict):
+                layer = None
+                if raw_cause.get("layer"):
+                    try:
+                        layer = LayerType(raw_cause["layer"])
+                    except ValueError:
+                        pass
+                self._analysis_result.probable_causes.append(
+                    ProbableCause(
+                        cause=raw_cause.get("cause", ""),
+                        confidence=raw_cause.get("confidence", 0.0),
+                        evidence=raw_cause.get("evidence", []),
+                        layer=layer,
+                    )
+                )
+
+        # Populate recommendations from skill output
+        raw_recs = data.get("recommendations", [])
+        for raw_rec in raw_recs:
+            if isinstance(raw_rec, dict):
+                self._analysis_result.recommendations.append(
+                    AnalysisRecommendation(
+                        action=raw_rec.get("action", ""),
+                        priority=raw_rec.get("priority", "medium"),
+                        rationale=raw_rec.get("rationale", ""),
+                    )
+                )
+
         return {
             "status": "success",
             "root_cause": {
                 "category": primary_contributor,
-                "confidence": summary.get("confidence", 0.85),
+                "confidence": confidence,
             },
             "breakdown": breakdown.to_dict(),
             "detailed_report": detailed_report,
@@ -1053,6 +1031,7 @@ class DiagnosisController:
             status=DiagnosisStatus.INTERRUPTED,
             mode=self._state.mode if self._state else DiagnosisMode.AUTONOMOUS,
             summary="Diagnosis interrupted by user",
+            completed_at=datetime.now(),
         )
 
     # === Checkpoint Interaction ===

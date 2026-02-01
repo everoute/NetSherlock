@@ -8,10 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from netsherlock.controller.diagnosis_controller import (
-    DiagnosisController,
-    DiagnosisStatus,
-)
+from netsherlock.controller.diagnosis_controller import DiagnosisController
 from netsherlock.core.skill_executor import (
     MockSkillExecutor,
     SkillResult,
@@ -19,7 +16,8 @@ from netsherlock.core.skill_executor import (
     create_mock_env_collector_response,
     create_mock_measurement_response,
 )
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.schemas.request import DiagnosisRequest
+from netsherlock.schemas.result import DiagnosisStatus
 from netsherlock.schemas.config import DiagnosisConfig, DiagnosisMode
 
 
@@ -239,7 +237,9 @@ class TestControllerWithSkillExecutor:
 
         assert result.analysis_result is not None
         assert result.analysis_result.primary_contributor is not None
-        assert result.analysis_result.confidence == 0.85
+        # confidence comes from the unified result, not AnalysisResult
+        # (AnalysisResult.confidence is populated by LLM analysis in Phase 2)
+        assert result.confidence == 0.85
 
         # Check breakdown was calculated
         breakdown = result.analysis_result.breakdown

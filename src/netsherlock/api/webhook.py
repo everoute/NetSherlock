@@ -7,6 +7,9 @@ This module provides the HTTP API for:
 - Querying diagnosis status and results
 - Mode-aware diagnosis (autonomous/interactive based on config)
 - API key authentication for security
+
+The webhook layer is engine-agnostic: it depends only on the
+DiagnosisEngine protocol, not on specific engine implementations.
 """
 
 import asyncio
@@ -23,13 +26,10 @@ from typing import Annotated, Any, Literal
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 
-from netsherlock.agents import (
-    DiagnosisResult,
-    NetworkTroubleshootingOrchestrator,
-    create_orchestrator,
-)
 from netsherlock.config.settings import get_settings
 from netsherlock.schemas.config import DiagnosisMode, DiagnosisRequestSource
+from netsherlock.schemas.request import DiagnosisRequest
+from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -39,8 +39,8 @@ logger = logging.getLogger(__name__)
 diagnosis_store: dict[str, DiagnosisResult] = {}
 diagnosis_queue: asyncio.Queue = asyncio.Queue()
 
-# Global orchestrator instance
-orchestrator: NetworkTroubleshootingOrchestrator | None = None
+# Global engine instance (DiagnosisEngine protocol)
+engine: Any = None  # DiagnosisEngine protocol — Any to avoid circular import
 
 
 # ============================================================
@@ -178,15 +178,125 @@ def determine_webhook_mode(
     )
 
 
+# ============================================================
+# Engine creation
+# ============================================================
+
+
+def _create_engine(settings: Any) -> Any:
+    """Create diagnosis engine based on settings.
+
+    Args:
+        settings: Application settings.
+
+    Returns:
+        DiagnosisEngine implementation (ControllerEngine or OrchestratorEngine).
+    """
+    engine_type = settings.diagnosis_engine
+
+    if engine_type == "controller":
+        from netsherlock.core.controller_engine import ControllerEngine
+
+        return ControllerEngine(
+            config=settings.get_diagnosis_config(),
+            global_inventory_path=settings.global_inventory_path,
+            project_path=settings.project_path,
+            llm_model=settings.llm.model,
+            llm_max_turns=settings.llm.max_turns,
+            llm_max_budget_usd=settings.llm.max_budget_usd,
+            bpf_local_tools_path=settings.bpf_tools.local_tools_path,
+            bpf_remote_tools_path=settings.bpf_tools.remote_tools_path,
+        )
+    elif engine_type == "orchestrator":
+        from netsherlock.core.orchestrator_engine import OrchestratorEngine
+
+        return OrchestratorEngine(settings=settings)
+    else:
+        raise ValueError(f"Unknown engine type: {engine_type}")
+
+
+# ============================================================
+# Request building
+# ============================================================
+
+
+def _build_diagnosis_request(
+    request_type: str,
+    request_id: str,
+    raw_data: dict[str, Any],
+) -> DiagnosisRequest:
+    """Convert webhook raw data to unified DiagnosisRequest.
+
+    Args:
+        request_type: "alert" or "manual".
+        request_id: Unique diagnosis ID.
+        raw_data: Raw data from queue.
+
+    Returns:
+        Unified DiagnosisRequest.
+    """
+    if request_type == "alert":
+        labels = raw_data.get("labels", {})
+        src_host_raw = labels.get("src_host") or labels.get("instance", "")
+        src_host = src_host_raw.split(":")[0] if src_host_raw else ""
+
+        return DiagnosisRequest(
+            request_id=request_id,
+            request_type=_map_alert_to_type(labels.get("alertname", "")),
+            network_type=labels.get("network_type", "vm"),
+            src_host=src_host,
+            src_vm=labels.get("src_vm"),
+            dst_host=labels.get("dst_host"),
+            dst_vm=labels.get("dst_vm"),
+            source=DiagnosisRequestSource.WEBHOOK,
+            alert_type=labels.get("alertname"),
+            mode=DiagnosisMode(raw_data["mode"]) if "mode" in raw_data else None,
+        )
+    else:
+        # Manual request
+        mode_str = raw_data.get("mode")
+        return DiagnosisRequest(
+            request_id=request_id,
+            request_type=raw_data.get("diagnosis_type", "latency"),
+            network_type=raw_data.get("network_type", "vm"),
+            src_host=raw_data["src_host"],
+            src_vm=raw_data.get("src_vm"),
+            dst_host=raw_data.get("dst_host"),
+            dst_vm=raw_data.get("dst_vm"),
+            source=DiagnosisRequestSource.API,
+            description=raw_data.get("description"),
+            alert_type=raw_data.get("alert_type"),
+            mode=DiagnosisMode(mode_str) if mode_str else None,
+        )
+
+
+def _map_alert_to_type(alertname: str) -> str:
+    """Map alertname to request_type."""
+    mapping = {
+        "VMNetworkLatency": "latency",
+        "HostNetworkLatency": "latency",
+        "VMPacketDrop": "packet_drop",
+        "HostPacketDrop": "packet_drop",
+        "VMConnectivity": "connectivity",
+    }
+    return mapping.get(alertname, "latency")
+
+
+# ============================================================
+# Application lifecycle
+# ============================================================
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
-    global orchestrator
+    global engine
 
     # Startup
-    logger.info("Initializing network troubleshooting orchestrator...")
-    orchestrator = create_orchestrator()
-    logger.info("Orchestrator initialized successfully")
+    settings = get_settings()
+    logger.info(f"Initializing diagnosis engine: {settings.diagnosis_engine}")
+    engine = _create_engine(settings)
+    logger.info(f"Engine initialized: {getattr(engine, 'engine_type', 'unknown')}")
 
     # Start background worker
     worker_task = asyncio.create_task(diagnosis_worker())
@@ -199,7 +309,7 @@ async def lifespan(app: FastAPI):
         await worker_task
     except asyncio.CancelledError:
         pass
-    logger.info("Orchestrator shutdown complete")
+    logger.info("Engine shutdown complete")
 
 
 app = FastAPI(
@@ -334,12 +444,13 @@ class HealthResponse(BaseModel):
     status: str
     timestamp: str
     queue_size: int
+    engine: str | None = None
 
 
 # Background worker
 
 async def diagnosis_worker():
-    """Background worker that processes diagnosis requests."""
+    """Background worker that processes diagnosis requests via engine."""
     logger.info("Diagnosis worker started")
 
     while True:
@@ -350,23 +461,21 @@ async def diagnosis_worker():
 
             logger.info(f"Processing diagnosis request: {request_id}")
 
-            if orchestrator is None:
-                logger.error("Orchestrator not initialized")
-                # Store error result for uninitialized orchestrator
-                diagnosis_store[request_id] = DiagnosisResult(
+            if engine is None:
+                logger.error("Engine not initialized")
+                diagnosis_store[request_id] = DiagnosisResult.create_error(
                     diagnosis_id=request_id,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
-                    alert_source=None,
-                    summary="Diagnosis failed: Orchestrator not initialized",
-                    root_cause=None,
-                    recommendations=[],
+                    error="Diagnosis engine not initialized",
                 )
             else:
                 try:
-                    if request_type == "alert":
-                        result = await orchestrator.diagnose_alert(request_data)
-                    else:
-                        result = await orchestrator.diagnose_request(request_data)
+                    # Build unified request from raw data
+                    request = _build_diagnosis_request(
+                        request_type, request_id, request_data
+                    )
+
+                    # Execute via engine protocol
+                    result = await engine.execute(request=request)
 
                     # Store result
                     diagnosis_store[request_id] = result
@@ -374,14 +483,9 @@ async def diagnosis_worker():
 
                 except Exception as e:
                     logger.exception(f"Diagnosis failed for {request_id}: {e}")
-                    # Store error result
-                    diagnosis_store[request_id] = DiagnosisResult(
+                    diagnosis_store[request_id] = DiagnosisResult.create_error(
                         diagnosis_id=request_id,
-                        timestamp=datetime.now(timezone.utc).isoformat(),
-                        alert_source=None,
-                        summary=f"Diagnosis failed: {str(e)}",
-                        root_cause=None,
-                        recommendations=[],
+                        error=str(e),
                     )
 
         except asyncio.CancelledError:
@@ -401,10 +505,20 @@ async def diagnosis_worker():
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint (no auth required)."""
+    engine_health = {}
+    engine_type = None
+    if engine is not None and hasattr(engine, "health_check"):
+        try:
+            engine_health = await engine.health_check()
+            engine_type = engine_health.get("engine")
+        except Exception:
+            engine_type = getattr(engine, "engine_type", "unknown")
+
     return HealthResponse(
-        status="healthy" if orchestrator else "initializing",
+        status="healthy" if engine else "initializing",
         timestamp=datetime.now(timezone.utc).isoformat(),
         queue_size=diagnosis_queue.qsize(),
+        engine=engine_type or getattr(engine, "engine_type", None),
     )
 
 
@@ -547,10 +661,15 @@ async def get_diagnosis(
 
     result = diagnosis_store[diagnosis_id]
 
+    timestamp = (
+        result.completed_at.isoformat() if result.completed_at
+        else result.started_at.isoformat() if result.started_at
+        else ""
+    )
     return DiagnosisResponse(
         diagnosis_id=result.diagnosis_id,
-        status="completed" if result.root_cause and result.root_cause.confidence > 0 else "error",
-        timestamp=result.timestamp,
+        status=result.status.value,
+        timestamp=timestamp,
         summary=result.summary,
         root_cause={
             "category": result.root_cause.category.value if result.root_cause else None,
@@ -584,7 +703,7 @@ async def list_diagnoses(
     # Sort by timestamp descending
     sorted_diagnoses = sorted(
         diagnosis_store.values(),
-        key=lambda d: d.timestamp,
+        key=lambda d: d.completed_at or d.started_at or datetime.min,
         reverse=True,
     )
 
@@ -594,8 +713,12 @@ async def list_diagnoses(
     return [
         DiagnosisResponse(
             diagnosis_id=d.diagnosis_id,
-            status="completed" if d.root_cause and d.root_cause.confidence > 0 else "error",
-            timestamp=d.timestamp,
+            status=d.status.value,
+            timestamp=(
+                d.completed_at.isoformat() if d.completed_at
+                else d.started_at.isoformat() if d.started_at
+                else ""
+            ),
             summary=d.summary,
         )
         for d in paginated

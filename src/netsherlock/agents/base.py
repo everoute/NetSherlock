@@ -169,24 +169,9 @@ class MeasurementResult:
     raw_data_path: str = ""
 
 
-@dataclass
-class DiagnosisResult:
-    """Complete diagnosis result.
 
-    NOTE: Consider using schemas.report.DiagnosisReport for new code.
-    """
-
-    diagnosis_id: str
-    timestamp: str
-    alert_source: AlertContext | None
-    summary: str
-    root_cause: RootCause
-    recommendations: list[Recommendation]
-    follow_up: dict[str, str] = field(default_factory=dict)
-    l1_observations: dict[str, Any] = field(default_factory=dict)
-    l2_environment: NetworkEnvironment | None = None
-    l3_measurements: MeasurementResult | None = None
-
+# DiagnosisResult has been moved to schemas/result.py.
+# Import from netsherlock.schemas.result instead.
 
 __all__ = [
     # Canonical types (from schemas)
@@ -205,5 +190,4 @@ __all__ = [
     "LatencyHistogram",
     "LatencySegment",
     "MeasurementResult",
-    "DiagnosisResult",
 ]

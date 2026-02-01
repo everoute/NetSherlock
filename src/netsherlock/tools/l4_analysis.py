@@ -12,7 +12,7 @@ from typing import Literal
 
 import structlog
 
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.schemas.request import DiagnosisRequest
 from netsherlock.schemas.environment import NetworkPath
 from netsherlock.schemas.measurement import (
     LatencyBreakdown,

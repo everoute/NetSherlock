@@ -18,10 +18,9 @@ from netsherlock.controller.checkpoints import (
 )
 from netsherlock.controller.diagnosis_controller import (
     DiagnosisController,
-    DiagnosisResult,
     DiagnosisState,
-    DiagnosisStatus,
 )
+from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 from netsherlock.main import _determine_diagnosis_mode, cli
 from netsherlock.schemas.config import (
     CheckpointType,
@@ -498,20 +497,21 @@ class TestDiagnosisResultFormatting:
             status=DiagnosisStatus.COMPLETED,
             mode=DiagnosisMode.AUTONOMOUS,
             analysis={
-                "root_cause": {"category": "vm_network", "confidence": 0.85},
+                "root_cause": {"category": "vm_internal", "confidence": 0.85},
                 "recommendations": [{"action": "restart"}],
             },
         )
 
-        result = DiagnosisResult.from_state(state)
+        result = DiagnosisResult.from_controller_state(state)
 
         assert result.diagnosis_id == "test-001"
         assert result.status == DiagnosisStatus.COMPLETED
-        assert result.root_cause["category"] == "vm_network"
+        assert result.root_cause is not None
+        assert result.root_cause.category.value == "vm_internal"
 
     def test_cancelled_result(self):
         """Cancelled result should have correct status."""
-        result = DiagnosisResult.cancelled("test-001", DiagnosisMode.INTERACTIVE)
+        result = DiagnosisResult.create_cancelled("test-001", mode=DiagnosisMode.INTERACTIVE)
 
         assert result.status == DiagnosisStatus.CANCELLED
         assert "cancelled" in result.summary.lower()
@@ -519,7 +519,7 @@ class TestDiagnosisResultFormatting:
     def test_error_result(self):
         """Error result should capture error message."""
         result = DiagnosisResult.create_error(
-            "test-001", DiagnosisMode.AUTONOMOUS, "Connection failed"
+            "test-001", error="Connection failed", mode=DiagnosisMode.AUTONOMOUS,
         )
 
         assert result.status == DiagnosisStatus.ERROR
@@ -587,14 +587,21 @@ class TestCLIResultFormattingIntegration:
         from datetime import datetime
 
         from netsherlock.main import _format_diagnosis_result
+        from netsherlock.schemas.report import Recommendation, RootCause, RootCauseCategory
 
         result = DiagnosisResult(
             diagnosis_id="test-001",
             status=DiagnosisStatus.COMPLETED,
             mode=DiagnosisMode.AUTONOMOUS,
             summary="Test completed",
-            root_cause={"category": "vm_network", "confidence": 0.85},
-            recommendations=[{"action": "restart_vhost", "priority": "high"}],
+            root_cause=RootCause(
+                category=RootCauseCategory.VM_INTERNAL,
+                component="virtio",
+                confidence=0.85,
+            ),
+            recommendations=[
+                Recommendation(priority=1, action="restart_vhost"),
+            ],
             started_at=datetime.now(),
             completed_at=datetime.now(),
         )
@@ -734,9 +741,9 @@ class TestCLIControllerRunIntegration:
             "netsherlock.main.DiagnosisController"
         ) as MockController:
             mock_instance = MagicMock()
-            mock_result = DiagnosisResult.cancelled(
+            mock_result = DiagnosisResult.create_cancelled(
                 "test-004",
-                DiagnosisMode.INTERACTIVE,
+                mode=DiagnosisMode.INTERACTIVE,
             )
 
             async def mock_run(*args, **kwargs):

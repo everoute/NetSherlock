@@ -14,7 +14,6 @@ Prompts and base types can be imported without the SDK.
 # These can always be imported (no external SDK dependency)
 from .base import (
     AlertContext,
-    DiagnosisResult,
     FlowInfo,
     LatencyHistogram,
     LatencySegment,
@@ -29,6 +28,9 @@ from .base import (
     RootCauseCategory,
     VMInfo,
 )
+
+# Unified types from schemas
+from netsherlock.schemas.result import DiagnosisResult
 from .prompts import (
     L2_ENVIRONMENT_AWARENESS_PROMPT,
     L3_PRECISE_MEASUREMENT_PROMPT,

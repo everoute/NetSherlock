@@ -8,7 +8,7 @@ including both autonomous and interactive modes.
 
 from netsherlock.controller.checkpoints import CheckpointData, CheckpointResult, CheckpointStatus
 from netsherlock.controller.diagnosis_controller import DiagnosisController
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.schemas.request import DiagnosisRequest
 from netsherlock.schemas.config import CheckpointType, DiagnosisMode, DiagnosisRequestSource
 
 

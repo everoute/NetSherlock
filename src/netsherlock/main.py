@@ -22,12 +22,9 @@ from netsherlock.controller.checkpoints import (
     CheckpointResult,
     CheckpointStatus,
 )
-from netsherlock.controller.diagnosis_controller import (
-    DiagnosisController,
-    DiagnosisResult,
-    DiagnosisStatus,
-)
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.controller.diagnosis_controller import DiagnosisController
+from netsherlock.schemas.request import DiagnosisRequest
+from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 from netsherlock.schemas.config import DiagnosisMode, DiagnosisRequestSource
 
 
@@ -193,8 +190,8 @@ def _format_diagnosis_result(result: DiagnosisResult, json_output: bool) -> None
             "status": result.status.value,
             "mode": result.mode.value,
             "summary": result.summary,
-            "root_cause": result.root_cause,
-            "detailed_report": result.detailed_report,
+            "root_cause": result.root_cause.model_dump() if result.root_cause else None,
+            "l4_analysis": result.l4_analysis,
             "report_path": result.report_path,
             "started_at": result.started_at.isoformat() if result.started_at else None,
             "completed_at": result.completed_at.isoformat() if result.completed_at else None,
@@ -207,9 +204,9 @@ def _format_diagnosis_result(result: DiagnosisResult, json_output: bool) -> None
         # Display Markdown report if available
         if result.markdown_report:
             click.echo(result.markdown_report)
-        elif result.detailed_report:
-            # Fallback: display summary from detailed report
-            report = result.detailed_report
+        elif result.l4_analysis:
+            # Fallback: display summary from L4 analysis data
+            report = result.l4_analysis
             summary = report.get("summary", {})
 
             click.echo("=" * 70)
@@ -231,7 +228,7 @@ def _format_diagnosis_result(result: DiagnosisResult, json_output: bool) -> None
             if result.summary:
                 click.echo(f"Summary: {result.summary}")
             if result.root_cause:
-                click.echo(f"Root Cause: {result.root_cause.get('category', 'Unknown')}")
+                click.echo(f"Root Cause: {result.root_cause.category.value}")
 
         # Show report file path
         if result.report_path:
@@ -553,6 +550,50 @@ def diagnose(
         else:
             click.echo(f"Error: {e}", err=True)
         sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--engine",
+    type=click.Choice(["controller", "orchestrator"]),
+    default="controller",
+    help="Diagnosis engine type",
+)
+@click.option(
+    "--inventory",
+    type=click.Path(exists=True),
+    help="Global inventory YAML path",
+)
+@click.option("--host", default="0.0.0.0", help="Bind host")
+@click.option("--port", default=8080, type=int, help="Bind port")
+@click.option("--reload", is_flag=True, help="Enable auto-reload (development)")
+def serve(engine: str, inventory: str | None, host: str, port: int, reload: bool) -> None:
+    """Start the webhook server.
+
+    Launches the FastAPI webhook server that accepts Alertmanager
+    webhooks and manual diagnosis requests.
+
+    Engine selection:
+      controller   - Deterministic, phase-by-phase workflow (default)
+      orchestrator - AI-autonomous with ReAct-style subagents
+    """
+    import os
+    import uvicorn
+
+    # Pass engine selection via environment variables
+    os.environ["DIAGNOSIS_ENGINE"] = engine
+    if inventory:
+        os.environ["GLOBAL_INVENTORY_PATH"] = inventory
+
+    click.echo(f"Starting NetSherlock webhook server (engine={engine})")
+    click.echo(f"Listening on {host}:{port}")
+
+    uvicorn.run(
+        "netsherlock.api.webhook:app",
+        host=host,
+        port=port,
+        reload=reload,
+    )
 
 
 @cli.group()

@@ -1,0 +1,33 @@
+{
+  "full_vm_latency": {
+    "alertname": "VMNetworkLatency",
+    "instance": "192.168.75.101:9100",
+    "src_host": "192.168.75.101",
+    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    "dst_host": "192.168.75.102",
+    "dst_vm": "bf7bb275-715d-4cb1-95a9-3efa045308f2",
+    "network_type": "vm",
+    "severity": "critical"
+  },
+  "minimal_labels": {
+    "alertname": "VMNetworkLatency",
+    "instance": "192.168.75.101:9100"
+  },
+  "host_latency": {
+    "alertname": "HostNetworkLatency",
+    "instance": "192.168.75.101:9100",
+    "network_type": "system",
+    "severity": "warning"
+  },
+  "packet_drop": {
+    "alertname": "VMPacketDrop",
+    "instance": "192.168.75.101:9100",
+    "src_host": "192.168.75.101",
+    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    "network_type": "vm"
+  },
+  "unknown_alert": {
+    "alertname": "CustomAlert",
+    "instance": "10.0.0.1:9100"
+  }
+}

@@ -2,6 +2,8 @@
 
 This module contains all the data models used across the application layers:
 - Alert schemas (L1 input)
+- Request schemas (unified diagnosis request)
+- Result schemas (unified diagnosis result)
 - Environment schemas (L2 output)
 - Measurement schemas (L3 output)
 - Report schemas (L4 output)
@@ -14,7 +16,6 @@ from .alert import (
     AlertSeverity,
     AlertSource,
     AlertTarget,
-    DiagnosisRequest,
     ProblemType,
 )
 from .config import (
@@ -61,6 +62,8 @@ from .report import (
     SegmentAttribution,
     Severity,
 )
+from .request import DiagnosisRequest
+from .result import DiagnosisResult, DiagnosisStatus
 
 __all__ = [
     # Alert schemas
@@ -69,8 +72,12 @@ __all__ = [
     "AlertSeverity",
     "AlertSource",
     "AlertTarget",
-    "DiagnosisRequest",
     "ProblemType",
+    # Request schemas
+    "DiagnosisRequest",
+    # Result schemas
+    "DiagnosisResult",
+    "DiagnosisStatus",
     # Config schemas
     "AutonomousConfig",
     "CheckpointType",

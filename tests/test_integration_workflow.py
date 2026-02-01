@@ -16,7 +16,6 @@ from netsherlock.config.global_inventory import GlobalInventory
 from netsherlock.controller.diagnosis_controller import (
     DiagnosisController,
     DiagnosisPhase,
-    DiagnosisStatus,
 )
 from netsherlock.core.skill_executor import (
     MockSkillExecutor,
@@ -24,7 +23,8 @@ from netsherlock.core.skill_executor import (
     create_mock_env_collector_response,
     create_mock_measurement_response,
 )
-from netsherlock.schemas.alert import DiagnosisRequest
+from netsherlock.schemas.request import DiagnosisRequest
+from netsherlock.schemas.result import DiagnosisStatus
 from netsherlock.schemas.analysis import LayerType
 from netsherlock.schemas.config import DiagnosisConfig, DiagnosisMode
 from netsherlock.schemas.minimal_input import MinimalInputConfig

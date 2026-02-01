@@ -7,19 +7,17 @@ invoking subagents in sequence: L1 (direct) → L2 → L3 → L4.
 
 from __future__ import annotations
 
+import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from claude_code_sdk import Agent, query
 
-from .base import (
-    AlertContext,
-    DiagnosisResult,
-    Recommendation,
-    RootCause,
-    RootCauseCategory,
-)
+from netsherlock.schemas.config import DiagnosisRequestSource
+from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
+
+from .base import AlertContext
 from .prompts import get_main_prompt
 from .subagents import (
     L2EnvironmentSubagent,
@@ -189,7 +187,7 @@ class NetworkTroubleshootingOrchestrator:
 
         # Generate diagnosis ID
         diagnosis_id = f"diag-{uuid.uuid4().hex[:8]}"
-        timestamp = datetime.utcnow().isoformat() + "Z"
+        timestamp = datetime.now(timezone.utc).isoformat() + "Z"
 
         # Run the orchestrated workflow
         prompt = f"""
@@ -234,7 +232,7 @@ Return a complete diagnosis with root cause and recommendations.
             DiagnosisResult with root cause and recommendations
         """
         diagnosis_id = f"diag-{uuid.uuid4().hex[:8]}"
-        timestamp = datetime.utcnow().isoformat() + "Z"
+        timestamp = datetime.now(timezone.utc).isoformat() + "Z"
 
         problem_type = request.get("problem_type", "unknown")
         src_node = request.get("src_node", "")
@@ -296,28 +294,121 @@ Return a complete diagnosis with root cause and recommendations.
     ) -> DiagnosisResult:
         """Synthesize final diagnosis from agent result.
 
-        This would parse the structured output from the orchestrator agent
-        and construct the final DiagnosisResult.
+        Extracts text from the Claude Agent SDK result, attempts to parse
+        structured JSON (if the agent returned a JSON block), and falls back
+        to using the raw text as the summary.
+
+        Args:
+            diagnosis_id: Unique identifier for this diagnosis.
+            timestamp: ISO timestamp string for when diagnosis started.
+            alert_context: Parsed alert context (if alert-triggered).
+            agent_result: Raw output from claude_code_sdk.query().
+
+        Returns:
+            Unified DiagnosisResult.
         """
-        # Placeholder implementation - actual parsing depends on agent output format
+        started_at = self._parse_timestamp(timestamp)
+
+        # Extract text content from agent result
+        text_content = self._extract_text_from_result(agent_result)
+
+        # Try to parse structured JSON from the text
+        structured = self._try_parse_json(text_content)
+
+        if structured:
+            return DiagnosisResult.from_orchestrator_output(
+                diagnosis_id=diagnosis_id,
+                agent_result=structured,
+                started_at=started_at,
+                completed_at=datetime.now(timezone.utc),
+                source=DiagnosisRequestSource.WEBHOOK if alert_context else DiagnosisRequestSource.CLI,
+            )
+
+        # Fallback: use raw text as summary
         return DiagnosisResult(
             diagnosis_id=diagnosis_id,
-            timestamp=timestamp,
-            alert_source=alert_context,
-            summary="Diagnosis synthesis to be implemented",
-            root_cause=RootCause(
-                category=RootCauseCategory.HOST_INTERNAL,
-                component="unknown",
-                confidence=0,
-                evidence=[],
-            ),
-            recommendations=[
-                Recommendation(
-                    priority=1,
-                    action="Review agent output for detailed diagnosis",
-                )
-            ],
+            status=DiagnosisStatus.COMPLETED,
+            started_at=started_at,
+            completed_at=datetime.now(timezone.utc),
+            summary=text_content[:2000] if text_content else "No diagnosis output",
         )
+
+    @staticmethod
+    def _extract_text_from_result(agent_result: Any) -> str:
+        """Extract text content from Claude Agent SDK query result.
+
+        The SDK returns message objects; we concatenate all text blocks.
+        """
+        if agent_result is None:
+            return ""
+        if isinstance(agent_result, str):
+            return agent_result
+
+        # agent_result may be a list of messages or a single message
+        texts = []
+        items = agent_result if isinstance(agent_result, list) else [agent_result]
+        for item in items:
+            if isinstance(item, str):
+                texts.append(item)
+            elif hasattr(item, "content"):
+                # Message object with content blocks
+                content = item.content
+                if isinstance(content, str):
+                    texts.append(content)
+                elif isinstance(content, list):
+                    for block in content:
+                        if hasattr(block, "text"):
+                            texts.append(block.text)
+                        elif isinstance(block, dict) and "text" in block:
+                            texts.append(block["text"])
+            elif isinstance(item, dict):
+                if "text" in item:
+                    texts.append(item["text"])
+                elif "content" in item:
+                    texts.append(str(item["content"]))
+
+        return "\n".join(texts) if texts else str(agent_result)
+
+    @staticmethod
+    def _try_parse_json(text: str) -> dict[str, Any] | None:
+        """Try to extract a JSON object from text.
+
+        Looks for ```json ... ``` blocks first, then tries the whole text.
+        """
+        if not text:
+            return None
+
+        # Try to find a fenced JSON block
+        json_start = text.find("```json")
+        if json_start != -1:
+            json_body_start = text.index("\n", json_start) + 1
+            json_end = text.find("```", json_body_start)
+            if json_end != -1:
+                try:
+                    return json.loads(text[json_body_start:json_end])
+                except (json.JSONDecodeError, ValueError):
+                    pass
+
+        # Try to find a raw JSON object in the text
+        brace_start = text.find("{")
+        brace_end = text.rfind("}")
+        if brace_start != -1 and brace_end > brace_start:
+            try:
+                return json.loads(text[brace_start : brace_end + 1])
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        return None
+
+    @staticmethod
+    def _parse_timestamp(timestamp: str) -> datetime | None:
+        """Parse ISO timestamp string to datetime."""
+        if not timestamp:
+            return None
+        try:
+            return datetime.fromisoformat(timestamp.rstrip("Z"))
+        except (ValueError, AttributeError):
+            return None
 
 
 # Convenience function to create orchestrator

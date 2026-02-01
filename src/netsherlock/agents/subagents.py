@@ -11,8 +11,9 @@ from typing import TYPE_CHECKING, Any
 
 from claude_code_sdk import Agent, query
 
+from netsherlock.schemas.result import DiagnosisResult
+
 from .base import (
-    DiagnosisResult,
     MeasurementResult,
     NetworkEnvironment,
 )

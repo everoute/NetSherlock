@@ -159,9 +159,10 @@ class TestBackwardCompatibility:
         """agents/base.py should export all legacy types."""
         from netsherlock.agents.base import (
             AlertContext,
-            DiagnosisResult,
             VMInfo,
         )
+        # DiagnosisResult moved to schemas.result in Phase 0 unification
+        from netsherlock.schemas.result import DiagnosisResult
 
         assert AlertContext is not None
         assert VMInfo is not None

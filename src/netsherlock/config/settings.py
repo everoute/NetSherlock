@@ -245,6 +245,22 @@ class Settings(BaseSettings):
         description="Base path for node local logs",
     )
 
+    # Engine selection
+    diagnosis_engine: Literal["controller", "orchestrator"] = Field(
+        default="controller",
+        description="Diagnosis engine type (DIAGNOSIS_ENGINE env var)",
+    )
+
+    # Path configuration
+    global_inventory_path: Path | None = Field(
+        default=None,
+        description="Path to global inventory YAML (GLOBAL_INVENTORY_PATH env var)",
+    )
+    project_path: Path | None = Field(
+        default=None,
+        description="Path to netsherlock project root (PROJECT_PATH env var)",
+    )
+
     # Webhook API security
     webhook_api_key: SecretStr | None = Field(
         default=None,
