@@ -20,12 +20,12 @@
 # The 8 measurement tools:
 #   Sender side:
 #     1. sender-vm: kernel_icmp_rtt.py (Segments A, M)
-#     2. sender-host: icmp_drop_detector.py (Segments B, K)
+#     2. sender-host: icmp_path_tracer.py (Segments B, K)
 #     3. sender-host: kvm_vhost_tun_latency_no_discovery.py (Segment B_1)
 #     4. sender-host: tun_tx_to_kvm_irq.py (Segment L)
 #   Receiver side:
 #     5. receiver-vm: kernel_icmp_rtt.py (Segments F, G, H)
-#     6. receiver-host: icmp_drop_detector.py (Segments D, I)
+#     6. receiver-host: icmp_path_tracer.py (Segments D, I)
 #     7. receiver-host: kvm_vhost_tun_latency_no_discovery.py (Segment I_1)
 #     8. receiver-host: tun_tx_to_kvm_irq.py (Segment E)
 
@@ -93,18 +93,18 @@ PID_TMP=$!
 SSH_PIDS+=($PID_TMP)
 echo "      PID: $PID_TMP, LOG: send-host-kvm-tun.log" >> ${CMDLOG}
 
-# [3/8] Receiver Host - icmp_drop_detector
-echo "[3/8] recv-host: icmp_drop_detector"
-CMD="sudo python3 /tmp/icmp_drop_detector.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --rx-iface ${RECV_PHY_IF} --tx-iface ${RECV_VNET_IF} --verbose"
+# [3/8] Receiver Host - icmp_path_tracer
+echo "[3/8] recv-host: icmp_path_tracer"
+CMD="sudo python3 /tmp/icmp_path_tracer.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --rx-iface ${RECV_PHY_IF} --tx-iface ${RECV_VNET_IF} --verbose"
 echo "      CMD: ssh ${RECEIVER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${RECEIVER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/recv-host-icmp.log 2>&1 &
 PID_TMP=$!
 SSH_PIDS+=($PID_TMP)
 echo "      PID: $PID_TMP, LOG: recv-host-icmp.log" >> ${CMDLOG}
 
-# [4/8] Sender Host - icmp_drop_detector
-echo "[4/8] send-host: icmp_drop_detector"
-CMD="sudo python3 /tmp/icmp_drop_detector.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --rx-iface ${SEND_VNET_IF} --tx-iface ${SEND_PHY_IF} --verbose"
+# [4/8] Sender Host - icmp_path_tracer
+echo "[4/8] send-host: icmp_path_tracer"
+CMD="sudo python3 /tmp/icmp_path_tracer.py --src-ip ${SENDER_VM_IP} --dst-ip ${RECEIVER_VM_IP} --rx-iface ${SEND_VNET_IF} --tx-iface ${SEND_PHY_IF} --verbose"
 echo "      CMD: ssh ${SENDER_HOST_SSH} '${CMD}'" | tee -a ${CMDLOG}
 ssh ${SENDER_HOST_SSH} "${CMD}" > ${MEASUREMENT_DIR}/send-host-icmp.log 2>&1 &
 PID_TMP=$!
@@ -174,8 +174,8 @@ echo "=== Stopping Tools ===" >> ${CMDLOG}
 # Note: BPF tools run as root via sudo, so we need sudo for pkill
 ssh ${SENDER_VM_SSH} "sudo pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
 ssh ${RECEIVER_VM_SSH} "sudo pkill -INT -f kernel_icmp_rtt.py" 2>/dev/null || true
-ssh ${SENDER_HOST_SSH} "sudo pkill -INT -f icmp_drop_detector.py; sudo pkill -INT -f tun_tx_to_kvm_irq.py; sudo pkill -INT -f kvm_vhost_tun_latency" 2>/dev/null || true
-ssh ${RECEIVER_HOST_SSH} "sudo pkill -INT -f icmp_drop_detector.py; sudo pkill -INT -f tun_tx_to_kvm_irq.py; sudo pkill -INT -f kvm_vhost_tun_latency" 2>/dev/null || true
+ssh ${SENDER_HOST_SSH} "sudo pkill -INT -f icmp_path_tracer.py; sudo pkill -INT -f tun_tx_to_kvm_irq.py; sudo pkill -INT -f kvm_vhost_tun_latency" 2>/dev/null || true
+ssh ${RECEIVER_HOST_SSH} "sudo pkill -INT -f icmp_path_tracer.py; sudo pkill -INT -f tun_tx_to_kvm_irq.py; sudo pkill -INT -f kvm_vhost_tun_latency" 2>/dev/null || true
 
 echo "Waiting ${SHUTDOWN_WAIT}s for graceful shutdown..."
 sleep ${SHUTDOWN_WAIT}

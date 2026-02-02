@@ -251,6 +251,55 @@ class TestCLIMainGroup:
         assert result.exit_code == 0
 
 
+class TestCLIEngineOption:
+    """Tests for --engine option on diagnose command."""
+
+    @pytest.fixture
+    def runner(self):
+        """Create CLI test runner."""
+        return CliRunner()
+
+    VM_DIAG_ARGS = [
+        "--network-type", "vm",
+        "--src-host", "192.168.1.10",
+        "--src-vm", "ae6aa164-604c-4cb0-84b8-2dea034307f1",
+    ]
+
+    def test_diagnose_help_shows_engine_option(self, runner):
+        """diagnose --help should show --engine option."""
+        result = runner.invoke(cli, ["diagnose", "--help"])
+        assert result.exit_code == 0
+        assert "--engine" in result.output
+        assert "controller" in result.output
+        assert "orchestrator" in result.output
+
+    def test_diagnose_default_engine_is_controller(self, runner):
+        """diagnose without --engine should default to controller."""
+        result = runner.invoke(cli, ["diagnose", *self.VM_DIAG_ARGS])
+        assert "Engine: controller" in result.output
+
+    def test_diagnose_engine_controller_explicit(self, runner):
+        """diagnose --engine controller should show controller."""
+        result = runner.invoke(
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--engine", "controller"]
+        )
+        assert "Engine: controller" in result.output
+
+    def test_diagnose_engine_orchestrator(self, runner):
+        """diagnose --engine orchestrator should show orchestrator."""
+        result = runner.invoke(
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--engine", "orchestrator"]
+        )
+        assert "Engine: orchestrator" in result.output
+
+    def test_diagnose_engine_invalid_rejected(self, runner):
+        """diagnose --engine invalid should be rejected by Click."""
+        result = runner.invoke(
+            cli, ["diagnose", *self.VM_DIAG_ARGS, "--engine", "invalid"]
+        )
+        assert result.exit_code != 0
+
+
 class TestDiagnosisModeIntegration:
     """Integration tests for mode selection logic."""
 

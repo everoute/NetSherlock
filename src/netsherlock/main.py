@@ -10,7 +10,7 @@ import json
 import sys
 import uuid
 from datetime import datetime
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import click
 import structlog
@@ -22,7 +22,6 @@ from netsherlock.controller.checkpoints import (
     CheckpointResult,
     CheckpointStatus,
 )
-from netsherlock.controller.diagnosis_controller import DiagnosisController
 from netsherlock.schemas.request import DiagnosisRequest
 from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 from netsherlock.schemas.config import DiagnosisMode, DiagnosisRequestSource
@@ -99,6 +98,45 @@ def _determine_diagnosis_mode(
 
     # Default for CLI is interactive (safe option)
     return DiagnosisMode.INTERACTIVE
+
+
+def _create_cli_engine(
+    engine_type: str,
+    settings: Any,
+    config_path: str | None,
+    checkpoint_callback: Any | None,
+) -> Any:
+    """Create diagnosis engine for CLI usage.
+
+    Args:
+        engine_type: "controller" or "orchestrator".
+        settings: Application settings.
+        config_path: Path to MinimalInputConfig YAML (controller only).
+        checkpoint_callback: Checkpoint callback (controller interactive only).
+
+    Returns:
+        DiagnosisEngine implementation.
+    """
+    if engine_type == "controller":
+        from netsherlock.core.controller_engine import ControllerEngine
+
+        return ControllerEngine(
+            config=settings.get_diagnosis_config(),
+            checkpoint_callback=checkpoint_callback,
+            minimal_input_path=config_path,
+            project_path=settings.project_path,
+            llm_model=settings.llm.model,
+            llm_max_turns=settings.llm.max_turns,
+            llm_max_budget_usd=settings.llm.max_budget_usd,
+            bpf_local_tools_path=settings.bpf_tools.local_tools_path,
+            bpf_remote_tools_path=settings.bpf_tools.remote_tools_path,
+        )
+    elif engine_type == "orchestrator":
+        from netsherlock.core.orchestrator_engine import OrchestratorEngine
+
+        return OrchestratorEngine(settings=settings)
+    else:
+        raise click.UsageError(f"Unknown engine type: {engine_type}")
 
 
 async def _cli_checkpoint_callback(data: CheckpointData) -> CheckpointResult:
@@ -370,6 +408,12 @@ def cli(ctx: click.Context, verbose: bool, json_output: bool) -> None:
     is_flag=True,
     help="Generate ICMP test traffic from sender VM (default: use background traffic)",
 )
+@click.option(
+    "--engine",
+    type=click.Choice(["controller", "orchestrator"]),
+    default="controller",
+    help="Diagnosis engine: controller (deterministic, default) or orchestrator (AI-autonomous)",
+)
 @click.pass_context
 def diagnose(
     ctx: click.Context,
@@ -385,6 +429,7 @@ def diagnose(
     mode_autonomous: bool,
     mode_interactive: bool,
     generate_traffic: bool,
+    engine: str,
 ) -> None:
     """Run network diagnosis on a target host.
 
@@ -395,6 +440,12 @@ def diagnose(
     2. Executes coordinated measurements (L3)
     3. Analyzes results and identifies root cause (L4)
     4. Generates a diagnosis report
+
+    Engines:
+
+    \b
+      --engine controller (default): Deterministic, phase-by-phase workflow
+      --engine orchestrator: AI-autonomous with ReAct-style subagents
 
     Modes:
 
@@ -414,20 +465,20 @@ def diagnose(
     Examples:
 
     \b
-      # Single VM network diagnosis
+      # Single VM network diagnosis (controller engine, default)
       netsherlock diagnose --network-type vm \\
         --src-host 192.168.1.10 \\
         --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \\
         --type latency
 
     \b
-      # VM-to-VM network diagnosis (autonomous mode)
+      # VM-to-VM diagnosis with orchestrator engine
       netsherlock diagnose --network-type vm \\
         --src-host 192.168.1.10 \\
         --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \\
         --dst-host 192.168.1.20 \\
         --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2 \\
-        --type latency --autonomous
+        --type latency --autonomous --engine orchestrator
     """
     # Determine mode from flags
     effective_mode = _determine_diagnosis_mode(mode, mode_autonomous, mode_interactive)
@@ -486,43 +537,37 @@ def diagnose(
                 click.echo(f"  Destination VM: {dst_vm}")
             click.echo(f"  Diagnosis Type: {diagnosis_type}")
             click.echo(f"  Mode: {effective_mode.value}")
+            click.echo(f"  Engine: {engine}")
             click.echo(f"  Duration: {duration}s")
             click.echo()
 
-        # Get diagnosis config
+        # Get settings
         settings = get_settings()
-        config = settings.get_diagnosis_config()
 
-        # Create checkpoint callback for interactive mode
+        # Create checkpoint callback for interactive mode (controller only)
         checkpoint_callback = None
-        if effective_mode == DiagnosisMode.INTERACTIVE:
+        if effective_mode == DiagnosisMode.INTERACTIVE and engine == "controller":
             checkpoint_callback = _cli_checkpoint_callback
 
-        # Create and run controller
-        controller = DiagnosisController(
-            config=config,
+        # Create engine
+        diagnosis_engine = _create_cli_engine(
+            engine_type=engine,
+            settings=settings,
+            config_path=config_path,
             checkpoint_callback=checkpoint_callback,
-            minimal_input_path=config_path,
-            llm_model=settings.llm.model,
-            llm_max_turns=settings.llm.max_turns,
-            llm_max_budget_usd=settings.llm.max_budget_usd,
-            bpf_local_tools_path=settings.bpf_tools.local_tools_path,
-            bpf_remote_tools_path=settings.bpf_tools.remote_tools_path,
         )
 
         if not json_output:
-            click.echo("Starting diagnosis...")
+            click.echo(f"Starting diagnosis (engine={engine})...")
             if verbose:
                 click.echo()
 
-        # Run diagnosis asynchronously
-        result = asyncio.run(
-            controller.run(
-                request=request,
-                source=DiagnosisRequestSource.CLI,
-                force_mode=effective_mode,
-            )
-        )
+        # Set request source and mode for engine protocol
+        request.source = DiagnosisRequestSource.CLI
+        request.mode = effective_mode
+
+        # Run diagnosis via engine
+        result = asyncio.run(diagnosis_engine.execute(request))
 
         # Display result
         _format_diagnosis_result(result, json_output)

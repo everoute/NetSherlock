@@ -657,77 +657,77 @@ class TestCLIControllerRunIntegration:
 
     def test_diagnose_runs_controller_autonomous(self, runner):
         """diagnose --autonomous should run controller in autonomous mode."""
+        mock_engine = MagicMock()
+        mock_result = DiagnosisResult(
+            diagnosis_id="test-001",
+            status=DiagnosisStatus.COMPLETED,
+            mode=DiagnosisMode.AUTONOMOUS,
+        )
+
+        async def mock_execute(*args, **kwargs):
+            return mock_result
+
+        mock_engine.execute = mock_execute
+
         with patch(
-            "netsherlock.main.DiagnosisController"
-        ) as MockController:
-            # Setup mock
-            mock_instance = MagicMock()
-            mock_result = DiagnosisResult(
-                diagnosis_id="test-001",
-                status=DiagnosisStatus.COMPLETED,
-                mode=DiagnosisMode.AUTONOMOUS,
-            )
-
-            async def mock_run(*args, **kwargs):
-                return mock_result
-
-            mock_instance.run = mock_run
-            MockController.return_value = mock_instance
-
+            "netsherlock.main._create_cli_engine",
+            return_value=mock_engine,
+        ) as mock_create:
             runner.invoke(
                 cli,
                 ["diagnose", *self.VM_DIAG_ARGS, "--autonomous"],
             )
 
-            # Controller should be called
-            MockController.assert_called_once()
+            # Engine should be created with controller type
+            mock_create.assert_called_once()
+            call_kwargs = mock_create.call_args.kwargs
+            assert call_kwargs["engine_type"] == "controller"
 
     def test_diagnose_runs_controller_interactive(self, runner):
-        """diagnose --interactive should run controller with callback."""
+        """diagnose --interactive should run controller with checkpoint callback."""
+        mock_engine = MagicMock()
+        mock_result = DiagnosisResult(
+            diagnosis_id="test-002",
+            status=DiagnosisStatus.COMPLETED,
+            mode=DiagnosisMode.INTERACTIVE,
+        )
+
+        async def mock_execute(*args, **kwargs):
+            return mock_result
+
+        mock_engine.execute = mock_execute
+
         with patch(
-            "netsherlock.main.DiagnosisController"
-        ) as MockController:
-            mock_instance = MagicMock()
-            mock_result = DiagnosisResult(
-                diagnosis_id="test-002",
-                status=DiagnosisStatus.COMPLETED,
-                mode=DiagnosisMode.INTERACTIVE,
-            )
-
-            async def mock_run(*args, **kwargs):
-                return mock_result
-
-            mock_instance.run = mock_run
-            MockController.return_value = mock_instance
-
+            "netsherlock.main._create_cli_engine",
+            return_value=mock_engine,
+        ) as mock_create:
             runner.invoke(
                 cli,
                 ["diagnose", *self.VM_DIAG_ARGS, "--interactive"],
             )
 
-            # Controller should be created with checkpoint_callback
-            call_kwargs = MockController.call_args.kwargs
-            assert "checkpoint_callback" in call_kwargs
+            # Engine should be created with checkpoint_callback
+            call_kwargs = mock_create.call_args.kwargs
             assert call_kwargs["checkpoint_callback"] is not None
 
     def test_diagnose_controller_error_exit_code(self, runner):
         """Controller error should result in non-zero exit code."""
+        mock_engine = MagicMock()
+        mock_result = DiagnosisResult.create_error(
+            "test-003",
+            DiagnosisMode.AUTONOMOUS,
+            "Test error",
+        )
+
+        async def mock_execute(*args, **kwargs):
+            return mock_result
+
+        mock_engine.execute = mock_execute
+
         with patch(
-            "netsherlock.main.DiagnosisController"
-        ) as MockController:
-            mock_instance = MagicMock()
-            mock_result = DiagnosisResult.create_error(
-                "test-003",
-                DiagnosisMode.AUTONOMOUS,
-                "Test error",
-            )
-
-            async def mock_run(*args, **kwargs):
-                return mock_result
-
-            mock_instance.run = mock_run
-            MockController.return_value = mock_instance
-
+            "netsherlock.main._create_cli_engine",
+            return_value=mock_engine,
+        ):
             result = runner.invoke(
                 cli,
                 ["diagnose", *self.VM_DIAG_ARGS, "--autonomous"],
@@ -737,21 +737,21 @@ class TestCLIControllerRunIntegration:
 
     def test_diagnose_controller_cancelled_exit_code(self, runner):
         """Controller cancelled should result in exit code 2."""
+        mock_engine = MagicMock()
+        mock_result = DiagnosisResult.create_cancelled(
+            "test-004",
+            mode=DiagnosisMode.INTERACTIVE,
+        )
+
+        async def mock_execute(*args, **kwargs):
+            return mock_result
+
+        mock_engine.execute = mock_execute
+
         with patch(
-            "netsherlock.main.DiagnosisController"
-        ) as MockController:
-            mock_instance = MagicMock()
-            mock_result = DiagnosisResult.create_cancelled(
-                "test-004",
-                mode=DiagnosisMode.INTERACTIVE,
-            )
-
-            async def mock_run(*args, **kwargs):
-                return mock_result
-
-            mock_instance.run = mock_run
-            MockController.return_value = mock_instance
-
+            "netsherlock.main._create_cli_engine",
+            return_value=mock_engine,
+        ):
             result = runner.invoke(
                 cli,
                 ["diagnose", *self.VM_DIAG_ARGS, "--interactive"],
