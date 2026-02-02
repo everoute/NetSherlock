@@ -46,7 +46,7 @@ class VMConfig:
         ssh_user: SSH username for VM
         ssh_host: SSH host/IP for VM
         ssh_key_file: Optional SSH private key path
-        test_ip: Test traffic IP (may differ from SSH IP)
+        name: VM display name for monitoring system lookup
     """
 
     uuid: str
@@ -54,7 +54,7 @@ class VMConfig:
     ssh_user: str
     ssh_host: str
     ssh_key_file: str | None = None
-    test_ip: str | None = None
+    name: str = ""
 
 
 @dataclass
@@ -126,7 +126,7 @@ class GlobalInventory:
                 ssh_user=v.get("ssh", {}).get("user", "root"),
                 ssh_host=v.get("ssh", {}).get("host", ""),
                 ssh_key_file=v.get("ssh", {}).get("key_file"),
-                test_ip=v.get("test_ip"),
+                name=v.get("name", name),
             )
 
         return cls(hosts=hosts, vms=vms)
@@ -177,12 +177,54 @@ class GlobalInventory:
             return None
         return vm_config.host_ref, host_config
 
+    def find_vm_by_name(self, name: str) -> tuple[str, VMConfig] | None:
+        """Find VM by display name or inventory key.
+
+        Matches against VMConfig.name field first.
+        Falls back to matching against the inventory dict key.
+        """
+        for key, vm in self.vms.items():
+            if vm.name == name:
+                return (key, vm)
+        # Fallback: match by dict key
+        if name in self.vms:
+            return (name, self.vms[name])
+        return None
+
+    def resolve_vm_pair(
+        self,
+        src_vm_name: str,
+        dst_vm_name: str,
+    ) -> dict[str, str | None]:
+        """Resolve a pair of VM names to UUIDs and host management IPs.
+
+        Core Identity Resolver for the Generic source adapter.
+        Test IPs are NOT resolved here — they come from the alert itself.
+        """
+        result: dict[str, str | None] = {
+            "src_host": None, "src_vm": None,
+            "dst_host": None, "dst_vm": None,
+        }
+
+        for prefix, vm_name in [("src", src_vm_name), ("dst", dst_vm_name)]:
+            vm_result = self.find_vm_by_name(vm_name)
+            if vm_result:
+                _, vm = vm_result
+                result[f"{prefix}_vm"] = vm.uuid
+                host_cfg = self.hosts.get(vm.host_ref)
+                if host_cfg:
+                    result[f"{prefix}_host"] = host_cfg.mgmt_ip
+
+        return result
+
     def build_minimal_input(
         self,
         src_host_ip: str,
         src_vm_uuid: str | None = None,
         dst_host_ip: str | None = None,
         dst_vm_uuid: str | None = None,
+        src_test_ip: str | None = None,
+        dst_test_ip: str | None = None,
     ) -> MinimalInputConfig:
         """Build MinimalInputConfig from L1 alert information.
 
@@ -195,6 +237,8 @@ class GlobalInventory:
             src_vm_uuid: Source VM UUID (optional)
             dst_host_ip: Destination host management IP (optional)
             dst_vm_uuid: Destination VM UUID (optional)
+            src_test_ip: Source test/data-plane IP from alert (optional)
+            dst_test_ip: Destination test/data-plane IP from alert (optional)
 
         Returns:
             MinimalInputConfig for the diagnosis
@@ -235,7 +279,7 @@ class GlobalInventory:
                     role="vm",
                     host_ref="host-sender",
                     uuid=vm_cfg.uuid,
-                    test_ip=vm_cfg.test_ip,
+                    test_ip=src_test_ip,
                 )
             else:
                 raise ValueError(f"Source VM {src_vm_uuid} not found in inventory")
@@ -272,7 +316,7 @@ class GlobalInventory:
                     role="vm",
                     host_ref="host-receiver",
                     uuid=vm_cfg.uuid,
-                    test_ip=vm_cfg.test_ip,
+                    test_ip=dst_test_ip,
                 )
             else:
                 raise ValueError(f"Destination VM {dst_vm_uuid} not found in inventory")
@@ -338,7 +382,7 @@ class GlobalInventory:
                         "host": vm.ssh_host,
                         **({"key_file": vm.ssh_key_file} if vm.ssh_key_file else {}),
                     },
-                    **({"test_ip": vm.test_ip} if vm.test_ip else {}),
+                    **({"name": vm.name} if vm.name else {}),
                 }
                 for name, vm in self.vms.items()
             },

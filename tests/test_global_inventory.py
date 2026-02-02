@@ -46,11 +46,11 @@ class TestVMConfig:
             ssh_user="root",
             ssh_host="192.168.2.100",
             ssh_key_file="/root/.ssh/vm_key",
-            test_ip="10.0.0.1",
+            name="web-server-01",
         )
         assert vm.uuid == "ae6aa164-604c-4cb0-84b8-2dea034307f1"
         assert vm.host_ref == "host-sender"
-        assert vm.test_ip == "10.0.0.1"
+        assert vm.name == "web-server-01"
 
     def test_vm_config_minimal(self):
         """Create minimal VM configuration."""
@@ -61,7 +61,7 @@ class TestVMConfig:
             ssh_host="10.0.0.1",
         )
         assert vm.ssh_key_file is None
-        assert vm.test_ip is None
+        assert vm.name == ""
 
 
 class TestGlobalInventory:
@@ -93,22 +93,22 @@ hosts:
 
 vms:
   vm-ae6aa164:
+    name: "web-server-01"
     uuid: "ae6aa164-604c-4cb0-84b8-2dea034307f1"
     host_ref: "host-192-168-75-101"
     ssh:
       user: "root"
       host: "192.168.2.100"
       key_file: "/root/.ssh/vm_key"
-    test_ip: "10.0.0.1"
 
   vm-be7bb275:
+    name: "db-server-01"
     uuid: "be7bb275-715d-5dc1-95c9-3efb045418g2"
     host_ref: "host-192-168-75-102"
     ssh:
       user: "root"
       host: "192.168.2.101"
       key_file: "/root/.ssh/vm_key"
-    test_ip: "10.0.0.2"
 """
 
     @pytest.fixture
@@ -152,7 +152,7 @@ vms:
         assert result is not None
         name, vm = result
         assert name == "vm-ae6aa164"
-        assert vm.test_ip == "10.0.0.1"
+        assert vm.name == "web-server-01"
 
         assert inventory.find_vm_by_uuid("nonexistent-uuid") is None
 
@@ -165,6 +165,8 @@ vms:
             src_vm_uuid="ae6aa164-604c-4cb0-84b8-2dea034307f1",
             dst_host_ip="192.168.75.102",
             dst_vm_uuid="be7bb275-715d-5dc1-95c9-3efb045418g2",
+            src_test_ip="10.0.0.1",
+            dst_test_ip="10.0.0.2",
         )
 
         assert len(config.nodes) == 4
@@ -179,7 +181,7 @@ vms:
         assert config.test_pairs["vm"].server == "vm-receiver"
         assert config.test_pairs["vm"].client == "vm-sender"
 
-        # Check node details
+        # Check node details — test_ip comes from parameter, not VMConfig
         sender_vm = config.get_node("vm-sender")
         assert sender_vm.test_ip == "10.0.0.1"
         assert sender_vm.uuid == "ae6aa164-604c-4cb0-84b8-2dea034307f1"
@@ -315,7 +317,7 @@ class TestGlobalInventoryEdgeCases:
                     host_ref="host-1",
                     ssh_user="root",
                     ssh_host="10.0.0.1",
-                    test_ip="172.16.0.1",
+                    name="test-vm-01",
                 ),
             },
         )

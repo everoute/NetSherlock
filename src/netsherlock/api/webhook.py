@@ -41,6 +41,12 @@ diagnosis_queue: asyncio.Queue = asyncio.Queue()
 
 # Global engine instance (DiagnosisEngine protocol)
 engine: Any = None  # DiagnosisEngine protocol — Any to avoid circular import
+_global_inventory: Any = None  # GlobalInventory instance — loaded during lifespan
+
+
+def _get_global_inventory():
+    """Get the loaded GlobalInventory, if available."""
+    return _global_inventory
 
 
 # ============================================================
@@ -254,19 +260,42 @@ def _build_diagnosis_request(
         )
     else:
         # Manual request
+        src_host = raw_data.get("src_host")
+        src_vm = raw_data.get("src_vm")
+        dst_host = raw_data.get("dst_host")
+        dst_vm = raw_data.get("dst_vm")
+
+        # VM name-based identity resolution (Generic source adapter)
+        src_vm_name = raw_data.get("src_vm_name")
+        dst_vm_name = raw_data.get("dst_vm_name")
+        if (not src_host or not src_vm) and (src_vm_name or dst_vm_name):
+            inventory = _get_global_inventory()
+            if inventory:
+                resolved = inventory.resolve_vm_pair(
+                    src_vm_name or "", dst_vm_name or ""
+                )
+                src_host = src_host or resolved["src_host"]
+                src_vm = src_vm or resolved["src_vm"]
+                dst_host = dst_host or resolved["dst_host"]
+                dst_vm = dst_vm or resolved["dst_vm"]
+
         mode_str = raw_data.get("mode")
         return DiagnosisRequest(
             request_id=request_id,
             request_type=raw_data.get("diagnosis_type", "latency"),
             network_type=raw_data.get("network_type", "vm"),
-            src_host=raw_data["src_host"],
-            src_vm=raw_data.get("src_vm"),
-            dst_host=raw_data.get("dst_host"),
-            dst_vm=raw_data.get("dst_vm"),
+            src_host=src_host or "",
+            src_vm=src_vm,
+            dst_host=dst_host,
+            dst_vm=dst_vm,
             source=DiagnosisRequestSource.API,
             description=raw_data.get("description"),
             alert_type=raw_data.get("alert_type"),
             mode=DiagnosisMode(mode_str) if mode_str else None,
+            options={
+                "src_test_ip": raw_data.get("src_test_ip"),
+                "dst_test_ip": raw_data.get("dst_test_ip"),
+            },
         )
 
 
@@ -274,6 +303,10 @@ def _map_alert_to_type(alertname: str) -> str:
     """Map alertname to request_type."""
     mapping = {
         "VMNetworkLatency": "latency",
+        "VMNetworkLatencyHigh": "latency",
+        "VMNetworkLatencyCritical": "latency",
+        "VMNetworkPacketLoss": "packet_drop",
+        "VMNetworkDown": "connectivity",
         "HostNetworkLatency": "latency",
         "VMPacketDrop": "packet_drop",
         "HostPacketDrop": "packet_drop",
@@ -290,13 +323,22 @@ def _map_alert_to_type(alertname: str) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
-    global engine
+    global engine, _global_inventory
 
     # Startup
     settings = get_settings()
     logger.info(f"Initializing diagnosis engine: {settings.diagnosis_engine}")
     engine = _create_engine(settings)
     logger.info(f"Engine initialized: {getattr(engine, 'engine_type', 'unknown')}")
+
+    # Load GlobalInventory for VM name-based resolution
+    if settings.global_inventory_path:
+        try:
+            from netsherlock.config.global_inventory import GlobalInventory
+            _global_inventory = GlobalInventory.load(settings.global_inventory_path)
+            logger.info(f"GlobalInventory loaded: {len(_global_inventory.vms)} VMs")
+        except Exception as e:
+            logger.warning(f"Failed to load GlobalInventory: {e}")
 
     # Start background worker
     worker_task = asyncio.create_task(diagnosis_worker())
@@ -359,13 +401,21 @@ VALID_NETWORK_TYPES = {"vm", "system"}
 class DiagnosticRequest(BaseModel):
     """Manual diagnostic request.
 
+    Supports two modes of identification:
+    1. Explicit: src_host + src_vm (traditional, used by Prometheus adapter)
+    2. VM name-based: src_vm_name + dst_vm_name (Generic adapter, resolved via GlobalInventory)
+
     Parameters:
         network_type: Network type (vm or system)
         diagnosis_type: Type of diagnosis (latency, packet_drop, connectivity)
-        src_host: Source host management IP (required)
-        src_vm: Source VM UUID (required for network_type=vm)
+        src_host: Source host management IP (required if src_vm_name not provided)
+        src_vm: Source VM UUID (required for network_type=vm when using explicit mode)
         dst_host: Destination host management IP (optional)
         dst_vm: Destination VM UUID (required when dst_host specified for vm network)
+        src_vm_name: Source VM name for identity resolution via GlobalInventory
+        dst_vm_name: Destination VM name for identity resolution via GlobalInventory
+        src_test_ip: Source test/data-plane IP (from alert, for measurement)
+        dst_test_ip: Destination test/data-plane IP (from alert, for measurement)
         mode: Diagnosis mode (autonomous or interactive)
         description: Additional problem description
     """
@@ -376,11 +426,29 @@ class DiagnosticRequest(BaseModel):
     diagnosis_type: Literal["latency", "packet_drop", "connectivity"] = Field(
         default="latency", description="Type of diagnosis: latency, packet_drop, connectivity"
     )
-    src_host: str = Field(..., description="Source host management IP address")
+    src_host: str | None = Field(
+        None, description="Source host management IP address"
+    )
     src_vm: str | None = Field(None, description="Source VM UUID (required for network_type=vm)")
     dst_host: str | None = Field(None, description="Destination host management IP address")
     dst_vm: str | None = Field(
         None, description="Destination VM UUID (required when dst_host specified for vm network)"
+    )
+    src_vm_name: str | None = Field(
+        None,
+        description="Source VM name for identity resolution via GlobalInventory.",
+    )
+    dst_vm_name: str | None = Field(
+        None,
+        description="Destination VM name for identity resolution via GlobalInventory.",
+    )
+    src_test_ip: str | None = Field(
+        None,
+        description="Source test/data-plane IP (from alert, for measurement).",
+    )
+    dst_test_ip: str | None = Field(
+        None,
+        description="Destination test/data-plane IP (from alert, for measurement).",
     )
     description: str | None = Field(None, description="Additional problem description")
     mode: Literal["autonomous", "interactive"] | None = Field(
@@ -394,12 +462,13 @@ class DiagnosticRequest(BaseModel):
 
     @field_validator("src_host")
     @classmethod
-    def validate_src_host(cls, v: str) -> str:
-        """Validate src_host is a valid IP address."""
-        try:
-            ipaddress.ip_address(v)
-        except ValueError:
-            raise ValueError(f"Invalid src_host IP address: {v}")
+    def validate_src_host(cls, v: str | None) -> str | None:
+        """Validate src_host is a valid IP address if provided."""
+        if v is not None:
+            try:
+                ipaddress.ip_address(v)
+            except ValueError:
+                raise ValueError(f"Invalid src_host IP address: {v}")
         return v
 
     @field_validator("dst_host")
@@ -415,10 +484,17 @@ class DiagnosticRequest(BaseModel):
 
     def model_post_init(self, __context) -> None:
         """Validate parameter combinations after model initialization."""
-        # VM network validation
-        if self.network_type == "vm":
-            if not self.src_vm:
-                raise ValueError("src_vm is required for network_type=vm")
+        # Must provide either src_host or src_vm_name
+        if not self.src_host and not self.src_vm_name:
+            raise ValueError("Either src_host or src_vm_name must be provided")
+
+        # VM network validation (only when explicit fields provided)
+        if self.network_type == "vm" and self.src_host:
+            if not self.src_vm and not self.src_vm_name:
+                raise ValueError(
+                    "src_vm is required for network_type=vm when src_host is provided "
+                    "(or use src_vm_name for name-based resolution)"
+                )
             if self.dst_host and not self.dst_vm:
                 raise ValueError("dst_vm is required when dst_host is specified")
             if self.dst_vm and not self.dst_host:

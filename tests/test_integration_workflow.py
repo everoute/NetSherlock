@@ -252,7 +252,6 @@ class TestGlobalInventoryIntegration:
         assert len(inventory.vms) == 2
         vm = inventory.vms["vm-ae6aa164"]
         assert vm.uuid == "ae6aa164-604c-4cb0-84b8-2dea034307f1"
-        assert vm.test_ip == "10.0.0.1"
         assert vm.host_ref == "host-192-168-75-101"
 
     def test_validation_passes(self, global_inventory_file):
