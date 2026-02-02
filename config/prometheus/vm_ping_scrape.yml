@@ -1,0 +1,14 @@
+# Prometheus scrape config for VM ping monitor (Prometheus mode)
+# Add this to prometheus.yml under scrape_configs:
+
+scrape_configs:
+  - job_name: "vm_ping_monitor"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["<sender-vm-ip>:9101"]
+        labels:
+          src_host: "192.168.70.31"
+          src_vm: "<sender-vm-uuid>"
+          dst_host: "192.168.70.32"
+          dst_vm: "<receiver-vm-uuid>"
+          network_type: "vm"

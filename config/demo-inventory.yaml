@@ -1,0 +1,37 @@
+# NetSherlock Demo Inventory — intel419 cluster
+# ===============================================
+#
+# This inventory maps the demo environment for monitoring integration testing.
+# Fill in actual values from Task 1 (environment topology discovery).
+#
+# Usage:
+#   netsherlock diagnose --auto --inventory config/demo-inventory.yaml
+
+hosts:
+  host-31:
+    mgmt_ip: "192.168.70.31"
+    ssh:
+      user: "smartx"
+
+  host-32:
+    mgmt_ip: "192.168.70.32"
+    ssh:
+      user: "smartx"
+
+vms:
+  sender-vm:
+    name: "lcc-rocky-2"           # VM display name (e.g. hostname inside VM)
+    uuid: "8cd88df6-11bc-4341-a968-f3c8b9d944df"           # VM UUID from virsh list
+    host_ref: "host-32"
+    ssh:
+      user: "root"
+      host: "192.168.77.83"         # VM SSH IP (management network)
+    # test_ip not stored — comes from alert at runtime
+
+  receiver-vm:
+    name: "lcc-rocky-1"
+    uuid: "a8366b2a-a709-4e88-ba57-128681bd1efb"
+    host_ref: "host-31"
+    ssh:
+      user: "root"
+      host: "192.168.76.244"

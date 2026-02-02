@@ -1,0 +1,41 @@
+# Prometheus alert rules for VM ping monitor metrics
+# Add this to Prometheus rule_files configuration.
+
+groups:
+  - name: vm_network
+    rules:
+      - alert: VMNetworkLatencyHigh
+        expr: ping_rtt_ms{stat="avg"} > 5
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "High VM network latency to {{ $labels.target }}"
+          description: "Ping RTT {{ $value }}ms exceeds 5ms threshold"
+
+      - alert: VMNetworkLatencyCritical
+        expr: ping_rtt_ms{stat="avg"} > 20
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical VM network latency to {{ $labels.target }}"
+          description: "Ping RTT {{ $value }}ms exceeds 20ms threshold"
+
+      - alert: VMNetworkPacketLoss
+        expr: ping_loss_percent > 10
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Packet loss to {{ $labels.target }}"
+          description: "{{ $value }}% packet loss detected"
+
+      - alert: VMNetworkDown
+        expr: ping_up == 0
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "VM network unreachable: {{ $labels.target }}"
+          description: "Target is completely unreachable (100% loss)"

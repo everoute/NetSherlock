@@ -1,0 +1,35 @@
+# VM Ping Monitor Configuration
+# Copy to monitor-config.yaml and fill in actual values.
+
+netsherlock:
+  url: "http://192.168.70.31:8080"
+  api_key: "your-api-key"
+
+# Collection parameters
+collection:
+  count: 10             # packets per cycle (ping -c N, 1 pkt/s)
+  cycle_pause: 1        # seconds to wait between cycles
+
+# Alert evaluation — sliding window
+evaluation:
+  window_size: 3        # consider last N cycles
+  trigger_count: 2      # N cycles must exceed threshold to fire
+
+# Default alert thresholds
+# Baseline: cross-node VM RTT steady-state ~0.4-0.9ms, cold-start spikes 1.5-3.0ms
+thresholds:
+  rtt_warning_ms: 0.5      # avg RTT > this → warning  (within steady-state variance)
+  rtt_critical_ms: 1.5     # avg RTT > this → critical (cold-start spike level)
+  loss_warning_pct: 10.0   # loss % > this → warning
+  loss_critical_pct: 50.0  # loss % > this → critical
+  cooldown_seconds: 60     # suppress re-trigger for same pair/severity
+
+# Monitoring topology
+monitors:
+  - src_vm_name: "lcc-rocky-2"       # sender VM display name
+    src_test_ip: "192.168.77.83"
+    targets:
+      - dst_vm_name: "lcc-rocky-1" # receiver VM display name
+        dst_test_ip: "192.168.76.244"
+        # thresholds:                     # optional per-target override
+        #   rtt_warning_ms: 2.0
