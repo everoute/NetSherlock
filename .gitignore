@@ -59,6 +59,10 @@ logs/
 .DS_Store
 Thumbs.db
 
+# Claude-mem auto-generated CLAUDE.md in subdirectories
+**/CLAUDE.md
+!/CLAUDE.md
+
 # Project specific
 docs/planning-with-files/*
 task_plan.md
