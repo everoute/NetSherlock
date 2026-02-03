@@ -1,0 +1,44 @@
+# NetSherlock Alertmanager Configuration
+# Purpose: Route Prometheus network alerts to NetSherlock webhook
+# Deployment: Development machine (192.168.10.175:9093)
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'netsherlock'
+  group_by: ['alertname', 'hostname', 'to_hostname']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 4h
+
+  routes:
+    # 网络延迟告警 -> NetSherlock
+    - match_re:
+        alertname: 'host_to_host_max_ping_time_ns.*|HostNetworkLatency.*|NetSherlockHostLatencyTest'
+      receiver: 'netsherlock'
+      group_wait: 5s
+      group_interval: 1m
+      continue: false
+
+    # 其他告警 -> 静默
+    - match_re:
+        alertname: '.*'
+      receiver: 'null'
+
+receivers:
+  # NetSherlock webhook (API key 通过 URL 参数传递，或在 NetSherlock 端允许无 key)
+  - name: 'netsherlock'
+    webhook_configs:
+      - url: 'http://localhost:8080/webhook/alertmanager'
+        send_resolved: false
+        max_alerts: 10
+
+  - name: 'null'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'hostname', 'to_hostname']

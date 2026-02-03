@@ -1,0 +1,23 @@
+# Global Inventory for NetSherlock
+# Maps hostnames to management IPs for webhook hostname resolution
+
+hosts:
+  # Production cluster nodes for system network testing
+  node31:
+    mgmt_ip: "192.168.70.31"
+    ssh:
+      user: root
+    network_types:
+      - storage
+      - system
+
+  node32:
+    mgmt_ip: "192.168.70.32"
+    ssh:
+      user: root
+    network_types:
+      - storage
+      - system
+
+# VM mappings (empty for system network testing)
+vms: {}

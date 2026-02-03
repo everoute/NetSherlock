@@ -226,6 +226,36 @@ def _create_engine(settings: Any) -> Any:
 # ============================================================
 
 
+def _resolve_hostname_to_ip(hostname: str | None) -> str | None:
+    """Resolve hostname to management IP using GlobalInventory.
+
+    For system network alerts, Prometheus sends hostname/to_hostname labels
+    (e.g., "node31", "node32") instead of IP addresses. This function looks
+    up the hostname in GlobalInventory to get the management IP.
+
+    Args:
+        hostname: Hostname from Prometheus label (e.g., "node31")
+
+    Returns:
+        Management IP address if found in inventory, else None
+    """
+    if not hostname:
+        return None
+
+    inventory = _get_global_inventory()
+    if not inventory:
+        logger.warning(f"Cannot resolve hostname '{hostname}': GlobalInventory not loaded")
+        return None
+
+    host_config = inventory.hosts.get(hostname)
+    if host_config:
+        logger.debug(f"Resolved hostname '{hostname}' to IP '{host_config.mgmt_ip}'")
+        return host_config.mgmt_ip
+
+    logger.warning(f"Hostname '{hostname}' not found in GlobalInventory")
+    return None
+
+
 def _build_diagnosis_request(
     request_type: str,
     request_id: str,
@@ -243,16 +273,34 @@ def _build_diagnosis_request(
     """
     if request_type == "alert":
         labels = raw_data.get("labels", {})
-        src_host_raw = labels.get("src_host") or labels.get("instance", "")
-        src_host = src_host_raw.split(":")[0] if src_host_raw else ""
+        network_type = labels.get("network_type", "vm")
+
+        # For system network alerts, resolve hostname/to_hostname to IPs
+        if network_type == "system":
+            # Primary: hostname/to_hostname labels from Prometheus metrics
+            src_hostname = labels.get("hostname")
+            dst_hostname = labels.get("to_hostname")
+
+            src_host = _resolve_hostname_to_ip(src_hostname) or ""
+            dst_host = _resolve_hostname_to_ip(dst_hostname)
+
+            if not src_host and src_hostname:
+                logger.warning(
+                    f"System network alert: unable to resolve src hostname '{src_hostname}'"
+                )
+        else:
+            # VM network: use src_host/dst_host or instance labels directly
+            src_host_raw = labels.get("src_host") or labels.get("instance", "")
+            src_host = src_host_raw.split(":")[0] if src_host_raw else ""
+            dst_host = labels.get("dst_host")
 
         return DiagnosisRequest(
             request_id=request_id,
             request_type=_map_alert_to_type(labels.get("alertname", "")),
-            network_type=labels.get("network_type", "vm"),
+            network_type=network_type,
             src_host=src_host,
             src_vm=labels.get("src_vm"),
-            dst_host=labels.get("dst_host"),
+            dst_host=dst_host,
             dst_vm=labels.get("dst_vm"),
             source=DiagnosisRequestSource.WEBHOOK,
             alert_type=labels.get("alertname"),
@@ -311,6 +359,10 @@ def _map_alert_to_type(alertname: str) -> str:
         "VMPacketDrop": "packet_drop",
         "HostPacketDrop": "packet_drop",
         "VMConnectivity": "connectivity",
+        # Host/system network P90 latency alerts from Prometheus
+        "host_to_host_max_ping_time_ns:critical": "latency",
+        "host_to_host_max_ping_time_ns:warning": "latency",
+        "NetSherlockHostLatencyTest": "latency",
     }
     return mapping.get(alertname, "latency")
 

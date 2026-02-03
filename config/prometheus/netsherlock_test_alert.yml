@@ -1,0 +1,55 @@
+# NetSherlock Test Alert Rule for System Network Diagnosis
+# Created: 2026-02-03
+#
+# This alert rule triggers when storage network P90 latency exceeds 1ms (1000000ns)
+# between any two hosts. The threshold is intentionally low for testing.
+#
+# Required labels for NetSherlock webhook:
+# - hostname: Source host name (from metric)
+# - to_hostname: Destination host name (from metric)
+# - network_type: "system" for host-to-host diagnosis
+#
+# Usage:
+# 1. Copy this file to /etc/prometheus/ on a Prometheus host
+# 2. Add to prometheus.yml rule_files: - netsherlock_test_alert.yml
+# 3. Reload Prometheus: curl -X POST http://prometheus:password@host:9090/-/reload
+#
+# Or test locally with promtool:
+#   promtool check rules netsherlock_test_alert.yml
+
+groups:
+  - name: netsherlock_system_network
+    interval: 15s
+    rules:
+      # Test alert with low threshold for easy triggering
+      - alert: NetSherlockHostLatencyTest
+        expr: |
+          max without(instance) (
+            histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
+          ) > 1e+06
+        for: 10s
+        labels:
+          # Static labels added to alert
+          network_type: "system"
+          severity: "warning"
+        annotations:
+          summary: "High storage network P90 latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 1ms threshold"
+          src_hostname: "{{ $labels.hostname }}"
+          dst_hostname: "{{ $labels.to_hostname }}"
+
+      # Production-ready alert (matches existing threshold)
+      - alert: HostNetworkLatencyHigh
+        expr: |
+          max without(instance) (
+            histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[5m]))
+          ) > 5e+06
+        for: 30s
+        labels:
+          network_type: "system"
+          severity: "critical"
+        annotations:
+          summary: "Critical storage network latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 5ms threshold"
+          src_hostname: "{{ $labels.hostname }}"
+          dst_hostname: "{{ $labels.to_hostname }}"
