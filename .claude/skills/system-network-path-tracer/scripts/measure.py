@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""System Network Packet Drop & Latency Measurement - Main Entry Point.
+"""System Network Packet Drop & Latency Measurement - Main Entry Point (v2).
 
-Deploys system_icmp_path_tracer.py to sender and receiver hosts for
+Deploys system_*_path_tracer.py to sender and receiver hosts for
 packet drop detection and internal latency measurement.
 
+v2 additions:
+- Multi-protocol support: ICMP (MVP), TCP/UDP (reserved)
+- Direction mode for ICMP: rx (local responds), tx (local initiates)
+- Focus mode: drop (丢包定界) vs latency (延迟定界)
+- Output mode: verbose (per-packet) vs stats (periodic histograms)
+
 The tool traces 4 stages on each host:
-  [0] ReqRX@phy → [1] ReqRcv@stack → [2] RepSnd@stack → [3] RepTX@phy
+  ICMP RX: [0] ReqRX@phy → [1] ReqRcv@stack → [2] RepSnd@stack → [3] RepTX@phy
+  ICMP TX: [0] ReqSnd@stack → [1] ReqTX@phy → [2] RepRX@phy → [3] RepRcv@stack
 
 Workflow:
 1. Validate SSH connectivity
 2. Start background traffic (if --generate-traffic)
-3. Deploy system_icmp_path_tracer.py to both hosts
+3. Deploy system_*_path_tracer.py to both hosts
 4. Start measurement (receiver first)
 5. Wait for duration
 6. Stop tools and collect logs
@@ -30,6 +37,16 @@ def get_script_dir() -> Path:
     return Path(__file__).parent.resolve()
 
 
+def get_tool_name(protocol: str) -> str:
+    """Get the BPF tool name for the given protocol."""
+    tools = {
+        'icmp': 'system_icmp_path_tracer.py',
+        'tcp': 'system_tcp_path_tracer.py',
+        'udp': 'system_udp_path_tracer.py'
+    }
+    return tools[protocol]
+
+
 def run_script(script_name: str, env: dict, description: str, quiet: bool = False):
     script_path = get_script_dir() / script_name
     if not script_path.exists():
@@ -43,7 +60,10 @@ def run_script(script_name: str, env: dict, description: str, quiet: bool = Fals
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="System Network Packet Drop & Latency Measurement")
+    parser = argparse.ArgumentParser(
+        description="System Network Packet Drop & Latency Measurement (v2)"
+    )
+
     # L2 environment
     parser.add_argument("--sender-host-ssh", required=True)
     parser.add_argument("--sender-ip", required=True, help="Sender host IP (ping initiator)")
@@ -52,6 +72,21 @@ def parse_args():
     parser.add_argument("--receiver-ip", required=True, help="Receiver host IP (ping target)")
     parser.add_argument("--receiver-phy-if", required=True, help="Receiver physical NIC")
     parser.add_argument("--local-tools-path", required=True)
+
+    # v2: Protocol and mode parameters
+    parser.add_argument("--protocol", choices=['icmp', 'tcp', 'udp'], default='icmp',
+                        help='Protocol to trace (default: icmp). Note: TCP/UDP reserved for future.')
+    parser.add_argument("--direction", choices=['rx', 'tx'], default='rx',
+                        help='Direction for ICMP: rx=local responds (default), tx=local initiates')
+    parser.add_argument("--focus", choices=['drop', 'latency'], default='drop',
+                        help='Measurement focus: drop=drop detection (default), latency=latency breakdown')
+    parser.add_argument("--output-mode", choices=['verbose', 'stats'], default='verbose',
+                        help='Output mode: verbose=per-packet (default), stats=periodic histograms')
+    parser.add_argument("--port", type=int, default=None,
+                        help='Port filter for TCP/UDP (reserved)')
+    parser.add_argument("--stats-interval", type=int, default=5,
+                        help='Stats interval in seconds for stats mode (reserved)')
+
     # Global config
     parser.add_argument("--duration", type=int, default=30)
     parser.add_argument("--generate-traffic", action="store_true")
@@ -63,17 +98,41 @@ def parse_args():
     parser.add_argument("--skip-validate", action="store_true")
     parser.add_argument("--output-dir", default="")
     parser.add_argument("--json-only", action="store_true")
+
     return parser.parse_args()
+
+
+def validate_args(args):
+    """Validate argument combinations."""
+    # MVP: Only ICMP is fully implemented
+    if args.protocol != 'icmp':
+        print(f"Warning: Protocol '{args.protocol}' is reserved for future implementation. Using ICMP.",
+              file=sys.stderr)
+        args.protocol = 'icmp'
+
+    # Stats mode only for TCP/UDP (reserved)
+    if args.output_mode == 'stats' and args.protocol == 'icmp':
+        print("Warning: Stats mode not supported for ICMP. Using verbose.", file=sys.stderr)
+        args.output_mode = 'verbose'
+
+    # Port filter only for TCP/UDP
+    if args.port is not None and args.protocol == 'icmp':
+        print("Warning: Port filter ignored for ICMP protocol.", file=sys.stderr)
+        args.port = None
+
+    return args
 
 
 def main():
     args = parse_args()
+    args = validate_args(args)
     quiet = args.json_only
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     measurement_dir = args.output_dir if args.output_dir else f"./measurement-{timestamp}"
     os.makedirs(measurement_dir, exist_ok=True)
 
+    # Build environment for shell scripts
     env = {
         "SENDER_HOST_SSH": args.sender_host_ssh,
         "SENDER_IP": args.sender_ip,
@@ -87,7 +146,19 @@ def main():
         "MEASUREMENT_DIR": measurement_dir,
         "RECEIVER_WARMUP": str(args.receiver_warmup),
         "SHUTDOWN_WAIT": str(args.shutdown_wait),
+        # v2: Protocol and mode env vars
+        "PROTOCOL": args.protocol,
+        "DIRECTION": args.direction,
+        "FOCUS": args.focus,
+        "OUTPUT_MODE": args.output_mode,
+        "TOOL_NAME": get_tool_name(args.protocol),
     }
+
+    # Optional parameters
+    if args.port is not None:
+        env["PORT"] = str(args.port)
+    if args.stats_interval:
+        env["STATS_INTERVAL"] = str(args.stats_interval)
 
     # Step 1: Validate SSH
     if not args.skip_validate:
@@ -123,6 +194,9 @@ def main():
                 sys.exit(1)
 
         # Step 4-6: Measure
+        if not quiet:
+            print(f"\n[Config] Protocol={args.protocol}, Direction={args.direction}, "
+                  f"Focus={args.focus}, OutputMode={args.output_mode}")
         result = run_script("start_measurement.sh", env, "Running measurement", quiet)
         if result.returncode != 0:
             print("Error: Measurement failed", file=sys.stderr)
@@ -146,7 +220,15 @@ def main():
 
     sys.path.insert(0, str(get_script_dir()))
     from parse_logs import parse_system_drop_logs
-    result_json = parse_system_drop_logs(measurement_dir)
+
+    # Pass protocol and direction info to parser
+    result_json = parse_system_drop_logs(
+        measurement_dir,
+        protocol=args.protocol,
+        direction=args.direction,
+        focus=args.focus,
+        output_mode=args.output_mode
+    )
     print(json.dumps(result_json, indent=2))
 
 

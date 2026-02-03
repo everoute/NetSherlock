@@ -1,111 +1,138 @@
 #!/usr/bin/env python3
-"""Parse system_icmp_path_tracer log files for drop statistics and latency.
+"""Parse system network path tracer log files (v2).
 
-Output format from the tool:
-  Verbose per-flow:
-    TIMESTAMP [ACTION] ID=N Seq=N ReqRX@phy:Y ReqRcv@stack:Y RepSnd@stack:Y RepTX@phy:Y
-      Latency(us): ReqPath=X.X Stack=X.X RepPath=X.X Total=X.X
+Routes to protocol-specific parsers based on log content detection.
 
-  Drop events:
-    === ICMP Drop Detected: TIMESTAMP ===
-    Flow: SRC -> DST (ID=N, Seq=N)
-      [0] ReqRX@phy: recorded
-      [1] ReqRcv@stack: MISSING
-    Drop: Request dropped INTERNALLY (between phy NIC and icmp_rcv)
-
-  Statistics (on Ctrl-C):
-    === ICMP System Path Statistics ===
-    Total flows tracked: N
-    Complete flows: N
-    Request internal drops: N
-    Stack no-reply: N
-    Reply internal drops: N
+Supported formats:
+- ICMP verbose: system_icmp_path_tracer.py with --verbose
+- TCP/UDP verbose: system_tcp_path_tracer.py / system_udp_path_tracer.py --verbose (reserved)
+- TCP/UDP stats: system_tcp_path_tracer.py / system_udp_path_tracer.py --stats-interval (reserved)
 """
 
 import json
 import os
-import re
 import sys
+from typing import Optional, Tuple
 
 
-def parse_system_tracer_log(log_path: str) -> dict:
-    """Parse a single system_icmp_path_tracer log file."""
+def detect_log_format(content: str) -> Tuple[str, str, str]:
+    """Detect protocol, output mode, and direction from log content.
+
+    Returns: (protocol, output_mode, direction)
+    """
+    # Detect protocol
+    if 'System ICMP Path Tracer' in content:
+        protocol = 'icmp'
+        output_mode = 'verbose'  # ICMP only has verbose mode
+        # Detect direction
+        if 'Direction: TX' in content:
+            direction = 'tx'
+        else:
+            direction = 'rx'
+        return (protocol, output_mode, direction)
+
+    elif 'System TCP Path Tracer' in content:
+        protocol = 'tcp'
+        if 'Mode: Stats' in content:
+            output_mode = 'stats'
+        else:
+            output_mode = 'verbose'
+        return (protocol, output_mode, 'bidirectional')
+
+    elif 'System UDP Path Tracer' in content:
+        protocol = 'udp'
+        if 'Mode: Stats' in content:
+            output_mode = 'stats'
+        else:
+            output_mode = 'verbose'
+        return (protocol, output_mode, 'bidirectional')
+
+    return ('unknown', 'unknown', 'unknown')
+
+
+def parse_log_file(log_path: str, protocol: Optional[str] = None,
+                   direction: Optional[str] = None) -> dict:
+    """Parse a single log file using the appropriate parser.
+
+    Args:
+        log_path: Path to the log file
+        protocol: Protocol hint (icmp, tcp, udp), or None to auto-detect
+        direction: Direction hint for ICMP (rx, tx), or None to auto-detect
+
+    Returns:
+        Parsed data structure
+    """
     if not os.path.exists(log_path) or os.path.getsize(log_path) == 0:
-        return {"error": f"Log file missing or empty: {log_path}", "total_flows": 0, "complete_flows": 0}
+        return {"error": f"Log file missing or empty: {log_path}",
+                "flows": {"total": 0, "complete": 0},
+                "drops": {},
+                "latency_us": {}}
 
     with open(log_path, "r") as f:
         content = f.read()
 
-    # Parse statistics summary (most reliable source)
-    stats = {}
-    stats_patterns = {
-        "total_flows": r"Total flows tracked:\s*(\d+)",
-        "complete_flows": r"Complete flows:\s*(\d+)",
-        "req_internal": r"Request internal drops:\s*(\d+)",
-        "stack_no_reply": r"Stack no-reply:\s*(\d+)",
-        "rep_internal": r"Reply internal drops:\s*(\d+)",
-    }
-    for key, pattern in stats_patterns.items():
-        m = re.search(pattern, content)
-        stats[key] = int(m.group(1)) if m else 0
+    # Auto-detect format if not specified
+    detected_protocol, detected_mode, detected_direction = detect_log_format(content)
 
-    # Parse per-flow latencies from verbose output
-    latency_re = re.compile(
-        r"Latency\(us\):\s*ReqPath=([\d.]+)\s+Stack=([\d.]+)\s+RepPath=([\d.]+)\s+Total=([\d.]+)"
-    )
-    req_paths = []
-    stacks = []
-    rep_paths = []
-    totals = []
+    if protocol is None:
+        protocol = detected_protocol
+    if direction is None:
+        direction = detected_direction
 
-    for m in latency_re.finditer(content):
-        req_paths.append(float(m.group(1)))
-        stacks.append(float(m.group(2)))
-        rep_paths.append(float(m.group(3)))
-        totals.append(float(m.group(4)))
+    # Route to appropriate parser
+    if protocol == 'icmp':
+        from parse_icmp_verbose import parse_icmp_verbose_log
+        return parse_icmp_verbose_log(content, direction)
 
-    def calc_stats(lst):
-        if not lst:
-            return {"avg": 0.0, "min": 0.0, "max": 0.0, "samples": 0}
+    elif protocol in ('tcp', 'udp'):
+        # Reserved for future implementation
         return {
-            "avg": round(sum(lst) / len(lst), 3),
-            "min": round(min(lst), 3),
-            "max": round(max(lst), 3),
-            "samples": len(lst),
+            "error": f"Protocol '{protocol}' parser not yet implemented",
+            "flows": {"total": 0, "complete": 0},
+            "drops": {},
+            "latency_us": {}
         }
 
-    drop_total = stats.get("req_internal", 0) + stats.get("stack_no_reply", 0) + stats.get("rep_internal", 0)
-    total = stats.get("total_flows", 0)
-    drop_rate = round(drop_total / total, 4) if total > 0 else 0.0
-
     return {
-        "total_flows": stats.get("total_flows", 0),
-        "complete_flows": stats.get("complete_flows", 0),
-        "drops": {
-            "req_internal": stats.get("req_internal", 0),
-            "stack_no_reply": stats.get("stack_no_reply", 0),
-            "rep_internal": stats.get("rep_internal", 0),
-        },
-        "drop_rate": drop_rate,
-        "latency_us": {
-            "req_path": calc_stats(req_paths),
-            "stack": calc_stats(stacks),
-            "rep_path": calc_stats(rep_paths),
-            "total": calc_stats(totals),
-        },
+        "error": f"Unknown protocol format in {log_path}",
+        "flows": {"total": 0, "complete": 0},
+        "drops": {},
+        "latency_us": {}
     }
 
 
-def parse_system_drop_logs(measurement_dir: str) -> dict:
-    """Parse all logs in a system-network-path-tracer measurement directory."""
-    receiver = parse_system_tracer_log(os.path.join(measurement_dir, "receiver-host.log"))
-    sender = parse_system_tracer_log(os.path.join(measurement_dir, "sender-host.log"))
+def parse_system_drop_logs(measurement_dir: str,
+                           protocol: str = 'icmp',
+                           direction: str = 'rx',
+                           focus: str = 'drop',
+                           output_mode: str = 'verbose') -> dict:
+    """Parse all logs in a system-network-path-tracer measurement directory.
+
+    Args:
+        measurement_dir: Directory containing log files
+        protocol: Protocol type (icmp, tcp, udp)
+        direction: ICMP direction (rx, tx)
+        focus: Measurement focus (drop, latency)
+        output_mode: Output mode (verbose, stats)
+
+    Returns:
+        Combined measurement results
+    """
+    receiver_log = os.path.join(measurement_dir, "receiver-host.log")
+    sender_log = os.path.join(measurement_dir, "sender-host.log")
+
+    receiver = parse_log_file(receiver_log, protocol, direction)
+    sender = parse_log_file(sender_log, protocol, direction)
 
     receiver["role"] = "primary (traces A→B traffic)"
     sender["role"] = "secondary (traces B→A traffic)"
 
     return {
         "measurement_type": "system-network-path-tracer",
+        "protocol": protocol,
+        "direction": direction,
+        "focus": focus,
+        "output_mode": output_mode,
         "receiver": receiver,
         "sender": sender,
         "log_files": ["receiver-host.log", "sender-host.log"],
@@ -114,8 +141,22 @@ def parse_system_drop_logs(measurement_dir: str) -> dict:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <measurement_dir>", file=sys.stderr)
-        sys.exit(1)
-    result = parse_system_drop_logs(sys.argv[1])
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Parse system network path tracer logs")
+    parser.add_argument("measurement_dir", help="Measurement directory")
+    parser.add_argument("--protocol", choices=['icmp', 'tcp', 'udp'], default='icmp')
+    parser.add_argument("--direction", choices=['rx', 'tx'], default='rx')
+    parser.add_argument("--focus", choices=['drop', 'latency'], default='drop')
+    parser.add_argument("--output-mode", choices=['verbose', 'stats'], default='verbose')
+
+    args = parser.parse_args()
+
+    result = parse_system_drop_logs(
+        args.measurement_dir,
+        protocol=args.protocol,
+        direction=args.direction,
+        focus=args.focus,
+        output_mode=args.output_mode
+    )
     print(json.dumps(result, indent=2))
