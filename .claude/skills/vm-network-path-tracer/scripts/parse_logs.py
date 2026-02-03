@@ -1,111 +1,116 @@
 #!/usr/bin/env python3
-"""Parse icmp_path_tracer logs for VM network drop detection.
+"""Parse VM network path tracer log files (v2).
 
-icmp_path_tracer output format:
-  Verbose per-flow:
-    [TIMESTAMP] [ACTION] ID=N Seq=N ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
-      Latency(us): ReqInternal=X.XX  External=X.XX  RepInternal=X.XX  Total=X.XX
+Routes to protocol-specific parsers based on log content detection.
 
-  Drop events:
-    === ICMP Drop Detected: TIMESTAMP ===
-    Flow: SRC -> DST (ID=N, Seq=N)
-    [0] ReqRX: recorded/MISSING
-    ...
-    Drop Location: Request dropped INTERNALLY
-
-  Statistics:
-    === ICMP Flow Statistics ===
-    Total flows tracked: N
-    Complete flows: N
-    Request internal drops: N
-    External drops: N
-    Reply internal drops: N
+Supported formats:
+- ICMP verbose: icmp_path_tracer.py with --verbose
+- TCP/UDP verbose: tcp_path_tracer.py / udp_path_tracer.py --verbose (reserved)
+- TCP/UDP stats: tcp_path_tracer.py / udp_path_tracer.py --stats-interval (reserved)
 """
 
 import json
 import os
-import re
 import sys
+from typing import Optional, Tuple
 
 
-def parse_vm_tracer_log(log_path: str) -> dict:
-    """Parse a single icmp_path_tracer log file."""
+def detect_log_format(content: str) -> Tuple[str, str]:
+    """Detect protocol and output mode from log content.
+
+    Returns: (protocol, output_mode)
+    """
+    # VM boundary tools detection
+    if 'ICMP Drop Detector' in content or 'ICMP Path Tracer' in content:
+        return ('icmp', 'verbose')
+    elif 'TCP Path Tracer' in content:
+        if 'Mode: Stats' in content:
+            return ('tcp', 'stats')
+        return ('tcp', 'verbose')
+    elif 'UDP Path Tracer' in content:
+        if 'Mode: Stats' in content:
+            return ('udp', 'stats')
+        return ('udp', 'verbose')
+
+    return ('unknown', 'unknown')
+
+
+def parse_log_file(log_path: str, protocol: Optional[str] = None) -> dict:
+    """Parse a single log file using the appropriate parser.
+
+    Args:
+        log_path: Path to the log file
+        protocol: Protocol hint (icmp, tcp, udp), or None to auto-detect
+
+    Returns:
+        Parsed data structure
+    """
     if not os.path.exists(log_path) or os.path.getsize(log_path) == 0:
-        return {"error": f"Log file missing or empty: {log_path}", "total_flows": 0, "complete_flows": 0}
+        return {"error": f"Log file missing or empty: {log_path}",
+                "flows": {"total": 0, "complete": 0},
+                "drops": {},
+                "latency_us": {}}
 
     with open(log_path, "r") as f:
         content = f.read()
 
-    # Parse statistics summary
-    stats = {}
-    stats_patterns = {
-        "total_flows": r"Total flows tracked:\s*(\d+)",
-        "complete_flows": r"Complete flows:\s*(\d+)",
-        "req_internal": r"Request internal drops:\s*(\d+)",
-        "external": r"External drops:\s*(\d+)",
-        "rep_internal": r"Reply internal drops:\s*(\d+)",
-    }
-    for key, pattern in stats_patterns.items():
-        m = re.search(pattern, content)
-        stats[key] = int(m.group(1)) if m else 0
+    # Auto-detect format if not specified
+    detected_protocol, detected_mode = detect_log_format(content)
 
-    # Parse per-flow latencies
-    latency_re = re.compile(
-        r"Latency\(us\):\s*ReqInternal=([\d.]+)\s+External=([\d.]+)\s+RepInternal=([\d.]+)\s+Total=([\d.]+)"
-    )
-    req_internals = []
-    externals = []
-    rep_internals = []
-    totals = []
+    if protocol is None:
+        protocol = detected_protocol
 
-    for m in latency_re.finditer(content):
-        req_internals.append(float(m.group(1)))
-        externals.append(float(m.group(2)))
-        rep_internals.append(float(m.group(3)))
-        totals.append(float(m.group(4)))
+    # Route to appropriate parser
+    if protocol == 'icmp':
+        from parse_icmp_verbose import parse_icmp_verbose_log
+        return parse_icmp_verbose_log(content)
 
-    def calc_stats(lst):
-        if not lst:
-            return {"avg": 0.0, "min": 0.0, "max": 0.0, "samples": 0}
+    elif protocol in ('tcp', 'udp'):
+        # Reserved for future implementation
         return {
-            "avg": round(sum(lst) / len(lst), 3),
-            "min": round(min(lst), 3),
-            "max": round(max(lst), 3),
-            "samples": len(lst),
+            "error": f"Protocol '{protocol}' parser not yet implemented",
+            "flows": {"total": 0, "complete": 0},
+            "drops": {},
+            "latency_us": {}
         }
 
-    drop_total = stats.get("req_internal", 0) + stats.get("external", 0) + stats.get("rep_internal", 0)
-    total = stats.get("total_flows", 0)
-    drop_rate = round(drop_total / total, 4) if total > 0 else 0.0
-
     return {
-        "total_flows": stats.get("total_flows", 0),
-        "complete_flows": stats.get("complete_flows", 0),
-        "drops": {
-            "req_internal": stats.get("req_internal", 0),
-            "external": stats.get("external", 0),
-            "rep_internal": stats.get("rep_internal", 0),
-        },
-        "drop_rate": drop_rate,
-        "latency_us": {
-            "req_internal": calc_stats(req_internals),
-            "external": calc_stats(externals),
-            "rep_internal": calc_stats(rep_internals),
-            "total": calc_stats(totals),
-        },
+        "error": f"Unknown protocol format in {log_path}",
+        "flows": {"total": 0, "complete": 0},
+        "drops": {},
+        "latency_us": {}
     }
 
 
-def parse_vm_drop_logs(measurement_dir: str) -> dict:
-    """Parse all logs in a vm-network-path-tracer measurement directory."""
-    sender = parse_vm_tracer_log(os.path.join(measurement_dir, "sender-host.log"))
-    receiver = parse_vm_tracer_log(os.path.join(measurement_dir, "receiver-host.log"))
+def parse_vm_drop_logs(measurement_dir: str,
+                       protocol: str = 'icmp',
+                       focus: str = 'drop',
+                       output_mode: str = 'verbose') -> dict:
+    """Parse all logs in a vm-network-path-tracer measurement directory.
+
+    Args:
+        measurement_dir: Directory containing log files
+        protocol: Protocol type (icmp, tcp, udp)
+        focus: Measurement focus (drop, latency)
+        output_mode: Output mode (verbose, stats)
+
+    Returns:
+        Combined measurement results
+    """
+    sender_log = os.path.join(measurement_dir, "sender-host.log")
+    receiver_log = os.path.join(measurement_dir, "receiver-host.log")
+
+    sender = parse_log_file(sender_log, protocol)
+    receiver = parse_log_file(receiver_log, protocol)
 
     sender["boundary"] = "vnet→phy (VM outbound)"
     receiver["boundary"] = "phy→vnet (VM inbound)"
 
     return {
         "measurement_type": "vm-network-path-tracer",
+        "protocol": protocol,
+        "focus": focus,
+        "output_mode": output_mode,
         "sender": sender,
         "receiver": receiver,
         "log_files": ["sender-host.log", "receiver-host.log"],
@@ -114,8 +119,20 @@ def parse_vm_drop_logs(measurement_dir: str) -> dict:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <measurement_dir>", file=sys.stderr)
-        sys.exit(1)
-    result = parse_vm_drop_logs(sys.argv[1])
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Parse VM network path tracer logs")
+    parser.add_argument("measurement_dir", help="Measurement directory")
+    parser.add_argument("--protocol", choices=['icmp', 'tcp', 'udp'], default='icmp')
+    parser.add_argument("--focus", choices=['drop', 'latency'], default='drop')
+    parser.add_argument("--output-mode", choices=['verbose', 'stats'], default='verbose')
+
+    args = parser.parse_args()
+
+    result = parse_vm_drop_logs(
+        args.measurement_dir,
+        protocol=args.protocol,
+        focus=args.focus,
+        output_mode=args.output_mode
+    )
     print(json.dumps(result, indent=2))

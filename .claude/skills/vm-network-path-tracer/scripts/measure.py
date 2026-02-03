@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""VM Network Drop Measurement - Main Entry Point.
+"""VM Network Path Tracer - Main Entry Point (v2).
 
-Deploys icmp_path_tracer.py to sender and receiver hosts for
-VM traffic drop detection at vnet↔phy boundaries.
+Deploys *_path_tracer.py to sender and receiver hosts for
+VM traffic drop detection and latency measurement at vnet↔phy boundaries.
+
+v2 additions:
+- Multi-protocol support: ICMP (MVP), TCP/UDP (reserved)
+- Focus mode: drop (丢包定界) vs latency (延迟定界)
+- Output mode: verbose (per-packet) vs stats (periodic histograms)
 """
 
 import argparse
@@ -18,6 +23,16 @@ def get_script_dir() -> Path:
     return Path(__file__).parent.resolve()
 
 
+def get_tool_name(protocol: str) -> str:
+    """Get the BPF tool name for the given protocol."""
+    tools = {
+        'icmp': 'icmp_path_tracer.py',
+        'tcp': 'tcp_path_tracer.py',
+        'udp': 'udp_path_tracer.py'
+    }
+    return tools[protocol]
+
+
 def run_script(script_name: str, env: dict, description: str, quiet: bool = False):
     script_path = get_script_dir() / script_name
     if not script_path.exists():
@@ -31,7 +46,11 @@ def run_script(script_name: str, env: dict, description: str, quiet: bool = Fals
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="VM Network Drop Measurement")
+    parser = argparse.ArgumentParser(
+        description="VM Network Path Tracer (v2)"
+    )
+
+    # L2 environment
     parser.add_argument("--sender-host-ssh", required=True)
     parser.add_argument("--sender-vm-ip", required=True, help="Sender VM IP for BPF filter")
     parser.add_argument("--receiver-vm-ip", required=True, help="Receiver VM IP for BPF filter")
@@ -41,6 +60,20 @@ def parse_args():
     parser.add_argument("--recv-vnet-if", required=True, help="Receiver VM TAP interface (e.g. vnet130)")
     parser.add_argument("--receiver-phy-if", required=True)
     parser.add_argument("--local-tools-path", required=True)
+
+    # v2: Protocol and mode parameters
+    parser.add_argument("--protocol", choices=['icmp', 'tcp', 'udp'], default='icmp',
+                        help='Protocol to trace (default: icmp). Note: TCP/UDP reserved for future.')
+    parser.add_argument("--focus", choices=['drop', 'latency'], default='drop',
+                        help='Measurement focus: drop=drop detection (default), latency=latency breakdown')
+    parser.add_argument("--output-mode", choices=['verbose', 'stats'], default='verbose',
+                        help='Output mode: verbose=per-packet (default), stats=periodic histograms')
+    parser.add_argument("--port", type=int, default=None,
+                        help='Port filter for TCP/UDP (reserved)')
+    parser.add_argument("--stats-interval", type=int, default=5,
+                        help='Stats interval in seconds for stats mode (reserved)')
+
+    # Global config
     parser.add_argument("--duration", type=int, default=30)
     parser.add_argument("--generate-traffic", action="store_true")
     parser.add_argument("--ping-interval", type=float, default=1)
@@ -52,17 +85,41 @@ def parse_args():
     parser.add_argument("--output-dir", default="")
     parser.add_argument("--json-only", action="store_true")
     parser.add_argument("--sender-vm-ssh", default="", help="Sender VM SSH (for --generate-traffic from VM)")
+
     return parser.parse_args()
+
+
+def validate_args(args):
+    """Validate argument combinations."""
+    # MVP: Only ICMP is fully implemented
+    if args.protocol != 'icmp':
+        print(f"Warning: Protocol '{args.protocol}' is reserved for future implementation. Using ICMP.",
+              file=sys.stderr)
+        args.protocol = 'icmp'
+
+    # Stats mode only for TCP/UDP (reserved)
+    if args.output_mode == 'stats' and args.protocol == 'icmp':
+        print("Warning: Stats mode not supported for ICMP. Using verbose.", file=sys.stderr)
+        args.output_mode = 'verbose'
+
+    # Port filter only for TCP/UDP
+    if args.port is not None and args.protocol == 'icmp':
+        print("Warning: Port filter ignored for ICMP protocol.", file=sys.stderr)
+        args.port = None
+
+    return args
 
 
 def main():
     args = parse_args()
+    args = validate_args(args)
     quiet = args.json_only
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     measurement_dir = args.output_dir if args.output_dir else f"./measurement-{timestamp}"
     os.makedirs(measurement_dir, exist_ok=True)
 
+    # Build environment for shell scripts
     env = {
         "SENDER_HOST_SSH": args.sender_host_ssh,
         "SENDER_VM_IP": args.sender_vm_ip,
@@ -78,7 +135,18 @@ def main():
         "MEASUREMENT_DIR": measurement_dir,
         "RECEIVER_WARMUP": str(args.receiver_warmup),
         "SHUTDOWN_WAIT": str(args.shutdown_wait),
+        # v2: Protocol and mode env vars
+        "PROTOCOL": args.protocol,
+        "FOCUS": args.focus,
+        "OUTPUT_MODE": args.output_mode,
+        "TOOL_NAME": get_tool_name(args.protocol),
     }
+
+    # Optional parameters
+    if args.port is not None:
+        env["PORT"] = str(args.port)
+    if args.stats_interval:
+        env["STATS_INTERVAL"] = str(args.stats_interval)
 
     # Validate SSH (hosts only)
     if not args.skip_validate:
@@ -114,6 +182,8 @@ def main():
                 print("Error: Tool deployment failed", file=sys.stderr)
                 sys.exit(1)
 
+        if not quiet:
+            print(f"\n[Config] Protocol={args.protocol}, Focus={args.focus}, OutputMode={args.output_mode}")
         result = run_script("start_measurement.sh", env, "Running measurement", quiet)
         if result.returncode != 0:
             print("Error: Measurement failed", file=sys.stderr)
@@ -135,7 +205,14 @@ def main():
 
     sys.path.insert(0, str(get_script_dir()))
     from parse_logs import parse_vm_drop_logs
-    result_json = parse_vm_drop_logs(measurement_dir)
+
+    # Pass protocol and mode info to parser
+    result_json = parse_vm_drop_logs(
+        measurement_dir,
+        protocol=args.protocol,
+        focus=args.focus,
+        output_mode=args.output_mode
+    )
     print(json.dumps(result_json, indent=2))
 
 
