@@ -97,7 +97,7 @@ def parse_vm_tracer_log(log_path: str) -> dict:
 
 
 def parse_vm_drop_logs(measurement_dir: str) -> dict:
-    """Parse all logs in a vm-network-drop measurement directory."""
+    """Parse all logs in a vm-network-path-tracer measurement directory."""
     sender = parse_vm_tracer_log(os.path.join(measurement_dir, "sender-host.log"))
     receiver = parse_vm_tracer_log(os.path.join(measurement_dir, "receiver-host.log"))
 
@@ -105,7 +105,7 @@ def parse_vm_drop_logs(measurement_dir: str) -> dict:
     receiver["boundary"] = "phy→vnet (VM inbound)"
 
     return {
-        "measurement_type": "vm-network-drop",
+        "measurement_type": "vm-network-path-tracer",
         "sender": sender,
         "receiver": receiver,
         "log_files": ["sender-host.log", "receiver-host.log"],

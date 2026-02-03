@@ -1,23 +1,24 @@
 ---
-name: vm-network-drop
+name: vm-network-path-tracer
 description: |
-  Detect and localize VM network packet drops at host boundaries using
-  dual-endpoint BPF tracing. Deploys icmp_path_tracer to sender and receiver
-  hosts, monitoring vnet↔phy interface boundaries to identify where VM traffic
-  is dropped on the host side.
+  Detect and localize VM network packet drops and measure internal latency
+  at host boundaries using dual-endpoint BPF tracing. Deploys icmp_path_tracer
+  to sender and receiver hosts, monitoring vnet↔phy interface boundaries to
+  identify where VM traffic is dropped or delayed.
 
   Trigger keywords: VM packet drop, VM drop detection, VM network drop,
-  vnet drop, VM traffic loss, VM丢包检测, 虚拟机丢包定界
+  VM latency, vnet drop, VM traffic loss, VM丢包检测, 虚拟机丢包定界,
+  VM网络延迟, 虚拟机网络路径追踪
 
 allowed-tools: Read, Write, Bash, Skill
 ---
 
-# VM Network Drop Measurement Skill
+# VM Network Path Tracer Skill
 
 ## 执行
 
 ```bash
-python3 .claude/skills/vm-network-drop/scripts/measure.py $ARGUMENTS
+python3 .claude/skills/vm-network-path-tracer/scripts/measure.py $ARGUMENTS
 ```
 
 ## 参数说明
@@ -82,7 +83,7 @@ Drop types per host:
 
 ```json
 {
-  "measurement_type": "vm-network-drop",
+  "measurement_type": "vm-network-path-tracer",
   "sender": {
     "boundary": "vnet→phy (VM outbound)",
     "total_flows": 150,
