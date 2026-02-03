@@ -114,28 +114,29 @@ def main():
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
 
-    # Step 3: Deploy
-    if not args.skip_deploy:
-        result = run_script("deploy_tools.sh", env, "Deploying BPF tools", quiet)
+    try:
+        # Step 3: Deploy
+        if not args.skip_deploy:
+            result = run_script("deploy_tools.sh", env, "Deploying BPF tools", quiet)
+            if result.returncode != 0:
+                print("Error: Tool deployment failed", file=sys.stderr)
+                sys.exit(1)
+
+        # Step 4-6: Measure
+        result = run_script("start_measurement.sh", env, "Running measurement", quiet)
         if result.returncode != 0:
-            print("Error: Tool deployment failed", file=sys.stderr)
+            print("Error: Measurement failed", file=sys.stderr)
             sys.exit(1)
-
-    # Step 4-6: Measure
-    result = run_script("start_measurement.sh", env, "Running measurement", quiet)
-    if result.returncode != 0:
-        print("Error: Measurement failed", file=sys.stderr)
-        sys.exit(1)
-
-    # Step 7: Stop traffic
-    if traffic_proc:
-        traffic_proc.terminate()
-        try:
-            traffic_proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            traffic_proc.kill()
-        if not quiet:
-            print("[Traffic] Stopped.")
+    finally:
+        # Step 7: Stop traffic (always cleanup, even on failure)
+        if traffic_proc:
+            traffic_proc.terminate()
+            try:
+                traffic_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                traffic_proc.kill()
+            if not quiet:
+                print("[Traffic] Stopped.")
 
     # Step 8: Parse logs
     if not quiet:

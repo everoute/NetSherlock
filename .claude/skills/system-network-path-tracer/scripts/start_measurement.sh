@@ -54,18 +54,41 @@ echo "Both tools started. Measuring for ${DURATION}s..."
 sleep "${DURATION}"
 
 echo ""
-echo "Stopping tools (SIGINT)..."
-for PID in "${SSH_PIDS[@]}"; do
-    kill -INT "${PID}" 2>/dev/null || true
-done
+echo "Stopping tools (SIGINT on remote hosts)..."
+ssh "${RECEIVER_HOST_SSH}" "sudo pkill -INT -f system_icmp_path_tracer.py" 2>/dev/null || true
+ssh "${SENDER_HOST_SSH}" "sudo pkill -INT -f system_icmp_path_tracer.py" 2>/dev/null || true
 
 echo "Waiting ${SHUTDOWN_WAIT}s for graceful shutdown..."
 sleep "${SHUTDOWN_WAIT}"
 
-for PID in "${SSH_PIDS[@]}"; do
-    kill -9 "${PID}" 2>/dev/null || true
-    wait "${PID}" 2>/dev/null || true
+# Wait for SSH processes to exit (they should exit after remote tools are killed)
+echo "Waiting for SSH processes to flush output (max 10s)..."
+WAIT_COUNT=0
+MAX_WAIT=10
+while [ ${WAIT_COUNT} -lt ${MAX_WAIT} ]; do
+    ALL_DONE=true
+    for PID in "${SSH_PIDS[@]}"; do
+        if kill -0 ${PID} 2>/dev/null; then
+            ALL_DONE=false
+            break
+        fi
+    done
+    if [ "${ALL_DONE}" = true ]; then
+        break
+    fi
+    sleep 1
+    WAIT_COUNT=$((WAIT_COUNT + 1))
 done
+
+# If any SSH processes are still running, terminate them
+for PID in "${SSH_PIDS[@]}"; do
+    if kill -0 ${PID} 2>/dev/null; then
+        echo "  Terminating SSH PID ${PID}..."
+        kill ${PID} 2>/dev/null || true
+    fi
+done
+sleep 1
+echo "All SSH processes completed."
 
 echo ""
 echo "Log files:"
