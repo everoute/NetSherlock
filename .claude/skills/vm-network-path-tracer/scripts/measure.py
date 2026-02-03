@@ -83,7 +83,8 @@ def parse_args():
     parser.add_argument("--skip-deploy", action="store_true")
     parser.add_argument("--skip-validate", action="store_true")
     parser.add_argument("--output-dir", default="")
-    parser.add_argument("--json-only", action="store_true")
+    parser.add_argument("--json-only", action="store_true", help="(deprecated) Use --json instead")
+    parser.add_argument("--json", action="store_true", help="Output JSON instead of Markdown report")
     parser.add_argument("--sender-vm-ssh", default="", help="Sender VM SSH (for --generate-traffic from VM)")
 
     return parser.parse_args()
@@ -113,7 +114,9 @@ def validate_args(args):
 def main():
     args = parse_args()
     args = validate_args(args)
-    quiet = args.json_only
+    # --json-only is deprecated, use --json
+    output_json = args.json or args.json_only
+    quiet = output_json
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     measurement_dir = args.output_dir if args.output_dir else f"./measurement-{timestamp}"
@@ -204,16 +207,20 @@ def main():
         print(f"{'='*60}")
 
     sys.path.insert(0, str(get_script_dir()))
-    from parse_logs import parse_vm_drop_logs
+    from parse_logs import parse_vm_drop_logs, generate_markdown_report
 
     # Pass protocol and mode info to parser
-    result_json = parse_vm_drop_logs(
+    result_data = parse_vm_drop_logs(
         measurement_dir,
         protocol=args.protocol,
         focus=args.focus,
         output_mode=args.output_mode
     )
-    print(json.dumps(result_json, indent=2))
+
+    if output_json:
+        print(json.dumps(result_data, indent=2))
+    else:
+        print(generate_markdown_report(result_data))
 
 
 if __name__ == "__main__":
