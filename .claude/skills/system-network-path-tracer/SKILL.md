@@ -159,44 +159,34 @@ Kernel Protocol Stack                   Physical NIC
 
 ```json
 {
-  "measurement_type": "system-network-path-tracer",
+  "status": "success",
+  "measurement_dir": "./measurement-20260203-143000",
+  "log_files": ["sender-host.log", "receiver-host.log"],
   "protocol": "icmp",
   "direction": "rx",
-  "focus": "drop",
-  "output_mode": "verbose",
-  "receiver": {
-    "role": "primary (traces A→B traffic)",
-    "flows": {
-      "total": 150,
-      "complete": 145,
-      "in_progress": 5
-    },
-    "drops": {
-      "internal_request": 3,
-      "stack_or_external": 1,
-      "internal_reply": 1
-    },
-    "drop_rate": 0.033,
-    "latency_us": {
-      "segment1": { "name": "ReqPath", "avg": 45.2, "min": 38.1, "max": 89.3 },
-      "segment2": { "name": "Stack", "avg": 5.3, "min": 2.1, "max": 12.4 },
-      "segment3": { "name": "RepPath", "avg": 38.6, "min": 30.2, "max": 78.9 },
-      "total": { "avg": 89.1, "min": 70.4, "max": 180.6 }
-    }
-  },
-  "sender": {
-    "role": "secondary (traces B→A traffic)",
-    ...
-  },
-  "log_files": ["receiver-host.log", "sender-host.log"],
-  "measurement_dir": "./measurement-20260203-143000"
+  "focus": "latency",
+  "duration": 30
 }
 ```
 
+### 分析
+
+测量完成后，使用 `system-network-latency-analysis` skill 进行分析：
+
+```bash
+python3 .claude/skills/system-network-latency-analysis/scripts/generate_report.py <measurement_dir>
+```
+
+分析会生成完整的诊断报告，包含：
+- 7 段延迟分解 (A/C/D/E/F/J/G)
+- 3 层归因表 (Sender Host / Receiver Host / Physical Network)
+- 端到端数据路径图
+- 丢包统计和关键发现
+
 ### Focus 模式说明
 
-- **`--focus drop`**: 输出强调丢包统计和定位，延迟仅显示 Total
-- **`--focus latency`**: 输出强调各段延迟分解，丢包作为次要信息
+- **`--focus drop`**: 优化丢包检测追踪
+- **`--focus latency`**: 优化延迟分段追踪
 
 ## MVP 范围
 

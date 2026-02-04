@@ -215,28 +215,26 @@ def main():
             if not quiet:
                 print("[Traffic] Stopped.")
 
-    # Step 8: Parse logs
-    if not quiet:
-        print(f"\n{'='*60}")
-        print("[Step] Parsing measurement logs")
-        print(f"{'='*60}")
-
-    sys.path.insert(0, str(get_script_dir()))
-    from parse_logs import parse_system_drop_logs, generate_markdown_report
-
-    # Pass protocol and direction info to parser
-    result_data = parse_system_drop_logs(
-        measurement_dir,
-        protocol=args.protocol,
-        direction=args.direction,
-        focus=args.focus,
-        output_mode=args.output_mode
-    )
+    # Step 8: Output measurement info (no analysis - use system-network-latency-analysis skill)
+    result = {
+        "status": "success",
+        "measurement_dir": measurement_dir,
+        "log_files": ["sender-host.log", "receiver-host.log"],
+        "protocol": args.protocol,
+        "direction": args.direction,
+        "focus": args.focus,
+        "duration": args.duration,
+    }
 
     if output_json:
-        print(json.dumps(result_data, indent=2))
+        print(json.dumps(result, indent=2))
     else:
-        print(generate_markdown_report(result_data))
+        print(f"\n{'='*60}")
+        print("[Complete] Measurement finished")
+        print(f"{'='*60}")
+        print(f"Output directory: {measurement_dir}")
+        print(f"Log files: sender-host.log, receiver-host.log")
+        print(f"\nTo analyze: python3 .claude/skills/system-network-latency-analysis/scripts/generate_report.py {measurement_dir}")
 
 
 if __name__ == "__main__":
