@@ -1,0 +1,42 @@
+Auto-detecting QEMU PID for device vnet35...
+QEMU PID: 22529
+Found 8 vhost threads: [22550, 22551, 22552, 22554, 22555, 22556, 22557, 22558]
+Device filter: vnet35
+Target vhost TIDs: [22550, 22551, 22552, 22554, 22555, 22556, 22557, 22558]
+Flow filter: proto=icmp,src=192.168.77.83,dst=192.168.76.244
+
+Warmup: 2s (learning eventfds)...
+Warmup complete.
+
+Tracing... Hit Ctrl+C to end.
+[18:09:52.948] tid=22558 queue=7 s0=15us s1=5us s2=8us total=28us
+[18:09:53.972] tid=22558 queue=7 s0=14us s1=4us s2=7us total=25us
+[18:09:54.996] tid=22558 queue=7 s0=13us s1=5us s2=8us total=26us
+[18:09:56.020] tid=22558 queue=7 s0=13us s1=5us s2=7us total=25us
+[18:09:57.044] tid=22552 queue=2 s0=0us s1=4us s2=8us total=0us
+[18:09:58.068] tid=22557 queue=6 s0=0us s1=6us s2=10us total=0us
+[18:09:59.092] tid=22557 queue=6 s0=15us s1=8us s2=10us total=33us
+[18:10:00.116] tid=22557 queue=6 s0=21us s1=10us s2=13us total=44us
+[18:10:01.140] tid=22557 queue=6 s0=20us s1=10us s2=13us total=43us
+[18:10:02.164] tid=22557 queue=6 s0=18us s1=5us s2=7us total=30us
+[18:10:03.188] tid=22557 queue=6 s0=11us s1=4us s2=8us total=23us
+[18:10:04.212] tid=22557 queue=6 s0=13us s1=6us s2=8us total=27us
+[18:10:05.236] tid=22557 queue=6 s0=17us s1=5us s2=8us total=30us
+[18:10:06.260] tid=22557 queue=6 s0=12us s1=5us s2=9us total=26us
+[18:10:07.266] tid=22557 queue=6 s0=17us s1=8us s2=12us total=37us
+[18:10:08.308] tid=22557 queue=6 s0=17us s1=9us s2=12us total=38us
+[18:10:09.332] tid=22557 queue=6 s0=14us s1=8us s2=9us total=31us
+[18:10:10.356] tid=22557 queue=6 s0=23us s1=7us s2=9us total=39us
+[18:10:11.380] tid=22557 queue=6 s0=17us s1=7us s2=9us total=33us
+[18:10:12.404] tid=22557 queue=6 s0=16us s1=7us s2=10us total=33us
+[18:10:13.428] tid=22557 queue=6 s0=16us s1=8us s2=10us total=34us
+[18:10:14.452] tid=22557 queue=6 s0=17us s1=7us s2=8us total=32us
+[18:10:15.476] tid=22557 queue=6 s0=16us s1=8us s2=9us total=33us
+
+============================================================
+Summary Statistics
+============================================================
+S0 (ioeventfd->kick):   cnt=      21  avg=      16.0us
+S1 (kick->sendmsg):     cnt=      23  avg=       6.6us
+S2 (sendmsg->receive):  cnt=      23  avg=       9.2us
+Total chain:            cnt=      21  avg=      31.9us

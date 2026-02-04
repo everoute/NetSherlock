@@ -1,0 +1,228 @@
+=== ICMP Drop Detector ===
+Source IP: 192.168.77.83
+Destination IP: 192.168.76.244
+RX Interface(s): enp24s0f0np0(ifindex=3)
+TX Interface(s): vnet130(ifindex=196)
+Timeout: 1000 ms
+
+Flow path:
+  [0] Request RX at enp24s0f0np0
+  [1] Request TX at vnet130
+  [2] Reply RX at vnet130
+  [3] Reply TX at enp24s0f0np0
+
+Tracing... Hit Ctrl-C to end.
+
+2026-02-04 18:23:21.397 [new] ID=183 Seq=4 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:21.397 [update] ID=183 Seq=4 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:21.397 [update] ID=183 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:21.397 [complete] ID=183 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=76.8  External=123.0  RepInternal=54.0  Total=253.8
+--------------------------------------------------------------------------------
+2026-02-04 18:23:22.425 [new] ID=183 Seq=5 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:22.425 [update] ID=183 Seq=5 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:23.445 [new] ID=183 Seq=6 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:23.445 [update] ID=183 Seq=6 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:23.445 [update] ID=183 Seq=6 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:23.445 [complete] ID=183 Seq=6 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=75.1  External=85.3  RepInternal=51.2  Total=211.6
+--------------------------------------------------------------------------------
+
+=== ICMP Drop Detected: 2026-02-04 18:23:24.349 ===
+Flow: 192.168.77.83 -> 192.168.76.244 (ID=183, Seq=5)
+  [0] ReqRX: recorded
+  [1] ReqTX: recorded
+  [2] RepRX: MISSING
+  [3] RepTX: MISSING
+
+Drop Location: EXTERNAL (network or peer)
+  Request sent from vnet130 but Reply NOT received at vnet130
+2026-02-04 18:23:24.469 [new] ID=183 Seq=7 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:24.469 [update] ID=183 Seq=7 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:24.469 [update] ID=183 Seq=7 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:24.469 [complete] ID=183 Seq=7 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=59.7  External=141.9  RepInternal=57.0  Total=258.5
+--------------------------------------------------------------------------------
+2026-02-04 18:23:25.493 [new] ID=183 Seq=8 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:25.493 [update] ID=183 Seq=8 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:25.493 [update] ID=183 Seq=8 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:25.493 [complete] ID=183 Seq=8 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=61.0  External=136.5  RepInternal=50.1  Total=247.5
+--------------------------------------------------------------------------------
+2026-02-04 18:23:26.517 [new] ID=183 Seq=9 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:26.517 [update] ID=183 Seq=9 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:26.517 [update] ID=183 Seq=9 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:26.517 [complete] ID=183 Seq=9 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=76.1  External=145.3  RepInternal=53.1  Total=274.5
+--------------------------------------------------------------------------------
+2026-02-04 18:23:27.542 [new] ID=183 Seq=10 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:27.542 [update] ID=183 Seq=10 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:27.542 [update] ID=183 Seq=10 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:27.542 [complete] ID=183 Seq=10 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=72.1  External=120.5  RepInternal=54.1  Total=246.7
+--------------------------------------------------------------------------------
+2026-02-04 18:23:28.566 [new] ID=183 Seq=11 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:28.566 [update] ID=183 Seq=11 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:28.566 [update] ID=183 Seq=11 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:28.566 [complete] ID=183 Seq=11 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=77.3  External=122.6  RepInternal=49.3  Total=249.2
+--------------------------------------------------------------------------------
+2026-02-04 18:23:29.589 [new] ID=183 Seq=12 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:29.589 [update] ID=183 Seq=12 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:29.589 [update] ID=183 Seq=12 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:29.589 [complete] ID=183 Seq=12 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=63.1  External=111.6  RepInternal=50.9  Total=225.6
+--------------------------------------------------------------------------------
+2026-02-04 18:23:30.614 [new] ID=183 Seq=13 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:30.614 [update] ID=183 Seq=13 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:31.637 [new] ID=183 Seq=14 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:31.637 [update] ID=183 Seq=14 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:31.637 [update] ID=183 Seq=14 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:31.637 [complete] ID=183 Seq=14 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=59.0  External=98.2  RepInternal=53.0  Total=210.2
+--------------------------------------------------------------------------------
+
+=== ICMP Drop Detected: 2026-02-04 18:23:32.548 ===
+Flow: 192.168.77.83 -> 192.168.76.244 (ID=183, Seq=13)
+  [0] ReqRX: recorded
+  [1] ReqTX: recorded
+  [2] RepRX: MISSING
+  [3] RepTX: MISSING
+
+Drop Location: EXTERNAL (network or peer)
+  Request sent from vnet130 but Reply NOT received at vnet130
+2026-02-04 18:23:32.661 [new] ID=183 Seq=15 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:32.661 [update] ID=183 Seq=15 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:32.661 [update] ID=183 Seq=15 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:32.661 [complete] ID=183 Seq=15 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=72.4  External=150.2  RepInternal=48.6  Total=271.2
+--------------------------------------------------------------------------------
+2026-02-04 18:23:33.685 [new] ID=183 Seq=16 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:33.685 [update] ID=183 Seq=16 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:33.685 [update] ID=183 Seq=16 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:33.685 [complete] ID=183 Seq=16 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=63.1  External=97.7  RepInternal=54.8  Total=215.6
+--------------------------------------------------------------------------------
+2026-02-04 18:23:34.709 [new] ID=183 Seq=17 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:34.709 [update] ID=183 Seq=17 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:35.733 [new] ID=183 Seq=18 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:35.733 [update] ID=183 Seq=18 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:35.733 [update] ID=183 Seq=18 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:35.733 [complete] ID=183 Seq=18 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=76.5  External=121.8  RepInternal=51.1  Total=249.4
+--------------------------------------------------------------------------------
+
+=== ICMP Drop Detected: 2026-02-04 18:23:36.636 ===
+Flow: 192.168.77.83 -> 192.168.76.244 (ID=183, Seq=17)
+  [0] ReqRX: recorded
+  [1] ReqTX: recorded
+  [2] RepRX: MISSING
+  [3] RepTX: MISSING
+
+Drop Location: EXTERNAL (network or peer)
+  Request sent from vnet130 but Reply NOT received at vnet130
+2026-02-04 18:23:36.757 [new] ID=183 Seq=19 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:36.757 [update] ID=183 Seq=19 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:36.757 [update] ID=183 Seq=19 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:36.757 [complete] ID=183 Seq=19 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=70.4  External=195.4  RepInternal=56.3  Total=322.1
+--------------------------------------------------------------------------------
+2026-02-04 18:23:37.781 [new] ID=183 Seq=20 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:37.781 [update] ID=183 Seq=20 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:37.781 [update] ID=183 Seq=20 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:37.781 [complete] ID=183 Seq=20 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=66.1  External=79.9  RepInternal=56.4  Total=202.4
+--------------------------------------------------------------------------------
+2026-02-04 18:23:38.805 [new] ID=183 Seq=21 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:38.805 [update] ID=183 Seq=21 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:38.805 [update] ID=183 Seq=21 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:38.805 [complete] ID=183 Seq=21 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=72.7  External=79.4  RepInternal=67.9  Total=220.0
+--------------------------------------------------------------------------------
+2026-02-04 18:23:39.830 [new] ID=183 Seq=22 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:39.830 [update] ID=183 Seq=22 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:40.853 [new] ID=183 Seq=23 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:40.853 [update] ID=183 Seq=23 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:40.853 [update] ID=183 Seq=23 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:40.853 [complete] ID=183 Seq=23 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=66.9  External=123.9  RepInternal=49.8  Total=240.7
+--------------------------------------------------------------------------------
+
+=== ICMP Drop Detected: 2026-02-04 18:23:41.756 ===
+Flow: 192.168.77.83 -> 192.168.76.244 (ID=183, Seq=22)
+  [0] ReqRX: recorded
+  [1] ReqTX: recorded
+  [2] RepRX: MISSING
+  [3] RepTX: MISSING
+
+Drop Location: EXTERNAL (network or peer)
+  Request sent from vnet130 but Reply NOT received at vnet130
+2026-02-04 18:23:41.877 [new] ID=183 Seq=24 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:41.877 [update] ID=183 Seq=24 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:41.877 [update] ID=183 Seq=24 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:41.877 [complete] ID=183 Seq=24 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=59.3  External=115.8  RepInternal=43.0  Total=218.1
+--------------------------------------------------------------------------------
+2026-02-04 18:23:42.901 [new] ID=183 Seq=25 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:42.901 [update] ID=183 Seq=25 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:42.901 [update] ID=183 Seq=25 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:42.901 [complete] ID=183 Seq=25 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=77.7  External=114.5  RepInternal=45.6  Total=237.7
+--------------------------------------------------------------------------------
+2026-02-04 18:23:43.925 [new] ID=183 Seq=26 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:43.925 [update] ID=183 Seq=26 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:43.925 [update] ID=183 Seq=26 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:43.925 [complete] ID=183 Seq=26 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=69.5  External=100.7  RepInternal=53.7  Total=223.9
+--------------------------------------------------------------------------------
+2026-02-04 18:23:44.949 [new] ID=183 Seq=27 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:44.949 [update] ID=183 Seq=27 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:44.949 [update] ID=183 Seq=27 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:44.949 [complete] ID=183 Seq=27 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=74.0  External=89.5  RepInternal=43.4  Total=206.9
+--------------------------------------------------------------------------------
+2026-02-04 18:23:45.977 [new] ID=183 Seq=28 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:45.977 [update] ID=183 Seq=28 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:45.977 [update] ID=183 Seq=28 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:45.977 [complete] ID=183 Seq=28 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=75.3  External=85.8  RepInternal=51.0  Total=212.1
+--------------------------------------------------------------------------------
+2026-02-04 18:23:46.997 [new] ID=183 Seq=29 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:46.997 [update] ID=183 Seq=29 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:46.997 [update] ID=183 Seq=29 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:46.997 [complete] ID=183 Seq=29 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=67.9  External=98.1  RepInternal=47.5  Total=213.5
+--------------------------------------------------------------------------------
+2026-02-04 18:23:48.021 [new] ID=183 Seq=30 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:48.021 [update] ID=183 Seq=30 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:48.021 [update] ID=183 Seq=30 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:48.021 [complete] ID=183 Seq=30 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=69.4  External=87.5  RepInternal=47.7  Total=204.6
+--------------------------------------------------------------------------------
+2026-02-04 18:23:49.045 [new] ID=183 Seq=31 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:49.045 [update] ID=183 Seq=31 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:49.045 [update] ID=183 Seq=31 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:49.045 [complete] ID=183 Seq=31 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=65.3  External=73.3  RepInternal=48.4  Total=187.0
+--------------------------------------------------------------------------------
+2026-02-04 18:23:50.069 [new] ID=183 Seq=32 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:50.069 [update] ID=183 Seq=32 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:50.069 [update] ID=183 Seq=32 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:50.069 [complete] ID=183 Seq=32 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=63.1  External=92.2  RepInternal=60.0  Total=215.3
+--------------------------------------------------------------------------------
+2026-02-04 18:23:51.093 [new] ID=183 Seq=33 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-04 18:23:51.093 [update] ID=183 Seq=33 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-04 18:23:51.093 [update] ID=183 Seq=33 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-04 18:23:51.093 [complete] ID=183 Seq=33 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=59.8  External=102.2  RepInternal=47.7  Total=209.6
+--------------------------------------------------------------------------------
+
+Detaching...
+
+=== ICMP Flow Statistics ===
+Total flows tracked: 30
+Complete flows: 26
+Request internal drops: 0
+External drops: 4
+Reply internal drops: 0

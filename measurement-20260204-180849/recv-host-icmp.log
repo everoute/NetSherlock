@@ -1,0 +1,24 @@
+=== ICMP Drop Detector ===
+Source IP: 192.168.77.83
+Destination IP: 192.168.76.244
+RX Interface(s): enp24s0f0np0(ifindex=3)
+TX Interface(s): vnet130(ifindex=196)
+Timeout: 1000 ms
+
+Flow path:
+  [0] Request RX at enp24s0f0np0
+  [1] Request TX at vnet130
+  [2] Reply RX at vnet130
+  [3] Reply TX at enp24s0f0np0
+
+Tracing... Hit Ctrl-C to end.
+
+
+Detaching...
+
+=== ICMP Flow Statistics ===
+Total flows tracked: 0
+Complete flows: 0
+Request internal drops: 0
+External drops: 0
+Reply internal drops: 0

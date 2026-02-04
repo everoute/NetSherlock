@@ -1,0 +1,645 @@
+=== Kernel ICMP RTT Tracer ===
+Trace Direction: RX
+Ping Session: 192.168.77.83 -> 192.168.76.244
+Local IP: 192.168.76.244 (0xc0a84cf4)
+Remote IP: 192.168.77.83 (0xc0a84d53)
+Monitoring interface(s): ens4(ifindex=4)
+
+BPF program loaded successfully
+
+Verifying probe attachments:
+  [OK] ip_local_out found in kallsyms
+  [OK] __ip_local_out found in kallsyms
+  [OK] ip_rcv found in kallsyms
+  [OK] icmp_rcv found in kallsyms
+  [OK] netif_receive_skb tracepoint exists
+  [OK] net_dev_xmit tracepoint exists
+
+Tracing ICMP RTT (src=192.168.77.83, dst=192.168.76.244, dir=rx) ... Hit Ctrl-C to end.
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:48.895 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 5)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/3    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/3    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c42ff60c00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c42ff60c00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c42ff60100
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c42ff60100
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           : 160.595 us
+  Total Path 1: 160.595 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  28.655 us
+  Total Path 2:  28.655 us
+
+Total RTT (Path1 Start to Path2 End): 222.333 us
+Inter-Path Latency (P1 end -> P2 start):  33.083 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:49.918 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 6)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378500
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378500
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379200
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379200
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  55.290 us
+  Total Path 1:  55.290 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  40.846 us
+  Total Path 2:  40.846 us
+
+Total RTT (Path1 Start to Path2 End): 113.718 us
+Inter-Path Latency (P1 end -> P2 start):  17.582 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:50.942 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 7)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c34251a000
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c34251a000
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379400
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379400
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  43.986 us
+  Total Path 1:  43.986 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  22.947 us
+  Total Path 2:  22.947 us
+
+Total RTT (Path1 Start to Path2 End):  82.693 us
+Inter-Path Latency (P1 end -> P2 start):  15.760 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:51.966 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 8)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378100
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378100
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379a00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379a00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  53.253 us
+  Total Path 1:  53.253 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  26.534 us
+  Total Path 2:  26.534 us
+
+Total RTT (Path1 Start to Path2 End):  94.721 us
+Inter-Path Latency (P1 end -> P2 start):  14.934 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:52.990 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 9)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446379000
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446379000
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446378100
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446378100
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  48.495 us
+  Total Path 1:  48.495 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  25.114 us
+  Total Path 2:  25.114 us
+
+Total RTT (Path1 Start to Path2 End):  88.650 us
+Inter-Path Latency (P1 end -> P2 start):  15.041 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:54.014 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 10)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378d00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378d00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379500
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379500
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  41.185 us
+  Total Path 1:  41.185 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  33.933 us
+  Total Path 2:  33.933 us
+
+Total RTT (Path1 Start to Path2 End):  93.538 us
+Inter-Path Latency (P1 end -> P2 start):  18.420 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:55.038 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 11)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378800
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378800
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379a00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379a00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  40.894 us
+  Total Path 1:  40.894 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  29.614 us
+  Total Path 2:  29.614 us
+
+Total RTT (Path1 Start to Path2 End):  85.354 us
+Inter-Path Latency (P1 end -> P2 start):  14.846 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:56.062 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 12)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378a00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378a00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379e00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379e00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  37.688 us
+  Total Path 1:  37.688 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  27.093 us
+  Total Path 2:  27.093 us
+
+Total RTT (Path1 Start to Path2 End):  79.611 us
+Inter-Path Latency (P1 end -> P2 start):  14.830 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:57.086 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 13)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446379100
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446379100
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379d00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379d00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  40.075 us
+  Total Path 1:  40.075 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  33.130 us
+  Total Path 2:  33.130 us
+
+Total RTT (Path1 Start to Path2 End):  91.512 us
+Inter-Path Latency (P1 end -> P2 start):  18.307 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:58.110 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 14)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446379700
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446379700
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379900
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379900
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  36.760 us
+  Total Path 1:  36.760 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  28.213 us
+  Total Path 2:  28.213 us
+
+Total RTT (Path1 Start to Path2 End):  79.556 us
+Inter-Path Latency (P1 end -> P2 start):  14.583 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:09:59.134 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 15)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378300
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378300
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379300
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379300
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  36.907 us
+  Total Path 1:  36.907 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  26.249 us
+  Total Path 2:  26.249 us
+
+Total RTT (Path1 Start to Path2 End):  78.097 us
+Inter-Path Latency (P1 end -> P2 start):  14.941 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:00.158 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 16)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446379c00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446379c00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446378c00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446378c00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  46.893 us
+  Total Path 1:  46.893 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  38.976 us
+  Total Path 2:  38.976 us
+
+Total RTT (Path1 Start to Path2 End): 103.152 us
+Inter-Path Latency (P1 end -> P2 start):  17.283 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:01.182 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 17)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446379700
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446379700
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379000
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379000
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  40.776 us
+  Total Path 1:  40.776 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  28.937 us
+  Total Path 2:  28.937 us
+
+Total RTT (Path1 Start to Path2 End):  84.353 us
+Inter-Path Latency (P1 end -> P2 start):  14.640 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:02.206 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 18)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378e00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378e00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446379700
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446379700
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  48.705 us
+  Total Path 1:  48.705 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  37.675 us
+  Total Path 2:  37.675 us
+
+Total RTT (Path1 Start to Path2 End): 106.845 us
+Inter-Path Latency (P1 end -> P2 start):  20.465 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:03.230 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 19)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378600
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378600
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446378a00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446378a00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  42.225 us
+  Total Path 1:  42.225 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  33.307 us
+  Total Path 2:  33.307 us
+
+Total RTT (Path1 Start to Path2 End):  92.503 us
+Inter-Path Latency (P1 end -> P2 start):  16.971 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:04.254 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 20)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c446378200
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c446378200
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c446378f00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c446378f00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  37.709 us
+  Total Path 1:  37.709 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  25.989 us
+  Total Path 2:  25.989 us
+
+Total RTT (Path1 Start to Path2 End):  77.754 us
+Inter-Path Latency (P1 end -> P2 start):  14.056 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:05.278 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 21)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d007f00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d007f00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d007e00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d007e00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  55.629 us
+  Total Path 1:  55.629 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  36.982 us
+  Total Path 2:  36.982 us
+
+Total RTT (Path1 Start to Path2 End): 122.071 us
+Inter-Path Latency (P1 end -> P2 start):  29.460 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:06.303 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 22)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d006f00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d006f00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d007700
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d007700
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  31.181 us
+  Total Path 1:  31.181 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  27.639 us
+  Total Path 2:  27.639 us
+
+Total RTT (Path1 Start to Path2 End):  74.452 us
+Inter-Path Latency (P1 end -> P2 start):  15.632 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:07.308 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 23)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d006300
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d006300
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d007c00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d007c00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  41.614 us
+  Total Path 1:  41.614 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  33.625 us
+  Total Path 2:  33.625 us
+
+Total RTT (Path1 Start to Path2 End):  92.657 us
+Inter-Path Latency (P1 end -> P2 start):  17.418 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:08.350 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 24)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d006300
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d006300
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d007100
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d007100
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  37.979 us
+  Total Path 1:  37.979 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  28.013 us
+  Total Path 2:  28.013 us
+
+Total RTT (Path1 Start to Path2 End):  81.684 us
+Inter-Path Latency (P1 end -> P2 start):  15.692 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:09.374 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 25)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d006b00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d006b00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d007300
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d007300
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  36.726 us
+  Total Path 1:  36.726 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  27.784 us
+  Total Path 2:  27.784 us
+
+Total RTT (Path1 Start to Path2 End):  80.337 us
+Inter-Path Latency (P1 end -> P2 start):  15.827 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:10.398 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 26)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d006300
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d006300
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d006600
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d006600
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  39.751 us
+  Total Path 1:  39.751 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  28.733 us
+  Total Path 2:  28.733 us
+
+Total RTT (Path1 Start to Path2 End):  83.537 us
+Inter-Path Latency (P1 end -> P2 start):  15.053 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:11.422 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 27)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d007800
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d007800
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d006500
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d006500
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  55.759 us
+  Total Path 1:  55.759 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  29.423 us
+  Total Path 2:  29.423 us
+
+Total RTT (Path1 Start to Path2 End): 102.806 us
+Inter-Path Latency (P1 end -> P2 start):  17.624 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:12.446 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 28)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d006d00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d006d00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d006900
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d006900
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  39.709 us
+  Total Path 1:  39.709 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  26.969 us
+  Total Path 2:  26.969 us
+
+Total RTT (Path1 Start to Path2 End):  82.936 us
+Inter-Path Latency (P1 end -> P2 start):  16.258 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:13.470 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 29)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d007000
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d007000
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d006000
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d006000
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  40.709 us
+  Total Path 1:  40.709 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  28.374 us
+  Total Path 2:  28.374 us
+
+Total RTT (Path1 Start to Path2 End):  83.782 us
+Inter-Path Latency (P1 end -> P2 start):  14.699 us
+================================================================================
+
+================================================================================
+=== ICMP RTT Trace: 2026-02-04 04:10:14.494 (RX (Remote -> Local)) ===
+Session: 192.168.77.83 -> 192.168.76.244 (ID: 160, Seq: 30)
+Path 1 (Request: RX from 192.168.77.83)      : PID=0      COMM=swapper/7    IF=ens4       ICMP_Type=8
+Path 2 (Reply:   TX to 192.168.77.83)        : PID=0      COMM=swapper/7    IF=unknown    ICMP_Type=0
+
+SKB Pointers:
+  Stage 0 (P1 (netif_receive_skb)                  ): 0xffff96c44d006a00
+  Stage 2 (P1 (icmp_rcv)                           ): 0xffff96c44d006a00
+  Stage 4 (P2 (ip_local_out)                       ): 0xffff96c44d007d00
+  Stage 5 (P2 (net_dev_xmit)                       ): 0xffff96c44d007d00
+
+Path 1 Latencies (us):
+  [0->2] P1 (netif_receive_skb)                   -> P1 (icmp_rcv)                           :  41.829 us
+  Total Path 1:  41.829 us
+
+Path 2 Latencies (us):
+  [4->5] P2 (ip_local_out)                        -> P2 (net_dev_xmit)                       :  33.225 us
+  Total Path 2:  33.225 us
+
+Total RTT (Path1 Start to Path2 End):  90.174 us
+Inter-Path Latency (P1 end -> P2 start):  15.120 us
+================================================================================
+
+
+Detaching...
+Exiting.

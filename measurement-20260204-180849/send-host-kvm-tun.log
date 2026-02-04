@@ -1,0 +1,19 @@
+Auto-detecting QEMU PID for device vnet35...
+QEMU PID: 22529
+Found 8 vhost threads: [22550, 22551, 22552, 22554, 22555, 22556, 22557, 22558]
+Device filter: vnet35
+Target vhost TIDs: [22550, 22551, 22552, 22554, 22555, 22556, 22557, 22558]
+Flow filter: proto=icmp,src=192.168.77.83,dst=192.168.76.244
+
+Warmup: 2s (learning eventfds)...
+Warmup complete.
+
+Tracing... Hit Ctrl+C to end.
+
+============================================================
+Summary Statistics
+============================================================
+S0 (ioeventfd->kick):   cnt=       0  avg=       N/Aus
+S1 (kick->sendmsg):     cnt=       0  avg=       N/Aus
+S2 (sendmsg->receive):  cnt=       0  avg=       N/Aus
+Total chain:            cnt=       0  avg=       N/Aus

@@ -1,0 +1,21 @@
+=== Kernel ICMP RTT Tracer ===
+Trace Direction: TX
+Ping Session: 192.168.77.83 -> 192.168.76.244
+Local IP: 192.168.77.83 (0xc0a84d53)
+Remote IP: 192.168.76.244 (0xc0a84cf4)
+Monitoring interface(s): ens4(ifindex=2)
+
+BPF program loaded successfully
+
+Verifying probe attachments:
+  [OK] ip_local_out found in kallsyms
+  [OK] __ip_local_out found in kallsyms
+  [OK] ip_rcv found in kallsyms
+  [OK] icmp_rcv found in kallsyms
+  [OK] netif_receive_skb tracepoint exists
+  [OK] net_dev_xmit tracepoint exists
+
+Tracing ICMP RTT (src=192.168.77.83, dst=192.168.76.244, dir=tx) ... Hit Ctrl-C to end.
+
+Detaching...
+Exiting.

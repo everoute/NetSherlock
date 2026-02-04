@@ -52,7 +52,6 @@ htmlcov/
 .env.*.local
 
 # Logs
-*.log
 logs/
 
 # OS
@@ -70,3 +69,4 @@ task_plan.md
 findings.md
 progress.md
 .task
+.serena/
