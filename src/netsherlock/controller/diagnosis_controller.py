@@ -590,7 +590,22 @@ class DiagnosisController:
                     "user": src_host_node.ssh.user,
                 },
             )
-            result["src_env"] = src_env_result.data if src_env_result.is_success else {}
+            # System mode returns a list of ports in parsed_list key
+            if src_env_result.is_success:
+                result["src_env"] = src_env_result.data.get("parsed_list", src_env_result.data)
+            else:
+                result["src_env"] = []
+
+            # Log L2 source environment for system network
+            src_ports = result["src_env"] if isinstance(result["src_env"], list) else []
+            storage_port = next((p for p in src_ports if p.get("port_type") == "storage"), None)
+            if storage_port:
+                self._log.info(
+                    "l2_src_env_collected_system",
+                    success=src_env_result.is_success,
+                    storage_ip=storage_port.get("ip_address"),
+                    phy_nic=storage_port.get("physical_nics", [{}])[0].get("name"),
+                )
 
         # Collect destination environment (cross-node scenario)
         if request.dst_host and request.network_type == "vm" and request.dst_vm and dst_vm_node and dst_host_node:
@@ -618,6 +633,33 @@ class DiagnosisController:
                 vnet=dst_nics[0].get("host_vnet") if dst_nics else None,
                 ovs_bridge=dst_nics[0].get("ovs_bridge") if dst_nics else None,
             )
+
+        elif request.dst_host and request.network_type == "system" and dst_host_node:
+            # Collect destination environment for system network
+            dst_env_result = await executor.invoke(
+                skill_name="network-env-collector",
+                parameters={
+                    "mode": "system",
+                    "host": dst_host_node.ssh.host,
+                    "user": dst_host_node.ssh.user,
+                },
+            )
+            # System mode returns a list of ports in parsed_list key
+            if dst_env_result.is_success:
+                result["dst_env"] = dst_env_result.data.get("parsed_list", dst_env_result.data)
+            else:
+                result["dst_env"] = []
+
+            # Log L2 destination environment for system network
+            dst_ports = result["dst_env"] if isinstance(result["dst_env"], list) else []
+            storage_port = next((p for p in dst_ports if p.get("port_type") == "storage"), None)
+            if storage_port:
+                self._log.info(
+                    "l2_dst_env_collected_system",
+                    success=dst_env_result.is_success,
+                    storage_ip=storage_port.get("ip_address"),
+                    phy_nic=storage_port.get("physical_nics", [{}])[0].get("name"),
+                )
 
         return result
 
@@ -673,6 +715,16 @@ class DiagnosisController:
             return {
                 "mode": "skill",
                 "skill": "vm-latency-measurement",
+                "parameters": skill_params,
+                "duration": request.options.get("duration", 30),
+            }
+        elif problem_type == "system_network_latency":
+            # Build skill parameters for system network path tracer
+            skill_params = self._build_system_skill_params(environment, request)
+
+            return {
+                "mode": "skill",
+                "skill": "system-network-path-tracer",
                 "parameters": skill_params,
                 "duration": request.options.get("duration", 30),
             }
@@ -764,6 +816,81 @@ class DiagnosisController:
             dst_phy_nic=params.get("receiver_phy_nic"),
             local_tools_path=params.get("local_tools_path"),
             remote_tools_path=params.get("remote_tools_path"),
+        )
+
+        return params
+
+    def _build_system_skill_params(
+        self,
+        environment: dict[str, Any],
+        request: DiagnosisRequest,
+    ) -> dict[str, Any]:
+        """Build skill parameters for system network path tracer.
+
+        Maps L2 environment data to system-network-path-tracer skill parameters.
+        For host-to-host latency measurement.
+        """
+        assert self._minimal_input is not None
+
+        src_env = environment.get("src_env", [])
+        dst_env = environment.get("dst_env", [])
+
+        # Get host node configurations
+        src_host_node = self._minimal_input.get_node("host-sender")
+        dst_host_node = self._minimal_input.get_node("host-receiver")
+
+        # Extract storage port info from L2 env (system mode returns list of ports)
+        src_ports = src_env if isinstance(src_env, list) else []
+        dst_ports = dst_env if isinstance(dst_env, list) else []
+
+        src_storage_port = next((p for p in src_ports if p.get("port_type") == "storage"), None)
+        dst_storage_port = next((p for p in dst_ports if p.get("port_type") == "storage"), None)
+
+        params: dict[str, Any] = {
+            # Duration and focus
+            "duration": request.options.get("duration", 30),
+            "focus": request.options.get("focus", "latency"),
+            "generate_traffic": request.options.get("generate_traffic", True),
+            "protocol": request.options.get("protocol", "icmp"),
+        }
+
+        # BPF tools paths
+        if self._bpf_local_tools_path:
+            params["local_tools_path"] = str(self._bpf_local_tools_path)
+        if self._bpf_remote_tools_path:
+            params["remote_tools_path"] = str(self._bpf_remote_tools_path)
+
+        # Sender host info
+        if src_host_node:
+            params["sender_host_ssh"] = src_host_node.ssh_string
+
+        # Sender network info from L2 env
+        if src_storage_port:
+            params["sender_ip"] = src_storage_port.get("ip_address")
+            phy_nics = src_storage_port.get("physical_nics", [])
+            if phy_nics:
+                params["sender_phy_if"] = phy_nics[0].get("name")
+
+        # Receiver host info
+        if dst_host_node:
+            params["receiver_host_ssh"] = dst_host_node.ssh_string
+
+        # Receiver network info from L2 env
+        if dst_storage_port:
+            params["receiver_ip"] = dst_storage_port.get("ip_address")
+            phy_nics = dst_storage_port.get("physical_nics", [])
+            if phy_nics:
+                params["receiver_phy_if"] = phy_nics[0].get("name")
+
+        # Log L2→L3 data flow for system network
+        self._log.info(
+            "l2_to_l3_system_params_built",
+            sender_ip=params.get("sender_ip"),
+            sender_phy_if=params.get("sender_phy_if"),
+            receiver_ip=params.get("receiver_ip"),
+            receiver_phy_if=params.get("receiver_phy_if"),
+            focus=params.get("focus"),
+            local_tools_path=params.get("local_tools_path"),
         )
 
         return params
@@ -879,7 +1006,19 @@ class DiagnosisController:
                 "reason": "No measurement_dir found",
             }
 
-        # Invoke analysis skill
+        # Check network type to determine analysis approach
+        network_type = environment.get("network_type", "vm")
+        self._log.info(
+            "l4_network_type_check",
+            network_type=network_type,
+            env_keys=list(environment.keys()),
+        )
+
+        if network_type == "system":
+            # System network: use system-network-latency-analysis skill
+            return await self._analyze_system_network(measurements, measurement_dir)
+
+        # VM network: use vm-latency-analysis skill
         executor = self._get_skill_executor()
         analysis_result = await executor.invoke(
             skill_name="vm-latency-analysis",
@@ -972,6 +1111,106 @@ class DiagnosisController:
             "root_cause": {
                 "category": primary_contributor,
                 "confidence": confidence,
+            },
+            "breakdown": breakdown.to_dict(),
+            "detailed_report": detailed_report,
+            "markdown_report": markdown_report,
+            "report_path": report_path,
+        }
+
+    async def _analyze_system_network(
+        self,
+        measurements: dict[str, Any],
+        measurement_dir: str,
+    ) -> dict[str, Any]:
+        """Analyze system network measurement data via analysis skill.
+
+        Invokes system-network-latency-analysis skill to parse dual-host
+        measurement logs and compute end-to-end latency breakdown.
+
+        Args:
+            measurements: Measurement data from skill (unused, kept for API compat)
+            measurement_dir: Path to measurement directory
+
+        Returns:
+            Analysis results including detailed report
+        """
+        self._log.info(
+            "l4_system_network_analysis_starting",
+            measurement_dir=measurement_dir,
+        )
+
+        # Invoke analysis skill
+        executor = self._get_skill_executor()
+        analysis_result = await executor.invoke(
+            skill_name="system-network-latency-analysis",
+            parameters={
+                "measurement_dir": measurement_dir,
+            },
+        )
+
+        if not analysis_result.is_success:
+            self._log.error(
+                "l4_system_network_analysis_failed",
+                error=analysis_result.error,
+            )
+            return {
+                "status": "error",
+                "reason": f"Analysis skill failed: {analysis_result.error}",
+            }
+
+        # Extract results from skill output
+        data = analysis_result.data
+        detailed_report = data.get("detailed_report", {})
+        markdown_report = data.get("markdown_report", "")
+        report_path = data.get("report_path", "")
+
+        summary = detailed_report.get("summary", {})
+        total_rtt_us = summary.get("total_rtt_us", 0.0)
+        primary_contributor = summary.get("primary_contributor", "unknown")
+
+        self._log.info(
+            "l4_system_network_analysis_completed",
+            total_rtt_us=total_rtt_us,
+            primary_contributor=primary_contributor,
+            report_path=report_path,
+        )
+
+        # Build segments for breakdown from analysis result
+        segments = detailed_report.get("segments", {})
+        segments_data = {}
+        for seg_id, seg_info in segments.items():
+            segments_data[seg_id] = {
+                "value_us": seg_info.get("avg_us", 0.0),
+                "source": seg_info.get("source", ""),
+                "description": seg_info.get("description", ""),
+            }
+
+        # Build AnalysisResult
+        breakdown = LatencyBreakdown(
+            total_rtt_us=total_rtt_us,
+            segments={
+                name: SegmentData(
+                    name=name,
+                    value_us=val.get("value_us", 0.0),
+                    source=val.get("source", ""),
+                    description=val.get("description", ""),
+                )
+                for name, val in segments_data.items()
+            },
+        )
+
+        self._analysis_result = AnalysisResult(
+            breakdown=breakdown,
+            primary_contributor=breakdown.get_primary_contributor(),
+            confidence=0.85,
+        )
+
+        return {
+            "status": "success",
+            "root_cause": {
+                "category": primary_contributor,
+                "confidence": 0.85,
             },
             "breakdown": breakdown.to_dict(),
             "detailed_report": detailed_report,
