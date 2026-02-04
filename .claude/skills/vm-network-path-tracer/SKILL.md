@@ -167,6 +167,33 @@ Sender VM    Sender Host                            Receiver Host    Receiver VM
 - **`--focus drop`**: 输出强调丢包统计和定位，延迟仅显示 Total
 - **`--focus latency`**: 输出强调各段延迟分解，丢包作为次要信息
 
+## 分析
+
+测量完成后，根据需要使用对应的分析 skill：
+
+**延迟分析** - 使用 `vm-network-latency-analysis`:
+```bash
+python3 .claude/skills/vm-network-latency-analysis/scripts/analyze_latency.py <measurement_dir>
+```
+
+延迟分析报告包含：
+- 6 段延迟分解 (S_ReqInternal / Physical / R_ReqInternal / R_External / R_RepInternal / S_RepInternal)
+- 4 层归因表 (Sender OVS / Physical Network / Receiver OVS / Receiver VM+Virt)
+- 端到端数据路径图
+- Physical Network 派生: Sender.External - Receiver.Total
+- Unmeasured: Sender VM internal + Sender Virtualization
+
+**丢包分析** - 使用 `vm-network-drop-analysis`:
+```bash
+python3 .claude/skills/vm-network-drop-analysis/scripts/analyze_drops.py <measurement_dir>
+```
+
+丢包分析报告包含：
+- 丢包位置归因 (Sender Host OVS / Receiver Host OVS / Receiver VM)
+- 丢包模式分析 (burst/sporadic)
+- 丢包事件时间线
+- 诊断建议
+
 ## MVP 范围
 
 | 协议 | 状态 | 说明 |
