@@ -14,8 +14,17 @@ route:
 
   routes:
     # 网络延迟告警 -> NetSherlock
+    # 匹配所有 host/system 网络延迟相关告警
     - match_re:
-        alertname: 'host_to_host_max_ping_time_ns.*|HostNetworkLatency.*|NetSherlockHostLatencyTest'
+        alertname: 'host_to_host_max_ping_time_ns.*|HostNetworkLatency.*|NetSherlock.*'
+      receiver: 'netsherlock'
+      group_wait: 5s
+      group_interval: 1m
+      continue: false
+
+    # VM 网络延迟告警 -> NetSherlock (如果未来扩展)
+    - match_re:
+        alertname: 'VMNetworkLatency.*|VMPacketDrop|VMConnectivity'
       receiver: 'netsherlock'
       group_wait: 5s
       group_interval: 1m

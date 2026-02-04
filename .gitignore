@@ -65,6 +65,7 @@ Thumbs.db
 
 # Project specific
 docs/planning-with-files/*
+docs/plans/*
 task_plan.md
 findings.md
 progress.md

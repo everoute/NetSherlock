@@ -6,7 +6,7 @@ hosts:
   node31:
     mgmt_ip: "192.168.70.31"
     ssh:
-      user: root
+      user: smartx
     network_types:
       - storage
       - system
@@ -14,7 +14,23 @@ hosts:
   node32:
     mgmt_ip: "192.168.70.32"
     ssh:
-      user: root
+      user: smartx
+    network_types:
+      - storage
+      - system
+
+  node33:
+    mgmt_ip: "192.168.70.33"
+    ssh:
+      user: smartx
+    network_types:
+      - storage
+      - system
+
+  node34:
+    mgmt_ip: "192.168.70.34"
+    ssh:
+      user: smartx
     network_types:
       - storage
       - system

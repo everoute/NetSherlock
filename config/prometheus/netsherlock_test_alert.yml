@@ -21,7 +21,28 @@ groups:
   - name: netsherlock_system_network
     interval: 15s
     rules:
-      # Test alert with low threshold for easy triggering
+      # ============================================================
+      # 开发测试告警 - 超低阈值，几乎必定触发
+      # ============================================================
+
+      # 超低阈值测试告警 - P90 > 500μs (0.5ms) - 几乎必定触发
+      - alert: NetSherlockHostLatencyDevTest
+        expr: |
+          max without(instance) (
+            histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
+          ) > 5e+05
+        for: 5s
+        labels:
+          network_type: "system"
+          severity: "info"
+          environment: "dev-test"
+        annotations:
+          summary: "[DEV TEST] Storage network P90 latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 0.5ms threshold (dev test)"
+          src_hostname: "{{ $labels.hostname }}"
+          dst_hostname: "{{ $labels.to_hostname }}"
+
+      # Test alert with low threshold for easy triggering (1ms)
       - alert: NetSherlockHostLatencyTest
         expr: |
           max without(instance) (
@@ -38,8 +59,28 @@ groups:
           src_hostname: "{{ $labels.hostname }}"
           dst_hostname: "{{ $labels.to_hostname }}"
 
-      # Production-ready alert (matches existing threshold)
-      - alert: HostNetworkLatencyHigh
+      # ============================================================
+      # 策略 1: 阶梯式阈值告警 (不同严重程度)
+      # ============================================================
+
+      # Warning: P90 延迟 > 2ms
+      - alert: HostNetworkLatencyWarning
+        expr: |
+          max without(instance) (
+            histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[5m]))
+          ) > 2e+06
+        for: 30s
+        labels:
+          network_type: "system"
+          severity: "warning"
+        annotations:
+          summary: "Storage network latency warning: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 2ms threshold"
+          src_hostname: "{{ $labels.hostname }}"
+          dst_hostname: "{{ $labels.to_hostname }}"
+
+      # Critical: P90 延迟 > 5ms (生产阈值)
+      - alert: HostNetworkLatencyCritical
         expr: |
           max without(instance) (
             histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[5m]))
@@ -51,5 +92,76 @@ groups:
         annotations:
           summary: "Critical storage network latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
           description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 5ms threshold"
+          src_hostname: "{{ $labels.hostname }}"
+          dst_hostname: "{{ $labels.to_hostname }}"
+
+      # ============================================================
+      # 策略 2: P99 尾部延迟告警 (捕获极端情况)
+      # ============================================================
+
+      # P99 延迟 > 10ms - 捕获尾部延迟问题
+      - alert: HostNetworkLatencyP99High
+        expr: |
+          max without(instance) (
+            histogram_quantile(0.99, rate(host_to_host_max_ping_time_ns_bucket[5m]))
+          ) > 10e+06
+        for: 1m
+        labels:
+          network_type: "system"
+          severity: "warning"
+          latency_percentile: "p99"
+        annotations:
+          summary: "High P99 tail latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "P99 ping latency {{ $value | humanizeDuration }} exceeds 10ms - possible intermittent issues"
+          src_hostname: "{{ $labels.hostname }}"
+          dst_hostname: "{{ $labels.to_hostname }}"
+
+      # ============================================================
+      # 策略 3: 延迟突增告警 (相对变化检测)
+      # ============================================================
+
+      # 延迟突增 > 3倍 (与5分钟前相比)
+      - alert: HostNetworkLatencySpike
+        expr: |
+          (
+            max without(instance) (
+              histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
+            )
+          ) / (
+            max without(instance) (
+              histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[5m] offset 5m))
+            )
+          ) > 3
+        for: 30s
+        labels:
+          network_type: "system"
+          severity: "warning"
+          alert_type: "spike"
+        annotations:
+          summary: "Latency spike detected: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "P90 latency increased more than 3x compared to 5 minutes ago"
+          src_hostname: "{{ $labels.hostname }}"
+          dst_hostname: "{{ $labels.to_hostname }}"
+
+      # ============================================================
+      # 策略 4: 持续高延迟告警 (长时间问题)
+      # ============================================================
+
+      # 持续高延迟 > 3ms 超过 5 分钟
+      - alert: HostNetworkLatencySustained
+        expr: |
+          avg_over_time(
+            (max without(instance) (
+              histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
+            ))[5m:]
+          ) > 3e+06
+        for: 5m
+        labels:
+          network_type: "system"
+          severity: "warning"
+          alert_type: "sustained"
+        annotations:
+          summary: "Sustained high latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "Average P90 latency over 5 minutes exceeds 3ms - persistent network issue"
           src_hostname: "{{ $labels.hostname }}"
           dst_hostname: "{{ $labels.to_hostname }}"

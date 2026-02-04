@@ -284,6 +284,10 @@ Return the collected data in JSON format when complete."""
             if isinstance(parsed, dict):
                 data.update(parsed)
                 return True
+            elif isinstance(parsed, list):
+                # Store list under "parsed_list" key for skills returning arrays
+                data["parsed_list"] = parsed
+                return True
         except (json.JSONDecodeError, ValueError):
             pass
 
@@ -291,6 +295,7 @@ Return the collected data in JSON format when complete."""
         json_patterns = [
             r"```json\s*\n?(.*?)\n?```",  # ```json ... ```
             r"```\s*\n?(\{.*?\})\n?```",  # ``` {...} ```
+            r"```\s*\n?(\[.*?\])\n?```",  # ``` [...] ``` (JSON array)
             r"(\{[^{}]*\"[^\"]+\"[^{}]*\})",  # Simple JSON object
         ]
 
@@ -301,6 +306,9 @@ Return the collected data in JSON format when complete."""
                     parsed = json.loads(match.strip())
                     if isinstance(parsed, dict):
                         data.update(parsed)
+                        return True
+                    elif isinstance(parsed, list):
+                        data["parsed_list"] = parsed
                         return True
                 except (json.JSONDecodeError, ValueError):
                     continue

@@ -39,17 +39,19 @@ mkdir -p "${MEASUREMENT_DIR}"
 CMDLOG="${MEASUREMENT_DIR}/commands.log"
 
 # Build tool-specific arguments
+# $4 = direction override (tx/rx) for asymmetric deployment
 build_tool_args() {
     local src_ip=$1
     local dst_ip=$2
     local phy_if=$3
+    local dir=${4:-${DIRECTION}}
     local args=""
 
     case ${PROTOCOL} in
         icmp)
             # ICMP: direction and verbose
             args="--src-ip ${src_ip} --dst-ip ${dst_ip} --phy-iface ${phy_if} --timeout-ms ${TIMEOUT_MS}"
-            args="${args} --direction ${DIRECTION}"
+            args="${args} --direction ${dir}"
             if [ "${OUTPUT_MODE}" = "verbose" ]; then
                 args="${args} --verbose"
             fi
@@ -73,19 +75,42 @@ build_tool_args() {
 
 echo "=== System Network Path Tracer Measurement (v2) ===" >> "${CMDLOG}"
 echo "Timestamp: $(date)" >> "${CMDLOG}"
-echo "Sender: ${SENDER_HOST_SSH} (${SENDER_IP}) IF=${SENDER_PHY_IF}" >> "${CMDLOG}"
-echo "Receiver: ${RECEIVER_HOST_SSH} (${RECEIVER_IP}) IF=${RECEIVER_PHY_IF}" >> "${CMDLOG}"
-echo "Protocol=${PROTOCOL}, Direction=${DIRECTION}, Focus=${FOCUS}, OutputMode=${OUTPUT_MODE}" >> "${CMDLOG}"
+echo "Sender: ${SENDER_HOST_SSH} (${SENDER_IP}) IF=${SENDER_PHY_IF} [TX mode]" >> "${CMDLOG}"
+echo "Receiver: ${RECEIVER_HOST_SSH} (${RECEIVER_IP}) IF=${RECEIVER_PHY_IF} [RX mode]" >> "${CMDLOG}"
+echo "Protocol=${PROTOCOL}, Focus=${FOCUS}, OutputMode=${OUTPUT_MODE}" >> "${CMDLOG}"
+echo "Asymmetric directions: Sender=TX (initiates), Receiver=RX (responds)" >> "${CMDLOG}"
 echo "DURATION=${DURATION}s, TIMEOUT=${TIMEOUT_MS}ms" >> "${CMDLOG}"
 echo "" >> "${CMDLOG}"
 
 declare -a SSH_PIDS=()
 
-# [1/2] Receiver Host (primary): traces traffic from Sender → Receiver
-RECV_ARGS=$(build_tool_args "${SENDER_IP}" "${RECEIVER_IP}" "${RECEIVER_PHY_IF}")
+# Asymmetric direction deployment for complete RTT measurement:
+# - Sender Host: TX mode (initiates ping, traces: stack_tx→phy_tx...phy_rx→stack_rx)
+# - Receiver Host: RX mode (responds to ping, traces: phy_rx→stack_rx→stack_tx→phy_tx)
+#
+# This captures the full path:
+#   Sender stack_tx → Sender phy_tx → [network] → Receiver phy_rx → Receiver stack_rx
+#   → Receiver stack_tx → Receiver phy_tx → [network] → Sender phy_rx → Sender stack_rx
+
+# Receiver Host (RX mode): traces incoming ping and outgoing reply
+# --src-ip = where ping comes FROM (sender), --dst-ip = local (receiver)
+RECV_SRC="${SENDER_IP}"
+RECV_DST="${RECEIVER_IP}"
+RECV_DIR="rx"
+RECV_ROLE="RX mode (responds to ping: ${RECV_SRC}→${RECV_DST})"
+
+# Sender Host (TX mode): traces outgoing ping and incoming reply
+# --src-ip = local (sender), --dst-ip = where ping goes TO (receiver)
+SEND_SRC="${SENDER_IP}"
+SEND_DST="${RECEIVER_IP}"
+SEND_DIR="tx"
+SEND_ROLE="TX mode (initiates ping: ${SEND_SRC}→${SEND_DST})"
+
+# [1/2] Receiver Host (RX mode - responds to ping)
+RECV_ARGS=$(build_tool_args "${RECV_SRC}" "${RECV_DST}" "${RECEIVER_PHY_IF}" "${RECV_DIR}")
 RECV_CMD="sudo python3 /tmp/${TOOL_NAME} ${RECV_ARGS}"
-echo "[1/2] receiver-host (primary, traces ${SENDER_IP}→${RECEIVER_IP}):"
-echo "  Protocol: ${PROTOCOL}, Direction: ${DIRECTION}"
+echo "[1/2] receiver-host (${RECV_ROLE}):"
+echo "  Protocol: ${PROTOCOL}, Direction: ${RECV_DIR}"
 echo "  ${RECV_CMD}"
 echo "[1/2] receiver-host: ssh ${RECEIVER_HOST_SSH} '${RECV_CMD}'" >> "${CMDLOG}"
 ssh "${RECEIVER_HOST_SSH}" "${RECV_CMD}" > "${MEASUREMENT_DIR}/receiver-host.log" 2>&1 &
@@ -93,11 +118,11 @@ SSH_PIDS+=($!)
 
 sleep "${RECEIVER_WARMUP}"
 
-# [2/2] Sender Host (secondary): traces traffic from Receiver → Sender
-SEND_ARGS=$(build_tool_args "${RECEIVER_IP}" "${SENDER_IP}" "${SENDER_PHY_IF}")
+# [2/2] Sender Host (TX mode - initiates ping)
+SEND_ARGS=$(build_tool_args "${SEND_SRC}" "${SEND_DST}" "${SENDER_PHY_IF}" "${SEND_DIR}")
 SEND_CMD="sudo python3 /tmp/${TOOL_NAME} ${SEND_ARGS}"
-echo "[2/2] sender-host (secondary, traces ${RECEIVER_IP}→${SENDER_IP}):"
-echo "  Protocol: ${PROTOCOL}, Direction: ${DIRECTION}"
+echo "[2/2] sender-host (${SEND_ROLE}):"
+echo "  Protocol: ${PROTOCOL}, Direction: ${SEND_DIR}"
 echo "  ${SEND_CMD}"
 echo "[2/2] sender-host: ssh ${SENDER_HOST_SSH} '${SEND_CMD}'" >> "${CMDLOG}"
 ssh "${SENDER_HOST_SSH}" "${SEND_CMD}" > "${MEASUREMENT_DIR}/sender-host.log" 2>&1 &

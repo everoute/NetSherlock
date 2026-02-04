@@ -350,19 +350,26 @@ def _build_diagnosis_request(
 def _map_alert_to_type(alertname: str) -> str:
     """Map alertname to request_type."""
     mapping = {
+        # VM network alerts
         "VMNetworkLatency": "latency",
         "VMNetworkLatencyHigh": "latency",
         "VMNetworkLatencyCritical": "latency",
         "VMNetworkPacketLoss": "packet_drop",
         "VMNetworkDown": "connectivity",
-        "HostNetworkLatency": "latency",
         "VMPacketDrop": "packet_drop",
-        "HostPacketDrop": "packet_drop",
         "VMConnectivity": "connectivity",
-        # Host/system network P90 latency alerts from Prometheus
+        # Host/system network alerts - existing Prometheus rules
         "host_to_host_max_ping_time_ns:critical": "latency",
         "host_to_host_max_ping_time_ns:warning": "latency",
+        # Host/system network alerts - NetSherlock custom rules
         "NetSherlockHostLatencyTest": "latency",
+        "HostNetworkLatency": "latency",
+        "HostNetworkLatencyWarning": "latency",
+        "HostNetworkLatencyCritical": "latency",
+        "HostNetworkLatencyP99High": "latency",
+        "HostNetworkLatencySpike": "latency",
+        "HostNetworkLatencySustained": "latency",
+        "HostPacketDrop": "packet_drop",
     }
     return mapping.get(alertname, "latency")
 
