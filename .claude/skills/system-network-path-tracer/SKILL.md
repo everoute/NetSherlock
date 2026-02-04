@@ -171,17 +171,29 @@ Kernel Protocol Stack                   Physical NIC
 
 ### 分析
 
-测量完成后，使用 `system-network-latency-analysis` skill 进行分析：
+测量完成后，根据需要使用对应的分析 skill：
 
+**延迟分析** - 使用 `system-network-latency-analysis`:
 ```bash
 python3 .claude/skills/system-network-latency-analysis/scripts/generate_report.py <measurement_dir>
 ```
 
-分析会生成完整的诊断报告，包含：
+延迟分析报告包含：
 - 7 段延迟分解 (A/C/D/E/F/J/G)
 - 3 层归因表 (Sender Host / Receiver Host / Physical Network)
 - 端到端数据路径图
-- 丢包统计和关键发现
+- 数据一致性验证
+
+**丢包分析** - 使用 `system-network-drop-analysis`:
+```bash
+python3 .claude/skills/system-network-drop-analysis/scripts/analyze_drops.py <measurement_dir>
+```
+
+丢包分析报告包含：
+- 丢包位置归因 (Sender/Receiver/Network)
+- 丢包模式分析 (突发/偶发)
+- 丢包事件时间线
+- 诊断建议
 
 ### Focus 模式说明
 
