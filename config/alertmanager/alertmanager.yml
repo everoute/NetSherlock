@@ -13,10 +13,10 @@ route:
   repeat_interval: 4h
 
   routes:
-    # 网络延迟告警 -> NetSherlock
-    # 匹配所有 host/system 网络延迟相关告警
+    # 网络延迟和丢包告警 -> NetSherlock
+    # 匹配所有 host/system 网络延迟和丢包相关告警
     - match_re:
-        alertname: 'host_to_host_max_ping_time_ns.*|HostNetworkLatency.*|NetSherlock.*'
+        alertname: 'host_to_host_max_ping_time_ns.*|HostNetworkLatency.*|HostNetworkPacketLoss.*|NetSherlock.*'
       receiver: 'netsherlock'
       group_wait: 5s
       group_interval: 1m

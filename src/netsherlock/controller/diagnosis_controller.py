@@ -108,6 +108,100 @@ class DiagnosisState:
 # The following helper functions create results adapted from controller state.
 
 
+
+# =============================================================================
+# Workflow Lookup Table
+# =============================================================================
+#
+# Maps (network_type, request_type, mode) → (measurement_skill, analysis_skill, param_builder)
+#
+# Supported combinations from diagnosis-workflow-architecture.md:
+#   - system + latency + boundary → system-network-path-tracer
+#   - system + packet_drop + boundary → system-network-path-tracer
+#   - vm + latency + boundary → vm-network-path-tracer
+#   - vm + packet_drop + boundary → vm-network-path-tracer
+#   - vm + latency + segment → vm-latency-measurement
+#
+# Mode defaults:
+#   - VM: boundary (host-only, no VM SSH needed)
+#   - System: boundary (host-to-host)
+#   - If VM SSH available and segment requested, use segment mode
+#
+
+WORKFLOW_TABLE: dict[tuple[str, str, str], tuple[str, str, str]] = {
+    # (network_type, request_type, mode) → (measurement_skill, analysis_skill, param_builder)
+    #
+    # ========== Boundary Mode (边界定界) ==========
+    # System Network
+    ("system", "latency", "boundary"): (
+        "system-network-path-tracer",
+        "system-network-latency-analysis",
+        "_build_system_skill_params",
+    ),
+    ("system", "packet_drop", "boundary"): (
+        "system-network-path-tracer",
+        "system-network-drop-analysis",
+        "_build_system_skill_params",
+    ),
+    # VM Network
+    ("vm", "latency", "boundary"): (
+        "vm-network-path-tracer",
+        "vm-network-latency-analysis",
+        "_build_vm_path_tracer_params",
+    ),
+    ("vm", "packet_drop", "boundary"): (
+        "vm-network-path-tracer",
+        "vm-network-drop-analysis",
+        "_build_vm_path_tracer_params",
+    ),
+    #
+    # ========== Segment Mode (分段定界) ==========
+    # VM Network - 8-point measurement (requires VM SSH)
+    ("vm", "latency", "segment"): (
+        "vm-latency-measurement",
+        "vm-latency-analysis",
+        "_build_skill_params",
+    ),
+}
+
+# Default mode for each (network_type, request_type)
+DEFAULT_WORKFLOW_MODE: dict[tuple[str, str], str] = {
+    ("system", "latency"): "boundary",
+    ("system", "packet_drop"): "boundary",
+    ("vm", "latency"): "boundary",  # Default to boundary; segment if options["segment"]=True
+    ("vm", "packet_drop"): "boundary",
+}
+
+
+def _lookup_workflow(
+    network_type: str,
+    request_type: str,
+    mode: str | None = None,
+) -> tuple[str, str, str] | None:
+    """Look up workflow from table.
+
+    Args:
+        network_type: "vm" or "system"
+        request_type: "latency", "packet_drop", etc.
+        mode: "boundary", "segment", etc. If None, use default
+
+    Returns:
+        Tuple of (measurement_skill, analysis_skill, param_builder) or None
+    """
+    if mode is None:
+        mode = DEFAULT_WORKFLOW_MODE.get((network_type, request_type), "boundary")
+
+    key = (network_type, request_type, mode)
+    workflow = WORKFLOW_TABLE.get(key)
+
+    if workflow is None and mode != "boundary":
+        # Fallback to boundary mode if requested mode not available
+        fallback_key = (network_type, request_type, "boundary")
+        workflow = WORKFLOW_TABLE.get(fallback_key)
+
+    return workflow
+
+
 class DiagnosisController:
     """Controller for dual-mode diagnosis execution.
 
@@ -373,7 +467,7 @@ class DiagnosisController:
         state.phase = DiagnosisPhase.CLASSIFICATION
         if self._check_interrupt():
             return self._interrupted_result()
-        state.classification = await self._classify_problem(state.environment)
+        state.classification = await self._classify_problem(state.environment, request)
 
         # Phase 4: Measurement Planning
         state.phase = DiagnosisPhase.MEASUREMENT_PLANNING
@@ -392,7 +486,7 @@ class DiagnosisController:
         if self._check_interrupt():
             return self._interrupted_result()
         state.analysis = await self._analyze_and_report(
-            state.measurements, state.environment
+            state.measurements, state.environment, state.measurement_plan
         )
 
         # Complete
@@ -431,7 +525,7 @@ class DiagnosisController:
 
         # Phase 3: Classification
         state.phase = DiagnosisPhase.CLASSIFICATION
-        state.classification = await self._classify_problem(state.environment)
+        state.classification = await self._classify_problem(state.environment, request)
 
         # Checkpoint 1: Problem Classification
         state.status = DiagnosisStatus.WAITING
@@ -487,7 +581,7 @@ class DiagnosisController:
         # Phase 6: L4 Analysis
         state.phase = DiagnosisPhase.L4_ANALYSIS
         state.analysis = await self._analyze_and_report(
-            state.measurements, state.environment
+            state.measurements, state.environment, state.measurement_plan
         )
 
         # Complete
@@ -663,34 +757,80 @@ class DiagnosisController:
 
         return result
 
-    async def _classify_problem(self, environment: dict[str, Any]) -> dict[str, Any]:
-        """Classify the problem type.
+    async def _classify_problem(
+        self, environment: dict[str, Any], request: DiagnosisRequest
+    ) -> dict[str, Any]:
+        """Classify the problem type using workflow lookup table.
 
-        MVP: Simple classification based on network_type.
-        Future: Use LLM for intelligent classification.
+        Determines the workflow based on:
+        - network_type: from environment (vm/system)
+        - request_type: from request (latency/packet_drop)
+        - mode: from request options or default
+
+        Args:
+            environment: L2 environment data
+            request: The diagnosis request
+
+        Returns:
+            Classification dict with workflow info
         """
         self._log.debug("phase_classification")
 
         network_type = environment.get("network_type", "vm")
+        request_type = request.request_type  # latency, packet_drop, connectivity
         is_cross_node = environment.get("dst_host") is not None
 
+        # Determine workflow mode from request options
+        mode = request.options.get("mode")
+        if mode is None:
+            if request.options.get("segment"):
+                mode = "segment"
+            else:
+                mode = DEFAULT_WORKFLOW_MODE.get((network_type, request_type), "boundary")
+
+        # Look up workflow
+        workflow = _lookup_workflow(network_type, request_type, mode)
+        if workflow is None:
+            return {
+                "type": "unsupported",
+                "network_type": network_type,
+                "request_type": request_type,
+                "mode": mode,
+                "is_cross_node": is_cross_node,
+                "confidence": 0.0,
+                "error": f"No workflow for {network_type}/{request_type}/{mode}",
+            }
+
+        measurement_skill, analysis_skill, param_builder = workflow
+
+        # Build problem type string for backward compatibility
         if network_type == "vm":
             if is_cross_node:
-                problem_type = "cross_node_vm_latency"
+                problem_type = f"cross_node_vm_{request_type}"
             else:
-                problem_type = "single_node_vm_latency"
+                problem_type = f"single_node_vm_{request_type}"
         else:
-            problem_type = "system_network_latency"
+            problem_type = f"system_network_{request_type}"
 
         return {
             "type": problem_type,
             "network_type": network_type,
+            "request_type": request_type,
+            "mode": mode,
             "is_cross_node": is_cross_node,
             "confidence": 0.90,
             "evidence": [
                 f"Network type: {network_type}",
+                f"Request type: {request_type}",
+                f"Mode: {mode}",
                 f"Cross-node: {is_cross_node}",
             ],
+            # Workflow info for downstream phases
+            "workflow": {
+                "measurement_skill": measurement_skill,
+                "analysis_skill": analysis_skill,
+                "param_builder": param_builder,
+            },
         }
 
     async def _plan_measurement(
@@ -699,41 +839,105 @@ class DiagnosisController:
         environment: dict[str, Any],
         request: DiagnosisRequest,
     ) -> dict[str, Any]:
-        """Plan measurement execution.
+        """Plan measurement execution using workflow from classification.
 
-        MVP: Only supports cross-node VM latency via skill.
+        Uses workflow info from classification phase to determine skill and params.
         """
         self._log.debug("phase_measurement_planning")
         assert self._minimal_input is not None
 
+        # Check for unsupported classification
+        if classification.get("type") == "unsupported":
+            self._log.warning(
+                "unsupported_workflow",
+                error=classification.get("error"),
+            )
+            return {
+                "mode": "unsupported",
+                "reason": classification.get("error", "Unknown workflow"),
+            }
+
+        # Get workflow info from classification
+        workflow = classification.get("workflow", {})
+        measurement_skill = workflow.get("measurement_skill")
+        analysis_skill = workflow.get("analysis_skill")
+        param_builder_name = workflow.get("param_builder")
+
+        if not measurement_skill or not param_builder_name:
+            # Fallback for backward compatibility with old classification format
+            problem_type = classification.get("type", "")
+            self._log.warning(
+                "missing_workflow_info_using_fallback",
+                problem_type=problem_type,
+            )
+            return await self._plan_measurement_legacy(classification, environment, request)
+
+        # Get param builder method
+        param_builder = getattr(self, param_builder_name, None)
+        if param_builder is None:
+            self._log.error(
+                "param_builder_not_found",
+                param_builder=param_builder_name,
+            )
+            return {
+                "mode": "unsupported",
+                "reason": f"Param builder '{param_builder_name}' not found",
+            }
+
+        # Build skill parameters
+        skill_params = param_builder(environment, request)
+
+        self._log.info(
+            "measurement_planned",
+            skill=measurement_skill,
+            analysis_skill=analysis_skill,
+            mode=classification.get("mode", "boundary"),
+        )
+
+        return {
+            "mode": "skill",
+            "skill": measurement_skill,
+            "analysis_skill": analysis_skill,
+            "parameters": skill_params,
+            "duration": request.options.get("duration", 30),
+            "workflow_mode": classification.get("mode", "boundary"),
+        }
+
+    async def _plan_measurement_legacy(
+        self,
+        classification: dict[str, Any],
+        environment: dict[str, Any],
+        request: DiagnosisRequest,
+    ) -> dict[str, Any]:
+        """Legacy measurement planning for backward compatibility.
+
+        Used when classification doesn't include workflow info (old format).
+        """
         problem_type = classification.get("type", "")
 
         if problem_type == "cross_node_vm_latency":
-            # Build skill parameters from environment and minimal_input
             skill_params = self._build_skill_params(environment, request)
-
             return {
                 "mode": "skill",
                 "skill": "vm-latency-measurement",
+                "analysis_skill": "vm-latency-analysis",
                 "parameters": skill_params,
                 "duration": request.options.get("duration", 30),
             }
         elif problem_type == "system_network_latency":
-            # Build skill parameters for system network path tracer
             skill_params = self._build_system_skill_params(environment, request)
-
             return {
                 "mode": "skill",
                 "skill": "system-network-path-tracer",
+                "analysis_skill": "system-network-latency-analysis",
                 "parameters": skill_params,
                 "duration": request.options.get("duration", 30),
             }
         else:
-            # Fallback for unsupported scenarios
             self._log.warning("unsupported_problem_type", type=problem_type)
             return {
                 "mode": "unsupported",
-                "reason": f"Problem type '{problem_type}' not supported in MVP",
+                "reason": f"Problem type '{problem_type}' not supported",
             }
 
     def _build_skill_params(
@@ -895,6 +1099,113 @@ class DiagnosisController:
 
         return params
 
+    def _build_vm_path_tracer_params(
+        self,
+        environment: dict[str, Any],
+        request: DiagnosisRequest,
+    ) -> dict[str, Any]:
+        """Build skill parameters for vm-network-path-tracer (boundary mode).
+
+        Maps L2 environment data to vm-network-path-tracer skill parameters.
+        This is for host-only boundary detection (no VM SSH needed).
+
+        Parameter name mapping to skill expectations:
+            --sender-host-ssh     = sender_host_ssh
+            --sender-vm-ip        = sender_vm_ip
+            --receiver-vm-ip      = receiver_vm_ip
+            --send-vnet-if        = sender_vnet
+            --sender-phy-if       = sender_phy_nic
+            --receiver-host-ssh   = receiver_host_ssh
+            --recv-vnet-if        = receiver_vnet
+            --receiver-phy-if     = receiver_phy_nic
+            --local-tools-path    = local_tools_path
+        """
+        assert self._minimal_input is not None
+
+        src_env = environment.get("src_env", {})
+        dst_env = environment.get("dst_env", {})
+
+        # Get node configurations
+        src_vm_node = self._minimal_input.get_node("vm-sender")
+        dst_vm_node = self._minimal_input.get_node("vm-receiver")
+        src_host_node = self._minimal_input.get_node("host-sender")
+        dst_host_node = self._minimal_input.get_node("host-receiver")
+
+        # Extract network interface info from L2 env
+        src_nics = src_env.get("nics", [])
+        dst_nics = dst_env.get("nics", [])
+
+        # Determine focus from request_type
+        request_type = request.request_type
+        if request_type == "packet_drop":
+            default_focus = "drop"
+        else:
+            default_focus = "latency"
+
+        params: dict[str, Any] = {
+            # Duration and focus
+            "duration": request.options.get("duration", 30),
+            "focus": request.options.get("focus", default_focus),
+            "generate_traffic": request.options.get("generate_traffic", True),
+            "protocol": request.options.get("protocol", "icmp"),
+        }
+
+        # BPF tools paths
+        if self._bpf_local_tools_path:
+            params["local_tools_path"] = str(self._bpf_local_tools_path)
+        if self._bpf_remote_tools_path:
+            params["remote_tools_path"] = str(self._bpf_remote_tools_path)
+
+        # Sender VM info (IP for BPF filter, SSH optional for traffic gen)
+        if src_vm_node:
+            params["sender_vm_ip"] = src_vm_node.test_ip  # Critical: use test_ip
+            # Optionally include VM SSH if available (for traffic generation from VM)
+            if src_vm_node.ssh_string:
+                params["sender_vm_ssh"] = src_vm_node.ssh_string
+
+        # Sender host info
+        if src_host_node:
+            params["sender_host_ssh"] = src_host_node.ssh_string
+
+        # Sender network interface info from L2 env
+        if src_nics:
+            nic = src_nics[0]
+            params["sender_vnet"] = nic.get("host_vnet")
+            phy_nics = nic.get("physical_nics", [])
+            if phy_nics:
+                params["sender_phy_nic"] = phy_nics[0].get("name")
+
+        # Receiver VM info
+        if dst_vm_node:
+            params["receiver_vm_ip"] = dst_vm_node.test_ip  # Critical: use test_ip
+
+        # Receiver host info
+        if dst_host_node:
+            params["receiver_host_ssh"] = dst_host_node.ssh_string
+
+        # Receiver network interface info from L2 env
+        if dst_nics:
+            nic = dst_nics[0]
+            params["receiver_vnet"] = nic.get("host_vnet")
+            phy_nics = nic.get("physical_nics", [])
+            if phy_nics:
+                params["receiver_phy_nic"] = phy_nics[0].get("name")
+
+        # Log L2→L3 data flow
+        self._log.info(
+            "l2_to_l3_vm_path_tracer_params_built",
+            sender_vm_ip=params.get("sender_vm_ip"),
+            sender_vnet=params.get("sender_vnet"),
+            sender_phy_nic=params.get("sender_phy_nic"),
+            receiver_vm_ip=params.get("receiver_vm_ip"),
+            receiver_vnet=params.get("receiver_vnet"),
+            receiver_phy_nic=params.get("receiver_phy_nic"),
+            focus=params.get("focus"),
+            local_tools_path=params.get("local_tools_path"),
+        )
+
+        return params
+
     async def _execute_measurement(
         self, measurement_plan: dict[str, Any], environment: dict[str, Any]
     ) -> dict[str, Any]:
@@ -963,12 +1274,17 @@ class DiagnosisController:
         self,
         measurements: dict[str, Any],
         environment: dict[str, Any],
+        measurement_plan: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Analyze results and generate report via analysis skill.
+
+        Uses analysis_skill from measurement_plan if available, otherwise
+        falls back to network_type-based selection for backward compatibility.
 
         Args:
             measurements: Measurement data
             environment: Environment data
+            measurement_plan: Measurement plan with analysis_skill info
 
         Returns:
             Analysis results including detailed report
@@ -1006,22 +1322,33 @@ class DiagnosisController:
                 "reason": "No measurement_dir found",
             }
 
-        # Check network type to determine analysis approach
-        network_type = environment.get("network_type", "vm")
+        # Get analysis skill from measurement plan or fall back to old logic
+        analysis_skill = None
+        if measurement_plan:
+            analysis_skill = measurement_plan.get("analysis_skill")
+
+        if not analysis_skill:
+            # Backward compatibility: determine from network_type
+            network_type = environment.get("network_type", "vm")
+            self._log.info(
+                "l4_fallback_to_network_type",
+                network_type=network_type,
+            )
+            if network_type == "system":
+                analysis_skill = "system-network-latency-analysis"
+            else:
+                analysis_skill = "vm-latency-analysis"
+
         self._log.info(
-            "l4_network_type_check",
-            network_type=network_type,
-            env_keys=list(environment.keys()),
+            "l4_invoking_analysis_skill",
+            analysis_skill=analysis_skill,
+            measurement_dir=measurement_dir,
         )
 
-        if network_type == "system":
-            # System network: use system-network-latency-analysis skill
-            return await self._analyze_system_network(measurements, measurement_dir)
-
-        # VM network: use vm-latency-analysis skill
+        # Invoke the analysis skill
         executor = self._get_skill_executor()
         analysis_result = await executor.invoke(
-            skill_name="vm-latency-analysis",
+            skill_name=analysis_skill,
             parameters={
                 "measurement_dir": measurement_dir,
             },
@@ -1030,11 +1357,12 @@ class DiagnosisController:
         if not analysis_result.is_success:
             self._log.error(
                 "l4_analysis_skill_failed",
+                skill=analysis_skill,
                 error=analysis_result.error,
             )
             return {
                 "status": "error",
-                "reason": f"Analysis skill failed: {analysis_result.error}",
+                "reason": f"Analysis skill '{analysis_skill}' failed: {analysis_result.error}",
             }
 
         # Extract results from skill output
@@ -1053,10 +1381,12 @@ class DiagnosisController:
             summary.get("confidence")
             or data.get("confidence", 0.0)
         )
+        total_rtt_us = summary.get("total_rtt_us", 0.0)
 
         self._log.info(
             "l4_analysis_completed",
-            total_rtt_us=summary.get("total_rtt_us", 0),
+            analysis_skill=analysis_skill,
+            total_rtt_us=total_rtt_us,
             primary_contributor=primary_contributor,
             report_path=report_path,
         )
@@ -1108,6 +1438,7 @@ class DiagnosisController:
 
         return {
             "status": "success",
+            "analysis_skill": analysis_skill,
             "root_cause": {
                 "category": primary_contributor,
                 "confidence": confidence,

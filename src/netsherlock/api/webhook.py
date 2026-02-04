@@ -343,6 +343,7 @@ def _build_diagnosis_request(
             options={
                 "src_test_ip": raw_data.get("src_test_ip"),
                 "dst_test_ip": raw_data.get("dst_test_ip"),
+                **(raw_data.get("options") or {}),
             },
         )
 
@@ -370,6 +371,10 @@ def _map_alert_to_type(alertname: str) -> str:
         "HostNetworkLatencySpike": "latency",
         "HostNetworkLatencySustained": "latency",
         "HostPacketDrop": "packet_drop",
+        # Host network packet loss alerts
+        "HostNetworkPacketLossDevTest": "packet_drop",
+        "HostNetworkPacketLossTest": "packet_drop",
+        "HostNetworkPacketLossCritical": "packet_drop",
     }
     return mapping.get(alertname, "latency")
 
@@ -517,6 +522,10 @@ class DiagnosticRequest(BaseModel):
     alert_type: str | None = Field(
         None,
         description="Alert type for mode selection (e.g., VMNetworkLatency)",
+    )
+    options: dict[str, Any] | None = Field(
+        default=None,
+        description="Additional options (e.g., segment=true for full-path VM latency measurement)",
     )
 
     @field_validator("src_host")

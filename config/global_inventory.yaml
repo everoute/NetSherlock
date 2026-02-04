@@ -35,5 +35,29 @@ hosts:
       - storage
       - system
 
-# VM mappings (empty for system network testing)
-vms: {}
+# VM mappings for VM network testing
+# Schema: uuid, host_ref, ssh.user, ssh.host, name
+vms:
+  vm-sender:
+    uuid: "8cd88df6-11bc-4341-a968-f3c8b9d944df"
+    host_ref: node32
+    name: "vm-sender"
+    ssh:
+      user: root
+      host: "192.168.77.83"
+    # Extended info for measurement (used by param builders)
+    test_ip: "192.168.77.83"
+    vnet_if: "vnet35"
+    vm_if: "ens4"
+
+  vm-receiver:
+    uuid: "a8366b2a-a709-4e88-ba57-128681bd1efb"
+    host_ref: node31
+    name: "vm-receiver"
+    ssh:
+      user: root
+      host: "192.168.76.244"
+    # Extended info for measurement (used by param builders)
+    test_ip: "192.168.76.244"
+    vnet_if: "vnet130"
+    vm_if: "ens4"
