@@ -1,209 +1,58 @@
-# NetSherlock Test Alert Rule for System Network Diagnosis
-# Created: 2026-02-03
+# NetSherlock Test Alert Rules for E2E Testing
+# Updated: 2026-02-05
 #
-# This alert rule triggers when storage network P90 latency exceeds 1ms (1000000ns)
-# between any two hosts. The threshold is intentionally low for testing.
+# Simplified rules for E2E testing - only 2 alerts to avoid duplicate triggers
 #
-# Required labels for NetSherlock webhook:
-# - hostname: Source host name (from metric)
-# - to_hostname: Destination host name (from metric)
-# - network_type: "system" for host-to-host diagnosis
+# Thresholds:
+#   - Latency: P90 > 15ms (15,000,000 ns)
+#   - Packet Loss: > 3% (raised from 1% to avoid false positives from real network issues)
 #
 # Usage:
 # 1. Copy this file to /etc/prometheus/ on a Prometheus host
 # 2. Add to prometheus.yml rule_files: - netsherlock_test_alert.yml
 # 3. Reload Prometheus: curl -X POST http://prometheus:password@host:9090/-/reload
-#
-# Or test locally with promtool:
-#   promtool check rules netsherlock_test_alert.yml
 
 groups:
-  - name: netsherlock_system_network
+  - name: netsherlock_e2e_test
     interval: 15s
     rules:
       # ============================================================
-      # 开发测试告警 - 超低阈值，几乎必定触发
+      # System Network Latency Alert
+      # Threshold: P90 > 15ms
+      # Fault injection: 20ms delay on port-storage
       # ============================================================
-
-      # 超低阈值测试告警 - P90 > 500μs (0.5ms) - 几乎必定触发
       - alert: NetSherlockHostLatencyDevTest
         expr: |
           max without(instance) (
             histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
-          ) > 5e+05
-        for: 5s
-        labels:
-          network_type: "system"
-          severity: "info"
-          environment: "dev-test"
-        annotations:
-          summary: "[DEV TEST] Storage network P90 latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 0.5ms threshold (dev test)"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # Test alert with low threshold for easy triggering (1ms)
-      - alert: NetSherlockHostLatencyTest
-        expr: |
-          max without(instance) (
-            histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
-          ) > 1e+06
+          ) > 1.5e+07
         for: 10s
         labels:
-          # Static labels added to alert
           network_type: "system"
           severity: "warning"
         annotations:
-          summary: "High storage network P90 latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 1ms threshold"
+          summary: "Storage network P90 latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
+          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 15ms threshold"
           src_hostname: "{{ $labels.hostname }}"
           dst_hostname: "{{ $labels.to_hostname }}"
 
       # ============================================================
-      # 策略 1: 阶梯式阈值告警 (不同严重程度)
+      # System Network Packet Loss Alert
+      # Threshold: 3% < loss < 100% (filter abnormal values > 100%)
+      # Fault injection: 10% packet loss on port-storage
+      # Note: Metric unit is percentage (5% = 5, not 0.05)
+      # Note: Only alert on node32 -> node31 path for testing
+      # UUID mapping: 66cb384e-d6e5-11ed-9faf-525400111812 = node32
       # ============================================================
-
-      # Warning: P90 延迟 > 2ms
-      - alert: HostNetworkLatencyWarning
-        expr: |
-          max without(instance) (
-            histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[5m]))
-          ) > 2e+06
-        for: 30s
-        labels:
-          network_type: "system"
-          severity: "warning"
-        annotations:
-          summary: "Storage network latency warning: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 2ms threshold"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # Critical: P90 延迟 > 5ms (生产阈值)
-      - alert: HostNetworkLatencyCritical
-        expr: |
-          max without(instance) (
-            histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[5m]))
-          ) > 5e+06
-        for: 30s
-        labels:
-          network_type: "system"
-          severity: "critical"
-        annotations:
-          summary: "Critical storage network latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "P90 ping latency {{ $value | humanizeDuration }} exceeds 5ms threshold"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # ============================================================
-      # 策略 2: P99 尾部延迟告警 (捕获极端情况)
-      # ============================================================
-
-      # P99 延迟 > 10ms - 捕获尾部延迟问题
-      - alert: HostNetworkLatencyP99High
-        expr: |
-          max without(instance) (
-            histogram_quantile(0.99, rate(host_to_host_max_ping_time_ns_bucket[5m]))
-          ) > 10e+06
-        for: 1m
-        labels:
-          network_type: "system"
-          severity: "warning"
-          latency_percentile: "p99"
-        annotations:
-          summary: "High P99 tail latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "P99 ping latency {{ $value | humanizeDuration }} exceeds 10ms - possible intermittent issues"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # ============================================================
-      # 策略 3: 延迟突增告警 (相对变化检测)
-      # ============================================================
-
-      # 延迟突增 > 3倍 (与5分钟前相比)
-      - alert: HostNetworkLatencySpike
-        expr: |
-          (
-            max without(instance) (
-              histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
-            )
-          ) / (
-            max without(instance) (
-              histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[5m] offset 5m))
-            )
-          ) > 3
-        for: 30s
-        labels:
-          network_type: "system"
-          severity: "warning"
-          alert_type: "spike"
-        annotations:
-          summary: "Latency spike detected: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "P90 latency increased more than 3x compared to 5 minutes ago"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # ============================================================
-      # 策略 4: 持续高延迟告警 (长时间问题)
-      # ============================================================
-
-      # 持续高延迟 > 3ms 超过 5 分钟
-      - alert: HostNetworkLatencySustained
-        expr: |
-          avg_over_time(
-            (max without(instance) (
-              histogram_quantile(0.9, rate(host_to_host_max_ping_time_ns_bucket[1m]))
-            ))[5m:]
-          ) > 3e+06
-        for: 5m
-        labels:
-          network_type: "system"
-          severity: "warning"
-          alert_type: "sustained"
-        annotations:
-          summary: "Sustained high latency: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "Average P90 latency over 5 minutes exceeds 3ms - persistent network issue"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # ============================================================
-      # 策略 5: 系统网络丢包告警
-      # ============================================================
-      # 使用 label_replace 从 instance IP 派生 hostname
-      # instance 格式: 70.0.0.XX:10404 -> nodeXX
-
-      # 开发测试 - 丢包率 > 0.1% (超低阈值)
-      # Fixed: Exclude self-ping by filtering to_hostname!="node33" (collector node)
       - alert: HostNetworkPacketLossDevTest
         expr: |
           label_replace(
-            host_network_ping_packet_loss_percent{_network="storage", to_hostname!="node33"} > 0.001,
+            (host_network_ping_packet_loss_percent{_network="storage", _host="66cb384e-d6e5-11ed-9faf-525400111812", to_hostname="node31"} > 3)
+            and
+            (host_network_ping_packet_loss_percent{_network="storage", _host="66cb384e-d6e5-11ed-9faf-525400111812", to_hostname="node31"} < 100),
             "hostname",
-            "node33",
-            "instance",
-            ".*"
-          )
-        for: 10s
-        labels:
-          network_type: "system"
-          severity: "info"
-          problem_type: "packet_drop"
-          environment: "dev-test"
-        annotations:
-          summary: "[DEV TEST] Host network packet loss: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "Packet loss {{ $value | printf \"%.2f\" }}% exceeds 0.1% threshold (dev test)"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # 测试告警 - 丢包率 > 1%
-      # Fixed: Exclude self-ping by filtering to_hostname!="node33" (collector node)
-      - alert: HostNetworkPacketLossTest
-        expr: |
-          label_replace(
-            host_network_ping_packet_loss_percent{_network="storage", to_hostname!="node33"} > 0.01,
-            "hostname",
-            "node33",
-            "instance",
+            "node32",
+            "_host",
             ".*"
           )
         for: 10s
@@ -213,28 +62,6 @@ groups:
           problem_type: "packet_drop"
         annotations:
           summary: "Host network packet loss: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "Packet loss {{ $value | printf \"%.2f\" }}% exceeds 1% threshold"
-          src_hostname: "{{ $labels.hostname }}"
-          dst_hostname: "{{ $labels.to_hostname }}"
-
-      # 生产告警 - 丢包率 > 5%
-      # Fixed: Exclude self-ping by filtering to_hostname!="node33" (collector node)
-      - alert: HostNetworkPacketLossCritical
-        expr: |
-          label_replace(
-            host_network_ping_packet_loss_percent{_network="storage", to_hostname!="node33"} > 0.05,
-            "hostname",
-            "node33",
-            "instance",
-            ".*"
-          )
-        for: 30s
-        labels:
-          network_type: "system"
-          severity: "critical"
-          problem_type: "packet_drop"
-        annotations:
-          summary: "Critical host network packet loss: {{ $labels.hostname }} → {{ $labels.to_hostname }}"
-          description: "Packet loss {{ $value | printf \"%.2f\" }}% exceeds 5% threshold - critical"
+          description: "Packet loss {{ $value | printf \"%.2f\" }}% exceeds 3% threshold"
           src_hostname: "{{ $labels.hostname }}"
           dst_hostname: "{{ $labels.to_hostname }}"

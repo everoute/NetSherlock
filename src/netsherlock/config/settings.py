@@ -171,7 +171,17 @@ class DiagnosisSettings(BaseSettings):
         description="Allow interrupting autonomous execution",
     )
     autonomous_known_alert_types: list[str] = Field(
-        default_factory=lambda: ["VMNetworkLatency", "HostNetworkLatency"],
+        default_factory=lambda: [
+            # Production alert types
+            "VMNetworkLatency",
+            "VMNetworkLatencyHigh",
+            "VMNetworkLatencyCritical",
+            "VMNetworkPacketLoss",
+            "HostNetworkLatency",
+            # Test/Dev alert types
+            "NetSherlockHostLatencyDevTest",
+            "HostNetworkPacketLossDevTest",
+        ],
         description="Alert types that can trigger autonomous mode",
     )
 

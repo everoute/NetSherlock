@@ -94,7 +94,7 @@ class ThresholdConfig:
     rtt_critical_ms: float = 50.0  # Was 20.0 - increased proportionally
     loss_warning_pct: float = 10.0
     loss_critical_pct: float = 50.0
-    cooldown_seconds: int = 300
+    cooldown_seconds: int = 3600   # 1 hour - prevent repeat alerts during continuous faults
 
 @dataclass
 class TargetConfig:
@@ -242,13 +242,16 @@ class AlertEvaluator:
                 f"Loss critical: {loss_critical_count}/{len(window)} cycles exceeded "
                 f"{self.loss_critical_pct}% (window {window_dur}s)")
 
-        if rtt_warning_count >= self.trigger_count:
+        # Only trigger warning if NO sample exceeds critical threshold.
+        # This prevents warning firing during ramp-up to critical level,
+        # avoiding duplicate alerts for the same fault event.
+        if rtt_warning_count >= self.trigger_count and rtt_critical_count == 0:
             avg = sum(r.rtt_avg_ms for r in window if r.rtt_avg_ms) / max(rtt_warning_count, 1)
             return self._try_fire(target, "warning",
                 f"RTT warning: {rtt_warning_count}/{len(window)} cycles exceeded "
                 f"{self.rtt_warning_ms}ms (avg {avg:.1f}ms, window {window_dur}s)")
 
-        if loss_warning_count >= self.trigger_count:
+        if loss_warning_count >= self.trigger_count and loss_critical_count == 0:
             return self._try_fire(target, "warning",
                 f"Loss warning: {loss_warning_count}/{len(window)} cycles exceeded "
                 f"{self.loss_warning_pct}% (window {window_dur}s)")
@@ -266,6 +269,12 @@ class AlertEvaluator:
             return None
 
         self._last_fired[key] = now
+
+        # When critical fires, also update warning cooldown to prevent duplicate alerts
+        # during the same fault event (warning might fire first as RTT ramps up)
+        if severity == "critical":
+            self._last_fired[(target, "warning")] = now
+
         return {"severity": severity, "description": description}
 
 
@@ -304,7 +313,8 @@ def run_direct_mode(config: MonitorConfig):
                 alert = evaluators[pair_key].evaluate(target.dst_test_ip, result)
 
                 if alert:
-                    payload = json.dumps({
+                    # Build diagnosis request payload
+                    payload_dict = {
                         "network_type": "vm",
                         "src_vm_name": monitor.src_vm_name,
                         "dst_vm_name": target.dst_vm_name,
@@ -312,7 +322,11 @@ def run_direct_mode(config: MonitorConfig):
                         "dst_test_ip": target.dst_test_ip,
                         "severity": alert["severity"],
                         "description": alert["description"],
-                    }).encode()
+                    }
+                    # Critical severity triggers segment mode (8-point measurement)
+                    if alert["severity"] == "critical":
+                        payload_dict["options"] = {"segment": True}
+                    payload = json.dumps(payload_dict).encode()
                     req = urllib.request.Request(
                         f"{config.netsherlock_url}/diagnose",
                         data=payload,

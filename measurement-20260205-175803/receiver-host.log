@@ -1,0 +1,240 @@
+=== ICMP Drop Detector ===
+Source IP: 192.168.77.83
+Destination IP: 192.168.76.244
+RX Interface(s): enp24s0f0np0(ifindex=3)
+TX Interface(s): vnet130(ifindex=196)
+Timeout: 1000 ms
+
+Flow path:
+  [0] Request RX at enp24s0f0np0
+  [1] Request TX at vnet130
+  [2] Reply RX at vnet130
+  [3] Reply TX at enp24s0f0np0
+
+Tracing... Hit Ctrl-C to end.
+
+2026-02-05 17:58:17.843 [new] ID=3121 Seq=5 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:17.843 [update] ID=3121 Seq=5 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:17.843 [update] ID=3121 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:17.843 [complete] ID=3121 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=81.0  External=171.6  RepInternal=48.9  Total=301.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:18.873 [new] ID=3121 Seq=6 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:18.873 [update] ID=3121 Seq=6 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:18.873 [update] ID=3121 Seq=6 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:18.873 [complete] ID=3121 Seq=6 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=83.1  External=151.1  RepInternal=52.3  Total=286.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:19.635 [new] ID=3122 Seq=2 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:19.635 [update] ID=3122 Seq=2 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:19.635 [update] ID=3122 Seq=2 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:19.635 [complete] ID=3122 Seq=2 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=105.6  External=101.7  RepInternal=51.2  Total=258.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:19.891 [new] ID=3121 Seq=7 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:19.891 [update] ID=3121 Seq=7 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:19.891 [update] ID=3121 Seq=7 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:19.891 [complete] ID=3121 Seq=7 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=53.5  External=103.0  RepInternal=61.2  Total=217.7
+--------------------------------------------------------------------------------
+2026-02-05 17:58:20.659 [new] ID=3122 Seq=3 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:20.659 [update] ID=3122 Seq=3 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:20.659 [update] ID=3122 Seq=3 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:20.659 [complete] ID=3122 Seq=3 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=62.4  External=120.8  RepInternal=49.9  Total=233.1
+--------------------------------------------------------------------------------
+2026-02-05 17:58:21.683 [new] ID=3122 Seq=4 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:21.683 [update] ID=3122 Seq=4 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:21.683 [update] ID=3122 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:21.683 [complete] ID=3122 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=55.6  External=118.8  RepInternal=58.4  Total=232.9
+--------------------------------------------------------------------------------
+2026-02-05 17:58:22.707 [new] ID=3122 Seq=5 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:22.707 [update] ID=3122 Seq=5 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:22.707 [update] ID=3122 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:22.707 [complete] ID=3122 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=52.4  External=106.5  RepInternal=43.3  Total=202.3
+--------------------------------------------------------------------------------
+2026-02-05 17:58:22.963 [new] ID=3121 Seq=10 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:22.963 [update] ID=3121 Seq=10 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:22.963 [update] ID=3121 Seq=10 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:22.963 [complete] ID=3121 Seq=10 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=62.8  External=101.3  RepInternal=42.8  Total=206.9
+--------------------------------------------------------------------------------
+2026-02-05 17:58:23.987 [new] ID=3121 Seq=11 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:23.987 [update] ID=3121 Seq=11 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:23.987 [update] ID=3121 Seq=11 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:23.987 [complete] ID=3121 Seq=11 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=62.4  External=89.8  RepInternal=47.3  Total=199.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:25.722 [new] ID=3123 Seq=1 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:25.722 [update] ID=3123 Seq=1 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:25.722 [update] ID=3123 Seq=1 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:25.722 [complete] ID=3123 Seq=1 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=104.8  External=365.5  RepInternal=52.5  Total=522.9
+--------------------------------------------------------------------------------
+2026-02-05 17:58:26.035 [new] ID=3121 Seq=13 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:26.035 [update] ID=3121 Seq=13 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:26.035 [update] ID=3121 Seq=13 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:26.035 [complete] ID=3121 Seq=13 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=48.1  External=126.2  RepInternal=43.9  Total=218.2
+--------------------------------------------------------------------------------
+2026-02-05 17:58:26.739 [new] ID=3123 Seq=2 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:26.739 [update] ID=3123 Seq=2 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:26.739 [update] ID=3123 Seq=2 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:26.739 [complete] ID=3123 Seq=2 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=69.0  External=115.5  RepInternal=46.7  Total=231.2
+--------------------------------------------------------------------------------
+2026-02-05 17:58:27.059 [new] ID=3121 Seq=14 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:27.059 [update] ID=3121 Seq=14 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:27.059 [update] ID=3121 Seq=14 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:27.059 [complete] ID=3121 Seq=14 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=69.9  External=91.6  RepInternal=46.5  Total=208.0
+--------------------------------------------------------------------------------
+2026-02-05 17:58:27.763 [new] ID=3123 Seq=3 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:27.763 [update] ID=3123 Seq=3 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:27.763 [update] ID=3123 Seq=3 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:27.763 [complete] ID=3123 Seq=3 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=71.7  External=113.9  RepInternal=51.5  Total=237.1
+--------------------------------------------------------------------------------
+2026-02-05 17:58:28.083 [new] ID=3121 Seq=15 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:28.083 [update] ID=3121 Seq=15 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:28.083 [update] ID=3121 Seq=15 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:28.083 [complete] ID=3121 Seq=15 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=72.8  External=279.2  RepInternal=52.3  Total=404.3
+--------------------------------------------------------------------------------
+2026-02-05 17:58:28.787 [new] ID=3123 Seq=4 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:28.787 [update] ID=3123 Seq=4 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:28.787 [update] ID=3123 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:28.787 [complete] ID=3123 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=71.3  External=98.9  RepInternal=47.0  Total=217.2
+--------------------------------------------------------------------------------
+2026-02-05 17:58:29.107 [new] ID=3121 Seq=16 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:29.107 [update] ID=3121 Seq=16 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:29.107 [update] ID=3121 Seq=16 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:29.108 [complete] ID=3121 Seq=16 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=71.6  External=97.3  RepInternal=55.9  Total=224.8
+--------------------------------------------------------------------------------
+2026-02-05 17:58:30.131 [new] ID=3121 Seq=17 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:30.131 [update] ID=3121 Seq=17 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:30.131 [update] ID=3121 Seq=17 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:30.131 [complete] ID=3121 Seq=17 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=70.7  External=215.3  RepInternal=52.8  Total=338.8
+--------------------------------------------------------------------------------
+2026-02-05 17:58:31.155 [new] ID=3121 Seq=18 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:31.155 [update] ID=3121 Seq=18 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:31.155 [update] ID=3121 Seq=18 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:31.155 [complete] ID=3121 Seq=18 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=74.8  External=92.7  RepInternal=48.1  Total=215.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:32.180 [new] ID=3121 Seq=19 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:32.180 [update] ID=3121 Seq=19 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:32.180 [update] ID=3121 Seq=19 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:32.180 [complete] ID=3121 Seq=19 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=83.4  External=126.4  RepInternal=53.0  Total=262.8
+--------------------------------------------------------------------------------
+2026-02-05 17:58:32.825 [new] ID=3124 Seq=1 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:32.825 [update] ID=3124 Seq=1 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:32.826 [update] ID=3124 Seq=1 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:32.826 [complete] ID=3124 Seq=1 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=116.2  External=106.6  RepInternal=57.1  Total=279.9
+--------------------------------------------------------------------------------
+2026-02-05 17:58:34.867 [new] ID=3124 Seq=3 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:34.867 [update] ID=3124 Seq=3 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:34.867 [update] ID=3124 Seq=3 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:34.867 [complete] ID=3124 Seq=3 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=66.6  External=176.1  RepInternal=59.1  Total=301.8
+--------------------------------------------------------------------------------
+2026-02-05 17:58:35.891 [new] ID=3124 Seq=4 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:35.891 [update] ID=3124 Seq=4 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:35.891 [update] ID=3124 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:35.891 [complete] ID=3124 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=73.0  External=105.7  RepInternal=48.5  Total=227.2
+--------------------------------------------------------------------------------
+2026-02-05 17:58:36.276 [new] ID=3121 Seq=23 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:36.276 [update] ID=3121 Seq=23 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:36.276 [update] ID=3121 Seq=23 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:36.276 [complete] ID=3121 Seq=23 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=60.3  External=94.5  RepInternal=47.3  Total=202.1
+--------------------------------------------------------------------------------
+2026-02-05 17:58:36.915 [new] ID=3124 Seq=5 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:36.915 [update] ID=3124 Seq=5 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:36.915 [update] ID=3124 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:36.915 [complete] ID=3124 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=67.9  External=126.6  RepInternal=59.9  Total=254.4
+--------------------------------------------------------------------------------
+2026-02-05 17:58:37.299 [new] ID=3121 Seq=24 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:37.299 [update] ID=3121 Seq=24 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:37.299 [update] ID=3121 Seq=24 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:37.299 [complete] ID=3121 Seq=24 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=68.4  External=96.2  RepInternal=41.9  Total=206.6
+--------------------------------------------------------------------------------
+2026-02-05 17:58:38.323 [new] ID=3121 Seq=25 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:38.323 [update] ID=3121 Seq=25 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:38.323 [update] ID=3121 Seq=25 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:38.323 [complete] ID=3121 Seq=25 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=63.9  External=131.1  RepInternal=47.3  Total=242.3
+--------------------------------------------------------------------------------
+2026-02-05 17:58:39.347 [new] ID=3121 Seq=26 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:39.347 [update] ID=3121 Seq=26 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:39.347 [update] ID=3121 Seq=26 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:39.347 [complete] ID=3121 Seq=26 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=69.2  External=100.3  RepInternal=44.0  Total=213.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:39.929 [new] ID=3125 Seq=1 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:39.930 [update] ID=3125 Seq=1 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:39.930 [update] ID=3125 Seq=1 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:39.930 [complete] ID=3125 Seq=1 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=98.6  External=108.4  RepInternal=36.9  Total=244.0
+--------------------------------------------------------------------------------
+2026-02-05 17:58:40.371 [new] ID=3121 Seq=27 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:40.371 [update] ID=3121 Seq=27 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:40.371 [update] ID=3121 Seq=27 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:40.371 [complete] ID=3121 Seq=27 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=71.1  External=104.0  RepInternal=46.9  Total=222.0
+--------------------------------------------------------------------------------
+2026-02-05 17:58:41.395 [new] ID=3121 Seq=28 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:41.395 [update] ID=3121 Seq=28 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:41.395 [update] ID=3121 Seq=28 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:41.395 [complete] ID=3121 Seq=28 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=52.7  External=122.3  RepInternal=45.5  Total=220.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:42.419 [new] ID=3121 Seq=29 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:42.419 [update] ID=3121 Seq=29 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:42.419 [update] ID=3121 Seq=29 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:42.419 [complete] ID=3121 Seq=29 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=63.7  External=116.4  RepInternal=48.9  Total=229.0
+--------------------------------------------------------------------------------
+2026-02-05 17:58:42.995 [new] ID=3125 Seq=4 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:42.995 [update] ID=3125 Seq=4 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:42.995 [update] ID=3125 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:42.995 [complete] ID=3125 Seq=4 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=63.9  External=112.0  RepInternal=45.1  Total=221.1
+--------------------------------------------------------------------------------
+2026-02-05 17:58:43.443 [new] ID=3121 Seq=30 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:43.443 [update] ID=3121 Seq=30 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:43.443 [update] ID=3121 Seq=30 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:43.443 [complete] ID=3121 Seq=30 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=84.8  External=146.8  RepInternal=48.9  Total=280.5
+--------------------------------------------------------------------------------
+2026-02-05 17:58:44.019 [new] ID=3125 Seq=5 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:44.019 [update] ID=3125 Seq=5 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:44.019 [update] ID=3125 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:44.019 [complete] ID=3125 Seq=5 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=65.2  External=106.2  RepInternal=42.8  Total=214.3
+--------------------------------------------------------------------------------
+2026-02-05 17:58:44.467 [new] ID=3121 Seq=31 ReqRX:Y ReqTX:- RepRX:- RepTX:-
+2026-02-05 17:58:44.467 [update] ID=3121 Seq=31 ReqRX:Y ReqTX:Y RepRX:- RepTX:-
+2026-02-05 17:58:44.467 [update] ID=3121 Seq=31 ReqRX:Y ReqTX:Y RepRX:Y RepTX:-
+2026-02-05 17:58:44.467 [complete] ID=3121 Seq=31 ReqRX:Y ReqTX:Y RepRX:Y RepTX:Y
+  Latency(us): ReqInternal=51.3  External=122.1  RepInternal=46.9  Total=220.3
+--------------------------------------------------------------------------------
+
+Detaching...
+
+=== ICMP Flow Statistics ===
+Total flows tracked: 36
+Complete flows: 36
+Request internal drops: 0
+External drops: 0
+Reply internal drops: 0
