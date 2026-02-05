@@ -314,11 +314,15 @@ class DiagnosisController:
         if self._global_inventory_path:
             self._log.info("loading_global_inventory", path=str(self._global_inventory_path))
             self._global_inventory = GlobalInventory.load(self._global_inventory_path)
+            # Extract test IPs from request options (sent by ping_monitor)
+            options = request.options or {}
             return self._global_inventory.build_minimal_input(
                 src_host_ip=request.src_host,
                 src_vm_uuid=request.src_vm,
                 dst_host_ip=request.dst_host,
                 dst_vm_uuid=request.dst_vm,
+                src_test_ip=options.get("src_test_ip"),
+                dst_test_ip=options.get("dst_test_ip"),
             )
 
         # Fallback: create minimal config from request

@@ -260,7 +260,7 @@ def _build_diagnosis_request(
     request_type: str,
     request_id: str,
     raw_data: dict[str, Any],
-) -> DiagnosisRequest:
+) -> DiagnosisRequest | None:
     """Convert webhook raw data to unified DiagnosisRequest.
 
     Args:
@@ -269,7 +269,7 @@ def _build_diagnosis_request(
         raw_data: Raw data from queue.
 
     Returns:
-        Unified DiagnosisRequest.
+        Unified DiagnosisRequest, or None if the request is invalid (e.g., self-ping).
     """
     if request_type == "alert":
         labels = raw_data.get("labels", {})
@@ -281,8 +281,22 @@ def _build_diagnosis_request(
             src_hostname = labels.get("hostname")
             dst_hostname = labels.get("to_hostname")
 
+            # Reject self-ping alerts (hostname == to_hostname)
+            if src_hostname and dst_hostname and src_hostname == dst_hostname:
+                logger.warning(
+                    f"Rejecting self-ping alert: {src_hostname} -> {dst_hostname}"
+                )
+                return None
+
             src_host = _resolve_hostname_to_ip(src_hostname) or ""
             dst_host = _resolve_hostname_to_ip(dst_hostname)
+
+            # Also check resolved IPs for self-ping
+            if src_host and dst_host and src_host == dst_host:
+                logger.warning(
+                    f"Rejecting self-ping alert (resolved): {src_host} -> {dst_host}"
+                )
+                return None
 
             if not src_host and src_hostname:
                 logger.warning(
@@ -617,6 +631,15 @@ async def diagnosis_worker():
                     request = _build_diagnosis_request(
                         request_type, request_id, request_data
                     )
+
+                    # Skip invalid requests (e.g., self-ping)
+                    if request is None:
+                        logger.info(f"Skipping invalid diagnosis request: {request_id}")
+                        diagnosis_store[request_id] = DiagnosisResult.create_error(
+                            diagnosis_id=request_id,
+                            error="Invalid request (self-ping detected)",
+                        )
+                        continue
 
                     # Execute via engine protocol
                     result = await engine.execute(request=request)

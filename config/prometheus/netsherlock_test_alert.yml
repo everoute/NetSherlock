@@ -173,14 +173,15 @@ groups:
       # instance 格式: 70.0.0.XX:10404 -> nodeXX
 
       # 开发测试 - 丢包率 > 0.1% (超低阈值)
+      # Fixed: Exclude self-ping by filtering to_hostname!="node33" (collector node)
       - alert: HostNetworkPacketLossDevTest
         expr: |
           label_replace(
-            host_network_ping_packet_loss_percent{_network="storage"} > 0.001,
+            host_network_ping_packet_loss_percent{_network="storage", to_hostname!="node33"} > 0.001,
             "hostname",
-            "node$1",
+            "node33",
             "instance",
-            "70\\.0\\.0\\.(\\d+):.*"
+            ".*"
           )
         for: 10s
         labels:
@@ -195,14 +196,15 @@ groups:
           dst_hostname: "{{ $labels.to_hostname }}"
 
       # 测试告警 - 丢包率 > 1%
+      # Fixed: Exclude self-ping by filtering to_hostname!="node33" (collector node)
       - alert: HostNetworkPacketLossTest
         expr: |
           label_replace(
-            host_network_ping_packet_loss_percent{_network="storage"} > 0.01,
+            host_network_ping_packet_loss_percent{_network="storage", to_hostname!="node33"} > 0.01,
             "hostname",
-            "node$1",
+            "node33",
             "instance",
-            "70\\.0\\.0\\.(\\d+):.*"
+            ".*"
           )
         for: 10s
         labels:
@@ -216,14 +218,15 @@ groups:
           dst_hostname: "{{ $labels.to_hostname }}"
 
       # 生产告警 - 丢包率 > 5%
+      # Fixed: Exclude self-ping by filtering to_hostname!="node33" (collector node)
       - alert: HostNetworkPacketLossCritical
         expr: |
           label_replace(
-            host_network_ping_packet_loss_percent{_network="storage"} > 0.05,
+            host_network_ping_packet_loss_percent{_network="storage", to_hostname!="node33"} > 0.05,
             "hostname",
-            "node$1",
+            "node33",
             "instance",
-            "70\\.0\\.0\\.(\\d+):.*"
+            ".*"
           )
         for: 30s
         labels:

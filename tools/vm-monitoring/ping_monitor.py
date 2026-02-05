@@ -88,8 +88,10 @@ def run_ping(target: str, count: int = 5, timeout: int = 10) -> PingResult:
 
 @dataclass
 class ThresholdConfig:
-    rtt_warning_ms: float = 5.0
-    rtt_critical_ms: float = 20.0
+    # RTT thresholds increased to prevent false alerts from normal VM latency spikes
+    # Normal VM latency: 0.4-1ms, occasional spikes to 5ms+
+    rtt_warning_ms: float = 15.0   # Was 5.0 - too low, causing false alerts
+    rtt_critical_ms: float = 50.0  # Was 20.0 - increased proportionally
     loss_warning_pct: float = 10.0
     loss_critical_pct: float = 50.0
     cooldown_seconds: int = 300
