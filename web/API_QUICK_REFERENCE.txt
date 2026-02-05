@@ -1,0 +1,120 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     NetSherlock API 快速参考表                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ 五个核心 API 端点 ─────────────────────────────────────────────────────────┐
+
+1️⃣  GET /health
+    └─ 健康检查 | 返回: {status, timestamp, queue_size, engine}
+
+2️⃣  POST /diagnose
+    ├─ 创建诊断任务
+    └─ 请求: {network_type, diagnosis_type, src_host?, dst_host?, ...}
+    └─ 返回: {diagnosis_id, status, timestamp, ...}
+
+3️⃣  GET /diagnosis/{id}
+    ├─ 获取诊断详情（包含分析结果、日志、建议等）
+    └─ 返回: {diagnosis_id, status, root_cause, recommendations, logs, ...}
+
+4️⃣  GET /diagnoses
+    ├─ 列表诊断任务（支持分页和过滤）
+    ├─ 查询: ?limit=50&offset=0&status=completed
+    └─ 返回: [{diagnosis_id, status, ...}]
+
+5️⃣  POST /diagnosis/{id}/cancel
+    ├─ 取消正在运行的诊断任务
+    └─ 返回: {diagnosis_id, status: "cancelled", cancelled_at}
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 任务状态流转 ──────────────────────────────────────────────────────────────┐
+
+          pending
+             ↓
+          running ──→ waiting → completed ✓
+             ↓
+          error ✗
+             
+          cancelled ✗
+
+終止状态: completed, cancelled, error, interrupted
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 诊断类型和网络类型 ────────────────────────────────────────────────────────┐
+
+诊断类型 (diagnosis_type):
+  • latency      - 延迟诊断
+  • packet_drop  - 丢包诊断
+  • connectivity - 连通性诊断
+
+网络类型 (network_type):
+  • vm     - 虚拟机间通信
+  • system - 物理主机间通信
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 前端实现状态 ──────────────────────────────────────────────────────────────┐
+
+✅ 已实现:
+   • POST /diagnose - NewTaskPage.tsx
+   • GET /diagnosis/{id} - TaskDetailPage.tsx, ReportDetailPage.tsx
+   • GET /diagnoses - TasksPage.tsx, ReportsPage.tsx
+
+❌ 未实现:
+   • GET /health - 未使用
+   • POST /diagnosis/{id}/cancel - 按钮存在但功能未实现
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 根本原因分类 (root_cause.category) ──────────────────────────────────────┐
+
+• vm_internal        - VM 内部问题
+• host_internal      - 主机内部问题
+• vhost_processing   - vhost 处理问题
+• physical_network   - 物理网络问题 ⚠️ 最常见
+• configuration      - 配置问题
+• resource_contention- 资源竞争
+• unknown            - 未知原因
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 前端轮询逻辑 ──────────────────────────────────────────────────────────────┐
+
+// 每 2 秒检查一次任务状态（TaskDetailPage.tsx）
+setInterval(async () => {
+  const diagnosis = await api.getDiagnosis(id)
+  
+  if (['completed', 'error', 'cancelled', 'interrupted'].includes(diagnosis.status)) {
+    clearInterval(interval)  // 任务终止，停止轮询
+  }
+}, 2000)
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 环境配置 ──────────────────────────────────────────────────────────────────┐
+
+.env 文件:
+  VITE_API_URL=http://localhost:8000
+  VITE_USE_MOCK_DATA=true  # 开发环境使用模拟数据
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ HTTP 状态码 ───────────────────────────────────────────────────────────────┐
+
+200 - 成功
+400 - 请求参数错误
+401 - 未授权（需要认证）
+404 - 诊断不存在
+409 - 冲突（如任务已存在）
+500 - 服务器错误
+503 - 服务不可用
+
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📚 详细文档:
+   • API_SPECIFICATION.md - 完整 API 规范
+   • API_SUMMARY.md       - 汇总参考表
+   • SESSION_PERSISTENCE.md - 会话持久化说明
+
+💡 提示: 后端需要实现这 5 个 API 端点，前端已准备好消费它们
