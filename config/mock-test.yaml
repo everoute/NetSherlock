@@ -1,0 +1,42 @@
+# Mock Test Configuration
+# For local testing without real SSH hosts
+# This configuration uses localhost for testing API responses
+
+nodes:
+  # VM Sender - localhost for testing
+  vm-sender:
+    ssh: "root@127.0.0.1"
+    workdir: "/tmp/netsherlock"
+    role: "vm"
+    host_ref: "host-sender"
+    uuid: "ae6aa164-604c-4cb0-84b8-2dea034307f1"
+    test_ip: "127.0.0.1"
+
+  # VM Receiver - localhost for testing
+  vm-receiver:
+    ssh: "root@127.0.0.1"
+    workdir: "/tmp/netsherlock"
+    role: "vm"
+    host_ref: "host-receiver"
+    uuid: "be7bb275-715d-5dc1-95c9-3efb045418g2"
+    test_ip: "127.0.0.1"
+
+  # Host Sender - localhost for testing
+  host-sender:
+    ssh: "root@127.0.0.1"
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+  # Host Receiver - localhost for testing
+  host-receiver:
+    ssh: "root@127.0.0.1"
+    workdir: "/tmp/netsherlock"
+    role: "host"
+
+test_pairs:
+  vm:
+    server: "vm-receiver"
+    client: "vm-sender"
+
+discovery_hints:
+  internal_port_type: "mgt"
