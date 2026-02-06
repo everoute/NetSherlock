@@ -1064,6 +1064,12 @@ async def list_diagnoses(
             diagnosis_type=d.request_type or None,
             network_type=d.network_type or None,
             summary=d.summary,
+            root_cause={
+                "category": d.root_cause.category.value if d.root_cause else None,
+                "component": d.root_cause.component if d.root_cause else None,
+                "confidence": d.root_cause.confidence if d.root_cause else 0,
+                "evidence": d.root_cause.evidence if d.root_cause else [],
+            } if d.root_cause else None,
         )
         for d in paginated
     ]
