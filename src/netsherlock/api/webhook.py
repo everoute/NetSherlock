@@ -702,6 +702,7 @@ async def diagnosis_worker():
         try:
             # Wait for diagnosis request
             request_type, request_id, request_data = await diagnosis_queue.get()
+            started_at = datetime.now()
 
             logger.info(f"Processing diagnosis request: {request_id}")
 
@@ -710,6 +711,7 @@ async def diagnosis_worker():
                 diagnosis_store[request_id] = DiagnosisResult.create_error(
                     diagnosis_id=request_id,
                     error="Diagnosis engine not initialized",
+                    started_at=started_at,
                 )
             else:
                 request = None
@@ -725,11 +727,16 @@ async def diagnosis_worker():
                         diagnosis_store[request_id] = DiagnosisResult.create_error(
                             diagnosis_id=request_id,
                             error="Invalid request (self-ping detected)",
+                            started_at=started_at,
                         )
                         continue
 
                     # Execute via engine protocol
                     result = await engine.execute(request=request)
+
+                    # Ensure started_at is set
+                    if not result.started_at:
+                        result.started_at = started_at
 
                     # Store result
                     diagnosis_store[request_id] = result
@@ -750,6 +757,7 @@ async def diagnosis_worker():
                     error_result = DiagnosisResult.create_error(
                         diagnosis_id=request_id,
                         error=str(e),
+                        started_at=started_at,
                     )
                     # Attach request context even on error
                     if request is not None:
