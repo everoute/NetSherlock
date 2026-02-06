@@ -727,9 +727,6 @@ if _environment == 'development' or _cors_origins:
         max_age=600,  # Cache preflight requests for 10 minutes
     )
 
-# Chat router (LLM-based natural language diagnosis)
-from netsherlock.api.chat import router as chat_router
-app.include_router(chat_router)
 
 
 # Request/Response Models
@@ -1349,6 +1346,13 @@ async def cancel_diagnosis(
     logger.info(f"Diagnosis cancelled: {diagnosis_id}")
 
     return {"message": "Diagnosis cancelled successfully", "diagnosis_id": diagnosis_id}
+
+
+# Chat router (LLM-based natural language diagnosis)
+# Imported here (after all models are defined) to avoid circular import,
+# since chat.py imports DiagnosticRequest and other symbols from this module.
+from netsherlock.api.chat import router as chat_router  # noqa: E402
+app.include_router(chat_router)
 
 
 # CLI entry point for development
