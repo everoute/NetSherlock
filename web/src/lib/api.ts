@@ -79,7 +79,7 @@ export const api = {
       return diagnosis
     }
 
-    const response = await fetch(`${API_BASE_URL}/diagnosis/${id}`)
+    const response = await fetch(`${API_BASE_URL}/diagnose/${id}`)
     if (!response.ok) {
       throw new Error(`Failed to get diagnosis: ${response.statusText}`)
     }
@@ -111,13 +111,11 @@ export const api = {
 
   /**
    * Cancel a pending diagnosis
+   *
+   * Note: This endpoint is not yet implemented in the backend.
+   * The cancel functionality will be available in a future release.
    */
   async cancelDiagnosis(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/diagnosis/${id}/cancel`, {
-      method: 'POST',
-    })
-    if (!response.ok) {
-      throw new Error(`Failed to cancel diagnosis: ${response.statusText}`)
-    }
+    throw new Error('Cancel diagnosis functionality is not yet implemented in the backend')
   },
 }
