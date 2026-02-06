@@ -667,6 +667,12 @@ class DiagnosisResponse(BaseModel):
     timestamp: str
     trigger: str | None = None  # "manual", "webhook", "alert"
     mode: str | None = None  # "autonomous" or "interactive"
+    diagnosis_type: str | None = None  # latency, packet_drop, connectivity
+    network_type: str | None = None  # vm, system
+    src_host: str | None = None
+    src_vm: str | None = None
+    dst_host: str | None = None
+    dst_vm: str | None = None
     summary: str | None = None
     root_cause: dict[str, Any] | None = None
     recommendations: list[dict[str, Any]] | None = None
@@ -938,6 +944,12 @@ async def get_diagnosis(
         status=result.status.value,
         timestamp=timestamp,
         trigger=_map_source_to_trigger(result.source),
+        diagnosis_type=result.request_type or None,
+        network_type=result.network_type or None,
+        src_host=result.src_host or None,
+        src_vm=result.src_vm,
+        dst_host=result.dst_host,
+        dst_vm=result.dst_vm,
         summary=result.summary,
         root_cause={
             "category": result.root_cause.category.value if result.root_cause else None,
@@ -989,6 +1001,8 @@ async def list_diagnoses(
                 else ""
             ),
             trigger=_map_source_to_trigger(d.source),
+            diagnosis_type=d.request_type or None,
+            network_type=d.network_type or None,
             summary=d.summary,
         )
         for d in paginated

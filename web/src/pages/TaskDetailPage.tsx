@@ -119,6 +119,42 @@ export function TaskDetailPage() {
         </div>
       </div>
 
+      {(task.diagnosis_type || task.network_type || task.src_host) && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Request Parameters</h2>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            {task.diagnosis_type && (
+              <div>
+                <span className="text-gray-500">Diagnosis Type:</span>{' '}
+                <span className="text-gray-900">{task.diagnosis_type.replace('_', ' ')}</span>
+              </div>
+            )}
+            {task.network_type && (
+              <div>
+                <span className="text-gray-500">Network Type:</span>{' '}
+                <span className="text-gray-900">{task.network_type === 'vm' ? 'VM Network' : 'System Network'}</span>
+              </div>
+            )}
+            {task.src_host && (
+              <div>
+                <span className="text-gray-500">Source:</span>{' '}
+                <span className="text-gray-900 font-mono">
+                  {task.src_host}{task.src_vm ? ` (${task.src_vm})` : ''}
+                </span>
+              </div>
+            )}
+            {(task.dst_host || task.dst_vm) && (
+              <div>
+                <span className="text-gray-500">Destination:</span>{' '}
+                <span className="text-gray-900 font-mono">
+                  {task.dst_host || ''}{task.dst_vm ? ` (${task.dst_vm})` : ''}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {task.summary && (
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Summary</h2>

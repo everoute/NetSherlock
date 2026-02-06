@@ -64,6 +64,10 @@ export interface DiagnosisResponse {
   mode?: 'autonomous' | 'interactive'
   diagnosis_type?: 'latency' | 'packet_drop' | 'connectivity'
   network_type?: 'vm' | 'system'
+  src_host?: string
+  src_vm?: string
+  dst_host?: string
+  dst_vm?: string
   summary?: string
   root_cause?: RootCause
   recommendations?: Recommendation[]
