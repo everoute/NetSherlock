@@ -17,6 +17,7 @@ import hashlib
 import hmac
 import ipaddress
 import logging
+import os
 import secrets
 import uuid
 from contextlib import asynccontextmanager
@@ -24,6 +25,7 @@ from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 from netsherlock.config.settings import get_settings
@@ -438,6 +440,62 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+# ============================================================
+# CORS Configuration
+# ============================================================
+
+def setup_cors() -> list[str]:
+    """Configure CORS allowed origins based on environment.
+
+    Development: Allow localhost on all common ports
+    Production: Use CORS_ALLOWED_ORIGINS environment variable
+    """
+    import os
+
+    environment = os.getenv('ENVIRONMENT', 'development')
+
+    if environment == 'development':
+        # Allow localhost and 127.0.0.1 on common development ports
+        origins = [
+            "http://localhost:3000",    # Vite default
+            "http://localhost:5173",    # Vite alternative
+            "http://localhost:8080",    # Common dev port
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:8080",
+        ]
+        logger.info("CORS: Development mode - allowing localhost origins")
+    else:
+        # Production: Load from environment variable
+        cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', '')
+        origins = [o.strip() for o in cors_origins.split(',') if o.strip()]
+
+        if not origins:
+            logger.warning("CORS: CORS_ALLOWED_ORIGINS not configured in production!")
+            origins = []
+
+        logger.info(f"CORS: Production mode - {len(origins)} allowed origin(s)")
+
+    return origins
+
+
+# Configure CORS middleware
+_cors_origins = setup_cors()
+_environment = os.getenv('ENVIRONMENT', 'development')
+
+# In development, allow all origins if not explicitly configured
+if _environment == 'development' or _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins if _cors_origins else ["*"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+        expose_headers=["Content-Length", "Content-Range"],
+        max_age=600,  # Cache preflight requests for 10 minutes
+    )
 
 
 # Request/Response Models

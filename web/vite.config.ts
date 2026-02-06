@@ -13,10 +13,22 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8080',
+      // Proxy API endpoints to backend
+      '^/health': {
+        target: process.env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '^/diagnose': {
+        target: process.env.VITE_API_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '^/diagnosis': {
+        target: process.env.VITE_API_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '^/diagnoses': {
+        target: process.env.VITE_API_URL || 'http://localhost:8000',
+        changeOrigin: true,
       },
     },
   },

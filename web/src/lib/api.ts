@@ -1,8 +1,31 @@
 import type { DiagnosticRequest, DiagnosisResponse, HealthResponse } from '@/types'
 import { getMockDiagnosis, getMockDiagnosesList } from './mockData'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+/**
+ * Determine API base URL based on environment
+ * - Development: use empty string to leverage Vite proxy
+ * - Production: use VITE_API_URL environment variable
+ */
+const getApiBaseUrl = (): string => {
+  // Use full URL in production or when proxy is explicitly disabled
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  }
+  // In development, use relative paths (Vite proxy handles routing)
+  return ''
+}
+
+const API_BASE_URL = getApiBaseUrl()
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+
+// Log API configuration for debugging
+if (typeof window !== 'undefined') {
+  console.debug('[API Config]', {
+    baseUrl: API_BASE_URL || '(using Vite proxy)',
+    useMockData: USE_MOCK_DATA,
+    environment: import.meta.env.MODE,
+  })
+}
 
 interface ListOptions {
   limit?: number

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Configuration Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+        }
+
+        .test-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .test-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .result.success {
+            border-left-color: #4caf50;
+            background: #f1f8f4;
+        }
+
+        .result.error {
+            border-left-color: #f44336;
+            background: #fef5f5;
+            color: #c33;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 CORS Configuration Test</h1>
+
+        <div class="info-box">
+            <strong>说明：</strong>此页面测试 CORS 配置是否正确。
+            点击下面的按钮测试 API 端点。
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">API 端点测试</div>
+            <div class="test-group">
+                <button onclick="testEndpoint('/health', 'GET')">
+                    Test GET /health
+                </button>
+                <button onclick="testEndpoint('/diagnoses', 'GET')">
+                    Test GET /diagnoses
+                </button>
+                <button onclick="testEndpoint('/diagnose', 'POST')">
+                    Test POST /diagnose
+                </button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">测试结果</div>
+            <pre id="result" class="result">（等待测试...）</pre>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">浏览器信息</div>
+            <pre id="envInfo" class="result"></pre>
+        </div>
+    </div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+        const envDiv = document.getElementById('envInfo');
+
+        function updateResult(content, isSuccess) {
+            resultDiv.textContent = content;
+            resultDiv.className = isSuccess ? 'result success' : 'result error';
+        }
+
+        function showEnvInfo() {
+            const info = [
+                'Origin: ' + window.location.origin,
+                'Hostname: ' + window.location.hostname,
+                'Protocol: ' + window.location.protocol,
+                'Port: ' + window.location.port || '(default)',
+            ];
+            envDiv.textContent = info.join('\n');
+        }
+
+        async function testEndpoint(path, method) {
+            updateResult(`Testing ${method} ${path}...`, true);
+
+            try {
+                const options = { method };
+
+                if (method === 'POST') {
+                    options.headers = { 'Content-Type': 'application/json' };
+                    options.body = JSON.stringify({
+                        network_type: 'vm',
+                        diagnosis_type: 'latency',
+                        src_host: '192.168.1.1',
+                    });
+                }
+
+                const response = await fetch(path, options);
+                const text = await response.text();
+
+                let message = `✓ Success\n\nMethod: ${method}\nPath: ${path}\nStatus: ${response.status} ${response.statusText}\n\nResponse:\n${text}`;
+                updateResult(message, true);
+            } catch (error) {
+                let message = `✗ Error\n\nMethod: ${method}\nPath: ${path}\nError: ${error.message}\n\nPossible causes:\n- Backend is not running\n- Vite proxy not configured\n- CORS not enabled on backend`;
+                updateResult(message, false);
+            }
+        }
+
+        window.addEventListener('load', showEnvInfo);
+    </script>
+</body>
+</html>
