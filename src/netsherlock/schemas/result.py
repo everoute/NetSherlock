@@ -56,6 +56,12 @@ class DiagnosisResult:
     # === Request context ===
     source: DiagnosisRequestSource = DiagnosisRequestSource.CLI
     mode: DiagnosisMode = DiagnosisMode.AUTONOMOUS
+    network_type: str = ""
+    request_type: str = ""  # latency, packet_drop, connectivity
+    src_host: str = ""
+    src_vm: str | None = None
+    dst_host: str | None = None
+    dst_vm: str | None = None
 
     # === Diagnosis conclusions ===
     summary: str = ""
@@ -126,11 +132,18 @@ class DiagnosisResult:
         # Map controller's list[dict] recommendations to typed Recommendation
         raw_recs = state.analysis.get("recommendations", [])
         recommendations = []
+        _priority_str_to_int = {"high": 1, "medium": 2, "low": 3}
         for raw_rec in raw_recs:
             if isinstance(raw_rec, dict):
+                raw_prio = raw_rec.get("priority", 1)
+                priority = (
+                    _priority_str_to_int.get(raw_prio, 2)
+                    if isinstance(raw_prio, str)
+                    else raw_prio
+                )
                 recommendations.append(
                     Recommendation(
-                        priority=raw_rec.get("priority", 1),
+                        priority=priority,
                         action=raw_rec.get("action", ""),
                         command=raw_rec.get("command", ""),
                         metric=raw_rec.get("metric", ""),
@@ -139,6 +152,23 @@ class DiagnosisResult:
                 )
             elif isinstance(raw_rec, Recommendation):
                 recommendations.append(raw_rec)
+
+        # Fall back to analysis_result recommendations if state.analysis had none
+        if not recommendations and analysis_result and analysis_result.recommendations:
+            for rec in analysis_result.recommendations:
+                raw_prio = getattr(rec, "priority", "medium")
+                priority = (
+                    _priority_str_to_int.get(raw_prio, 2)
+                    if isinstance(raw_prio, str)
+                    else raw_prio
+                )
+                recommendations.append(
+                    Recommendation(
+                        priority=priority,
+                        action=getattr(rec, "action", ""),
+                        rationale=getattr(rec, "rationale", ""),
+                    )
+                )
 
         summary = ""
         if analysis_result:

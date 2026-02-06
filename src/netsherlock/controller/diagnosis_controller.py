@@ -1401,6 +1401,10 @@ class DiagnosisController:
 
         # Build AnalysisResult for internal use
         breakdown = self._calculate_breakdown(measurements)
+        # Override with analysis skill's total_rtt_us if measurements lacked it
+        if total_rtt_us > 0 and breakdown.total_rtt_us == 0:
+            breakdown.total_rtt_us = total_rtt_us
+            breakdown.calculate_layer_attribution()
         self._analysis_result = AnalysisResult(
             breakdown=breakdown,
             primary_contributor=breakdown.get_primary_contributor(),
@@ -1444,13 +1448,46 @@ class DiagnosisController:
                     )
                 )
 
+        # Map descriptive primary_contributor to RootCauseCategory value
+        contributor_to_category = {
+            "Sender Host Internal": "host_internal",
+            "Receiver Host Internal": "host_internal",
+            "Physical Network": "physical_network",
+            "VM Kernel": "vm_internal",
+            "Host OVS": "host_internal",
+            "Virtualization RX": "vhost_processing",
+            "Virtualization TX": "vhost_processing",
+            # LayerType enum values pass through as-is
+            "host_ovs": "host_internal",
+            "vm_kernel": "vm_internal",
+            "physical_network": "physical_network",
+            "virt_rx": "vhost_processing",
+            "virt_tx": "vhost_processing",
+        }
+        root_cause_category = contributor_to_category.get(
+            primary_contributor, primary_contributor
+        )
+
+        # Build recommendations dicts for state.analysis propagation
+        recommendations_dicts = [
+            {
+                "priority": rec.get("priority", "medium"),
+                "action": rec.get("action", ""),
+                "rationale": rec.get("rationale", ""),
+            }
+            for rec in raw_recs
+            if isinstance(rec, dict)
+        ]
+
         return {
             "status": "success",
             "analysis_skill": analysis_skill,
             "root_cause": {
-                "category": primary_contributor,
+                "category": root_cause_category,
+                "component": primary_contributor,
                 "confidence": confidence,
             },
+            "recommendations": recommendations_dicts,
             "breakdown": breakdown.to_dict(),
             "detailed_report": detailed_report,
             "markdown_report": markdown_report,

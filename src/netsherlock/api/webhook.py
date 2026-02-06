@@ -670,6 +670,7 @@ class DiagnosisResponse(BaseModel):
     summary: str | None = None
     root_cause: dict[str, Any] | None = None
     recommendations: list[dict[str, Any]] | None = None
+    markdown_report: str | None = None
     message: str | None = None
 
 
@@ -703,6 +704,7 @@ async def diagnosis_worker():
                     error="Diagnosis engine not initialized",
                 )
             else:
+                request = None
                 try:
                     # Build unified request from raw data
                     request = _build_diagnosis_request(
@@ -723,14 +725,33 @@ async def diagnosis_worker():
 
                     # Store result
                     diagnosis_store[request_id] = result
+
+                    # Attach request context to result
+                    if request is not None:
+                        result.network_type = request.network_type
+                        result.request_type = request.request_type
+                        result.src_host = request.src_host
+                        result.src_vm = request.src_vm
+                        result.dst_host = request.dst_host
+                        result.dst_vm = request.dst_vm
+
                     logger.info(f"Diagnosis completed: {request_id}")
 
                 except Exception as e:
                     logger.exception(f"Diagnosis failed for {request_id}: {e}")
-                    diagnosis_store[request_id] = DiagnosisResult.create_error(
+                    error_result = DiagnosisResult.create_error(
                         diagnosis_id=request_id,
                         error=str(e),
                     )
+                    # Attach request context even on error
+                    if request is not None:
+                        error_result.network_type = request.network_type
+                        error_result.request_type = request.request_type
+                        error_result.src_host = request.src_host
+                        error_result.src_vm = request.src_vm
+                        error_result.dst_host = request.dst_host
+                        error_result.dst_vm = request.dst_vm
+                    diagnosis_store[request_id] = error_result
 
         except asyncio.CancelledError:
             logger.info("Diagnosis worker cancelled")
@@ -928,6 +949,7 @@ async def get_diagnosis(
             {"priority": r.priority, "action": r.action, "command": r.command}
             for r in result.recommendations
         ] if result.recommendations else None,
+        markdown_report=result.markdown_report or None,
     )
 
 
