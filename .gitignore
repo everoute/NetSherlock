@@ -62,6 +62,9 @@ Thumbs.db
 **/CLAUDE.md
 !/CLAUDE.md
 
+# Runtime data
+data/
+
 # Project specific
 docs/planning-with-files/*
 docs/plans/*

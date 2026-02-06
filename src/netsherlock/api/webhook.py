@@ -16,12 +16,15 @@ import asyncio
 import hashlib
 import hmac
 import ipaddress
+import json
 import logging
 import os
 import secrets
+import tempfile
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -37,9 +40,215 @@ from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# In-memory storage for diagnosis results (use Redis/DB in production)
-diagnosis_store: dict[str, DiagnosisResult] = {}
 diagnosis_queue: asyncio.Queue = asyncio.Queue()
+
+
+class DiagnosisStore:
+    """Persistent diagnosis store backed by individual JSON files.
+
+    Provides dict-like access while persisting each diagnosis as a JSON file
+    under ``data_dir/diagnoses/``.  Files are written atomically (temp + rename)
+    and loaded on startup so tasks survive server restarts.
+
+    When ``data_dir`` is *None*, the store operates in memory-only mode
+    (backwards-compatible with the previous bare-dict implementation).
+    """
+
+    def __init__(self, data_dir: Path | None = None):
+        self._store: dict[str, DiagnosisResult] = {}
+        self._data_dir: Path | None = None
+        if data_dir and isinstance(data_dir, Path):
+            self._data_dir = data_dir / "diagnoses"
+            self._data_dir.mkdir(parents=True, exist_ok=True)
+            self._load_all()
+
+    # ---- dict-like interface ----
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._store
+
+    def __getitem__(self, key: str) -> DiagnosisResult:
+        return self._store[key]
+
+    def __setitem__(self, key: str, value: DiagnosisResult) -> None:
+        self._store[key] = value
+        self._persist(key, value)
+
+    def __delitem__(self, key: str) -> None:
+        del self._store[key]
+        if self._data_dir:
+            path = self._data_dir / f"{key}.json"
+            path.unlink(missing_ok=True)
+
+    def values(self):
+        return self._store.values()
+
+    def copy(self) -> dict[str, DiagnosisResult]:
+        return dict(self._store)
+
+    def clear(self) -> None:
+        self._store.clear()
+
+    def update(self, other: dict[str, DiagnosisResult]) -> None:
+        self._store.update(other)
+
+    # ---- persistence helpers ----
+
+    def save(self, key: str) -> None:
+        """Persist an existing entry after in-place mutation."""
+        if key in self._store:
+            self._persist(key, self._store[key])
+
+    def _persist(self, key: str, result: DiagnosisResult) -> None:
+        if self._data_dir is None:
+            return
+        data = self._serialize(result)
+        file_path = self._data_dir / f"{key}.json"
+        # Atomic write: temp file in same directory, then rename
+        fd, tmp_path = tempfile.mkstemp(
+            dir=self._data_dir, suffix=".tmp", prefix=f"{key}_"
+        )
+        try:
+            with os.fdopen(fd, "w") as f:
+                json.dump(data, f, indent=2, default=str)
+            os.replace(tmp_path, file_path)
+        except Exception:
+            # Clean up temp file on failure
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+
+    def _load_all(self) -> None:
+        if self._data_dir is None:
+            return
+        loaded = 0
+        for path in self._data_dir.glob("*.json"):
+            try:
+                with open(path) as f:
+                    data = json.load(f)
+                result = self._deserialize(data)
+                self._store[result.diagnosis_id] = result
+                loaded += 1
+            except Exception as e:
+                logger.warning(f"Failed to load diagnosis from {path.name}: {e}")
+        if loaded:
+            logger.info(f"Loaded {loaded} diagnosis(es) from disk")
+
+    # ---- serialization ----
+
+    @staticmethod
+    def _serialize(result: DiagnosisResult) -> dict[str, Any]:
+        from netsherlock.schemas.report import Recommendation as ReportRecommendation
+
+        data: dict[str, Any] = {
+            "diagnosis_id": result.diagnosis_id,
+            "status": result.status.value,
+            "phase": result.phase,
+            "started_at": result.started_at.isoformat() if result.started_at else None,
+            "completed_at": result.completed_at.isoformat() if result.completed_at else None,
+            "source": result.source.value,
+            "mode": result.mode.value,
+            "network_type": result.network_type,
+            "request_type": result.request_type,
+            "src_host": result.src_host,
+            "src_vm": result.src_vm,
+            "dst_host": result.dst_host,
+            "dst_vm": result.dst_vm,
+            "summary": result.summary,
+            "root_cause": result.root_cause.model_dump(mode="json") if result.root_cause else None,
+            "recommendations": [
+                r.model_dump(mode="json") if isinstance(r, ReportRecommendation) else {"priority": r.priority, "action": r.action, "rationale": getattr(r, "rationale", "")}
+                for r in result.recommendations
+            ],
+            "confidence": result.confidence,
+            "l1_observations": result.l1_observations,
+            "l2_environment": result.l2_environment,
+            "l3_measurements": result.l3_measurements,
+            "l4_analysis": result.l4_analysis,
+            "analysis_result": result.analysis_result.to_dict() if result.analysis_result else None,
+            "markdown_report": result.markdown_report,
+            "report_path": result.report_path,
+            "checkpoint_history": result.checkpoint_history,
+            "error": result.error,
+        }
+        return data
+
+    @staticmethod
+    def _deserialize(data: dict[str, Any]) -> DiagnosisResult:
+        from netsherlock.schemas.report import (
+            Recommendation as ReportRecommendation,
+            RootCause,
+            RootCauseCategory,
+        )
+
+        root_cause = None
+        if data.get("root_cause"):
+            rc = data["root_cause"]
+            try:
+                category = RootCauseCategory(rc.get("category", "unknown"))
+            except ValueError:
+                category = RootCauseCategory.UNKNOWN
+            root_cause = RootCause(
+                category=category,
+                component=rc.get("component", ""),
+                confidence=rc.get("confidence", 0.0),
+                evidence=rc.get("evidence", []),
+                contributing_factors=rc.get("contributing_factors", []),
+            )
+
+        recommendations = []
+        for r in data.get("recommendations", []):
+            if isinstance(r, dict):
+                recommendations.append(ReportRecommendation(
+                    priority=r.get("priority", 1),
+                    action=r.get("action", ""),
+                    command=r.get("command", ""),
+                    metric=r.get("metric", ""),
+                    rationale=r.get("rationale", ""),
+                ))
+
+        started_at = None
+        if data.get("started_at"):
+            started_at = datetime.fromisoformat(data["started_at"])
+        completed_at = None
+        if data.get("completed_at"):
+            completed_at = datetime.fromisoformat(data["completed_at"])
+
+        return DiagnosisResult(
+            diagnosis_id=data["diagnosis_id"],
+            status=DiagnosisStatus(data.get("status", "error")),
+            phase=data.get("phase", ""),
+            started_at=started_at,
+            completed_at=completed_at,
+            source=DiagnosisRequestSource(data.get("source", "cli")),
+            mode=DiagnosisMode(data.get("mode", "autonomous")),
+            network_type=data.get("network_type", ""),
+            request_type=data.get("request_type", ""),
+            src_host=data.get("src_host", ""),
+            src_vm=data.get("src_vm"),
+            dst_host=data.get("dst_host"),
+            dst_vm=data.get("dst_vm"),
+            summary=data.get("summary", ""),
+            root_cause=root_cause,
+            recommendations=recommendations,
+            confidence=data.get("confidence", 0.0),
+            l1_observations=data.get("l1_observations", {}),
+            l2_environment=data.get("l2_environment", {}),
+            l3_measurements=data.get("l3_measurements", {}),
+            l4_analysis=data.get("l4_analysis", {}),
+            # analysis_result: skip deserialization — raw dict stored, not needed for API
+            analysis_result=None,
+            markdown_report=data.get("markdown_report", ""),
+            report_path=data.get("report_path", ""),
+            checkpoint_history=data.get("checkpoint_history", []),
+            error=data.get("error"),
+        )
+
+
+# Initialized in lifespan(); memory-only fallback for tests
+diagnosis_store: DiagnosisStore = DiagnosisStore()
 
 # Global engine instance (DiagnosisEngine protocol)
 engine: Any = None  # DiagnosisEngine protocol — Any to avoid circular import
@@ -421,10 +630,13 @@ def _map_alert_to_type(alertname: str) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
-    global engine, _global_inventory
+    global engine, _global_inventory, diagnosis_store
 
     # Startup
     settings = get_settings()
+
+    # Initialize persistent diagnosis store
+    diagnosis_store = DiagnosisStore(data_dir=settings.data_dir)
     logger.info(f"Initializing diagnosis engine: {settings.diagnosis_engine}")
     engine = _create_engine(settings)
     logger.info(f"Engine initialized: {getattr(engine, 'engine_type', 'unknown')}")
@@ -740,6 +952,7 @@ async def diagnosis_worker():
                                 entry = diagnosis_store[rid]
                                 entry.status = DiagnosisStatus(state.status.value)
                                 entry.phase = state.phase.value
+                                diagnosis_store.save(rid)
                         return on_progress
 
                     # Execute via engine protocol
@@ -765,6 +978,7 @@ async def diagnosis_worker():
                         result.src_vm = request.src_vm
                         result.dst_host = request.dst_host
                         result.dst_vm = request.dst_vm
+                        diagnosis_store.save(request_id)
 
                     logger.info(f"Diagnosis completed: {request_id}")
 
@@ -1126,6 +1340,7 @@ async def cancel_diagnosis(
     result.status = DiagnosisStatus.CANCELLED
     result.completed_at = datetime.now(timezone.utc)
     result.summary = result.summary or "Diagnosis cancelled by user"
+    diagnosis_store.save(diagnosis_id)
 
     logger.info(f"Diagnosis cancelled: {diagnosis_id}")
 

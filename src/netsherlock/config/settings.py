@@ -267,6 +267,12 @@ class Settings(BaseSettings):
         description="Diagnosis engine type (DIAGNOSIS_ENGINE env var)",
     )
 
+    # Data persistence
+    data_dir: Path = Field(
+        default=Path("data"),
+        description="Directory for persistent data storage (DATA_DIR env var)",
+    )
+
     # Path configuration
     global_inventory_path: Path | None = Field(
         default=None,
