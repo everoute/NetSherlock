@@ -147,32 +147,32 @@ graph TB
 ```mermaid
 graph TD
     subgraph Triggers["触发层"]
-        AM["Alertmanager\nWebhook"]
+        AM["Alertmanager Webhook"]
         API["REST API"]
         CLI["CLI"]
     end
 
     AM & API & CLI --> DE["DiagnosisEngine Protocol"]
 
-    DE -.-> OE["OrchestratorEngine\nReAct 自主编排\nMain Agent + Subagents"]
-    DE --> CE["ControllerEngine\n确定性编排\nL1 - L2 - L3 - L4"]
+    DE -.-> OE["OrchestratorEngine ReAct 自主编排 Main Agent + Subagents"]
+    DE --> CE["ControllerEngine 确定性编排 L1 - L2 - L3 - L4"]
 
     OE --> SL
     CE --> SL
 
     subgraph SL["Skill Layer"]
         direction LR
-        SLDesc["共享抽象层\n每次 Skill 执行\n均调用 LLM\nSkillExecutor\n→ Claude Agent SDK"]:::desc
-        S1["L2 Env\nnetwork-env-collector"]
-        S2["L3 Measure\npath-tracer\nlatency-measurement"]
-        S3["L4 Analysis\nlatency/drop analysis\nkernel-stack-analyzer"]
+        SLDesc["共享抽象层 每次 Skill 执行均调用 LLM SkillExecutor → Claude Agent SDK"]:::desc
+        S1["L2 Env network-env-collector"]
+        S2["L3 Measure path-tracer latency-measurement"]
+        S3["L4 Analysis latency/drop analysis kernel-stack-analyzer"]
     end
 
     SL --> LLM
 
     subgraph LLM["LLM 决策引擎"]
         direction LR
-        LLMCore["综合分析\n生成下一步建议"]
+        LLMCore["综合分析 生成下一步建议"]
         subgraph Context["内部 Context 整合"]
             direction TB
             CTX1["相关代码 Repo"]
@@ -185,29 +185,30 @@ graph TD
 
     LLMCore --> Suggest["下一步建议列表"]
 
-    Suggest -->|"Interactive:\nCheckpoint 等待用户选择"| UserChoice{"用户选择"}
-    UserChoice -->|"选择继续\n指定 Skill 组合"| CE
+    Suggest -->|"Interactive: Checkpoint 等待用户选择"| UserChoice{"用户选择"}
+    UserChoice -->|"选择继续 指定 Skill 组合"| CE
     UserChoice -->|"退出诊断"| Result
 
-    Suggest -->|"Autonomous 多层:\nLLM 自动判定"| AutoDecide{"自动评估"}
+    Suggest -->|"Autonomous 多层: LLM 自动判定"| AutoDecide{"自动评估"}
     AutoDecide -->|"继续"| CE
     AutoDecide -->|"完成"| Result
 
-    Result["DiagnosisResult\n含全部 Stage 历史"]
+    Result["DiagnosisResult 含全部 Stage 历史"]:::result
 
     S1 & S2 --> Infra
     S3 -.-> Infra
 
     subgraph Infra["基础设施层"]
         direction LR
-        SSH["SSH Manager\n远程执行"]
-        BPF["BPF Tools\n65+个eBPF工具"]
-        L1Mon["L1 监控/告警\nGrafana / Prometheus 等"]
+        SSH["SSH Manager 远程执行"]
+        BPF["BPF Tools 65+个eBPF工具"]
+        L1Mon["L1 监控/告警 Grafana / Prometheus 等"]
     end
 
     L1Mon -.->|"告警触发"| AM
 
     classDef desc fill:#c8e6c9,stroke:#81c784,color:#1b5e20,font-size:12px
+    classDef result fill:#ff7043,stroke:#e64a19,color:#fff,stroke-width:3px,font-weight:bold,font-size:14px
     style SL fill:#e8f5e9
     style LLM fill:#e1bee7
     style Context fill:#f3e5f5
