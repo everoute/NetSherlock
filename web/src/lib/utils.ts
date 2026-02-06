@@ -1,6 +1,55 @@
 import type { RootCauseCategory, DiagnosisStatus } from '@/types'
 
 /**
+ * The 4 main diagnosis phases displayed in the progress stepper
+ */
+export const DIAGNOSIS_PHASES = [
+  { key: 'l1_monitoring', label: 'L1 Monitoring' },
+  { key: 'l2_environment', label: 'L2 Environment' },
+  { key: 'l3_measurement', label: 'L3 Measurement' },
+  { key: 'l4_analysis', label: 'L4 Analysis' },
+] as const
+
+/**
+ * Map a backend phase string to a human-readable label
+ */
+export function getPhaseLabel(phase: string | undefined): string {
+  const labels: Record<string, string> = {
+    init: 'Initializing',
+    l1_monitoring: 'L1 Monitoring',
+    l2_environment: 'L2 Environment',
+    classification: 'Classification',
+    measurement_planning: 'Measurement Planning',
+    l3_measurement: 'L3 Measurement',
+    l4_analysis: 'L4 Analysis',
+    report_generation: 'Report Generation',
+    completed: 'Completed',
+  }
+  return labels[phase || ''] || phase || 'Unknown'
+}
+
+/**
+ * Map a backend phase string to a 0-based step index among the 4 main phases.
+ * Returns -1 for phases before L1, and 4 for phases after L4.
+ */
+export function getPhaseStep(phase: string | undefined): number {
+  if (!phase) return -1
+  // Map each backend phase to which of the 4 main steps it corresponds to
+  const stepMap: Record<string, number> = {
+    init: -1,
+    l1_monitoring: 0,
+    l2_environment: 1,
+    classification: 1,
+    measurement_planning: 2,
+    l3_measurement: 2,
+    l4_analysis: 3,
+    report_generation: 4,
+    completed: 4,
+  }
+  return stepMap[phase] ?? -1
+}
+
+/**
  * Merge classnames together, filtering out falsy values
  */
 export function cn(...classes: (string | undefined | null | false)[]): string {

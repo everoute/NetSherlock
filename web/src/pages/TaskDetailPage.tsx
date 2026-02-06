@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { api } from '@/lib/api'
 import type { DiagnosisResponse } from '@/types'
 import { StatusBadge } from '@/components/StatusBadge'
+import { DiagnosisProgress } from '@/components/DiagnosisProgress'
 import { formatRelativeTime, formatDuration, copyToClipboard } from '@/lib/utils'
 
 export function TaskDetailPage() {
@@ -95,6 +96,12 @@ export function TaskDetailPage() {
         </div>
         <StatusBadge status={task.status} size="lg" />
       </div>
+
+      {(task.status === 'running' || task.status === 'waiting') && task.phase && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <DiagnosisProgress phase={task.phase} />
+        </div>
+      )}
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
         <div className="grid grid-cols-2 gap-4 text-sm">

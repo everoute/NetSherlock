@@ -56,6 +56,7 @@ export interface LogFile {
 export interface DiagnosisResponse {
   diagnosis_id: string
   status: DiagnosisStatus
+  phase?: string
   timestamp: string
   started_at?: string
   completed_at?: string

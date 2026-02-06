@@ -4,7 +4,7 @@ import { Eye, RotateCw, FileText, Hand, Webhook, Bell, XCircle } from 'lucide-re
 import { api } from '@/lib/api'
 import type { DiagnosisResponse, DiagnosisStatus } from '@/types'
 import { StatusBadge } from '@/components/StatusBadge'
-import { formatRelativeTime, formatTaskName } from '@/lib/utils'
+import { formatRelativeTime, formatTaskName, getPhaseLabel } from '@/lib/utils'
 
 export function TasksPage() {
   const [tasks, setTasks] = useState<DiagnosisResponse[]>([])
@@ -238,6 +238,11 @@ export function TasksPage() {
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={task.status} size="sm" />
+                      {(task.status === 'running' || task.status === 'waiting') && task.phase && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {getPhaseLabel(task.phase)}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {formatRelativeTime(task.started_at || task.timestamp)}
