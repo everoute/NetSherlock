@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { Eye, RotateCw, XCircle, FileText, Hand, Webhook, Bell } from 'lucide-react'
+import { Eye, RotateCw, FileText, Hand, Webhook, Bell, XCircle } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { DiagnosisResponse, DiagnosisStatus } from '@/types'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -87,14 +87,6 @@ export function TasksPage() {
           Logs
         </Link>,
       )
-      actions.push(
-        <button
-          key="cancel"
-          className="text-red-600 hover:text-red-700 text-sm font-medium"
-        >
-          Cancel
-        </button>,
-      )
     }
 
     if (task.status === 'completed') {
@@ -120,15 +112,6 @@ export function TasksPage() {
           <Eye className="h-4 w-4" />
           Logs
         </Link>,
-      )
-      actions.push(
-        <button
-          key="retry"
-          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
-        >
-          <RotateCw className="h-4 w-4" />
-          Retry
-        </button>,
       )
     }
 

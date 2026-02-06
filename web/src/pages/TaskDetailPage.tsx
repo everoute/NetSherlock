@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { ArrowLeft, Copy, XCircle } from 'lucide-react'
+import { ArrowLeft, Copy, FileText } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { api } from '@/lib/api'
@@ -67,8 +67,6 @@ export function TaskDetailPage() {
     )
   }
 
-  const isRunning = task.status === 'running' || task.status === 'waiting'
-
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <Link
@@ -112,7 +110,6 @@ export function TaskDetailPage() {
             <span className="text-gray-500">Duration:</span>{' '}
             <span className="text-gray-900">
               {formatDuration(task.started_at, task.completed_at)}
-              {isRunning && ' (running)'}
             </span>
           </div>
           <div>
@@ -156,11 +153,6 @@ export function TaskDetailPage() {
                 <div className="text-gray-600">
                   [<span className="text-blue-600">{task.started_at ? formatRelativeTime(task.started_at) : 'N/A'}</span>]
                   Mode: {task.mode}
-                </div>
-              )}
-              {isRunning && (
-                <div className="text-blue-600 animate-pulse">
-                  ▌ Processing...
                 </div>
               )}
               {task.completed_at && (
@@ -218,22 +210,17 @@ export function TaskDetailPage() {
         </div>
       )}
 
-      <div className="mt-6 flex gap-3">
-        {isRunning && (
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">
-            <XCircle className="h-4 w-4" />
-            Cancel
-          </button>
-        )}
-        {task.status === 'completed' && (
+      {task.status === 'completed' && (
+        <div className="mt-6">
           <Link
             to={`/reports/${task.diagnosis_id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
+            <FileText className="h-4 w-4" />
             View Report
           </Link>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
