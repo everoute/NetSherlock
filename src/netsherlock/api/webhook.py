@@ -664,6 +664,7 @@ class DiagnosisResponse(BaseModel):
 
     diagnosis_id: str
     status: str  # "queued", "processing", "completed", "error"
+    phase: str | None = None  # Current diagnosis phase (e.g. "l1_monitoring", "l3_measurement")
     timestamp: str
     started_at: str | None = None
     completed_at: str | None = None
@@ -732,8 +733,20 @@ async def diagnosis_worker():
                         )
                         continue
 
+                    # Define progress callback to update diagnosis_store in real-time
+                    def _make_progress_callback(rid: str):
+                        def on_progress(state):
+                            if rid in diagnosis_store:
+                                entry = diagnosis_store[rid]
+                                entry.status = DiagnosisStatus(state.status.value)
+                                entry.phase = state.phase.value
+                        return on_progress
+
                     # Execute via engine protocol
-                    result = await engine.execute(request=request)
+                    result = await engine.execute(
+                        request=request,
+                        progress_callback=_make_progress_callback(request_id),
+                    )
 
                     # Ensure started_at is set
                     if not result.started_at:
@@ -858,9 +871,19 @@ async def receive_alertmanager_webhook(
 
         await diagnosis_queue.put(("alert", diagnosis_id, alert_data))
 
+        # Store initial result so GET /diagnose/{id} returns immediately
+        diagnosis_store[diagnosis_id] = DiagnosisResult(
+            diagnosis_id=diagnosis_id,
+            status=DiagnosisStatus.PENDING,
+            phase="queued",
+            source=DiagnosisRequestSource.WEBHOOK,
+            mode=effective_mode,
+        )
+
         responses.append(DiagnosisResponse(
             diagnosis_id=diagnosis_id,
             status="queued",
+            phase="queued",
             timestamp=datetime.now(timezone.utc).isoformat(),
             trigger="alert",
             mode=effective_mode.value,
@@ -918,6 +941,15 @@ async def create_diagnosis(
     request_data["alert_type"] = alert_type_for_mode  # Include for mode selection
     await diagnosis_queue.put(("manual", diagnosis_id, request_data))
 
+    # Store initial result so GET /diagnose/{id} returns immediately
+    diagnosis_store[diagnosis_id] = DiagnosisResult(
+        diagnosis_id=diagnosis_id,
+        status=DiagnosisStatus.PENDING,
+        phase="queued",
+        source=DiagnosisRequestSource.API,
+        mode=effective_mode,
+    )
+
     logger.info(
         f"Manual diagnosis queued: {diagnosis_id} - {request.network_type}/{request.diagnosis_type} (mode={effective_mode.value})"
     )
@@ -925,6 +957,7 @@ async def create_diagnosis(
     return DiagnosisResponse(
         diagnosis_id=diagnosis_id,
         status="queued",
+        phase="queued",
         timestamp=datetime.now(timezone.utc).isoformat(),
         trigger="manual",
         mode=effective_mode.value,
@@ -961,6 +994,7 @@ async def get_diagnosis(
     return DiagnosisResponse(
         diagnosis_id=result.diagnosis_id,
         status=result.status.value,
+        phase=result.phase or None,
         timestamp=timestamp,
         started_at=result.started_at.isoformat() if result.started_at else None,
         completed_at=result.completed_at.isoformat() if result.completed_at else None,
@@ -1018,6 +1052,7 @@ async def list_diagnoses(
         DiagnosisResponse(
             diagnosis_id=d.diagnosis_id,
             status=d.status.value,
+            phase=d.phase or None,
             timestamp=(
                 d.completed_at.isoformat() if d.completed_at
                 else d.started_at.isoformat() if d.started_at

@@ -7,6 +7,7 @@ for a structured, phase-by-phase diagnostic workflow.
 from __future__ import annotations
 
 import structlog
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -78,6 +79,7 @@ class ControllerEngine:
     async def execute(
         self,
         request: DiagnosisRequest,
+        progress_callback: Callable[[Any], None] | None = None,
     ) -> DiagnosisResult:
         """Execute diagnosis via DiagnosisController.
 
@@ -125,6 +127,7 @@ class ControllerEngine:
             llm_permission_mode=self._llm_permission_mode,
             bpf_local_tools_path=self._bpf_local_tools_path,
             bpf_remote_tools_path=self._bpf_remote_tools_path,
+            progress_callback=progress_callback,
         )
 
         return await controller.run(

@@ -48,6 +48,7 @@ class DiagnosisResult:
     # === Core identification ===
     diagnosis_id: str
     status: DiagnosisStatus
+    phase: str = ""  # Current diagnosis phase (e.g. "l1_monitoring", "l3_measurement")
 
     # === Time information ===
     started_at: datetime | None = None
@@ -186,6 +187,7 @@ class DiagnosisResult:
         result = cls(
             diagnosis_id=state.diagnosis_id,
             status=DiagnosisStatus(state.status.value),
+            phase=state.phase.value,
             started_at=state.started_at,
             completed_at=state.completed_at,
             source=DiagnosisRequestSource.CLI,

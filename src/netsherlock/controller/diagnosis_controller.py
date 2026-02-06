@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -228,6 +229,7 @@ class DiagnosisController:
         llm_permission_mode: str | None = None,
         bpf_local_tools_path: str | Path | None = None,
         bpf_remote_tools_path: str | Path | None = None,
+        progress_callback: Callable[[Any], None] | None = None,
     ):
         """Initialize controller.
 
@@ -258,6 +260,7 @@ class DiagnosisController:
         self._bpf_local_tools_path = Path(bpf_local_tools_path) if bpf_local_tools_path else None
         self._bpf_remote_tools_path = Path(bpf_remote_tools_path) if bpf_remote_tools_path else Path("/tmp/netsherlock-tools")
 
+        self._progress_callback = progress_callback
         self._state: DiagnosisState | None = None
         self._checkpoint_manager: CheckpointManager | None = None
         self._interrupt_event = asyncio.Event()
@@ -295,6 +298,14 @@ class DiagnosisController:
             max_turns=self._llm_max_turns,
             max_budget_usd=self._llm_max_budget_usd,
         )
+
+    def _notify_progress(self) -> None:
+        """Notify progress callback with current state, if set."""
+        if self._progress_callback is not None and self._state is not None:
+            try:
+                self._progress_callback(self._state)
+            except Exception:
+                self._log.warning("progress_callback_error", exc_info=True)
 
     def _load_minimal_input(self, request: DiagnosisRequest) -> MinimalInputConfig:
         """Load or build MinimalInputConfig.
@@ -461,36 +472,42 @@ class DiagnosisController:
 
         # Phase 1: L1 Monitoring
         state.phase = DiagnosisPhase.L1_MONITORING
+        self._notify_progress()
         if self._check_interrupt():
             return self._interrupted_result()
         state.l1_context = await self._query_monitoring(request)
 
         # Phase 2: L2 Environment
         state.phase = DiagnosisPhase.L2_ENVIRONMENT
+        self._notify_progress()
         if self._check_interrupt():
             return self._interrupted_result()
         state.environment = await self._collect_environment(request, state.l1_context)
 
         # Phase 3: Classification
         state.phase = DiagnosisPhase.CLASSIFICATION
+        self._notify_progress()
         if self._check_interrupt():
             return self._interrupted_result()
         state.classification = await self._classify_problem(state.environment, request)
 
         # Phase 4: Measurement Planning
         state.phase = DiagnosisPhase.MEASUREMENT_PLANNING
+        self._notify_progress()
         if self._check_interrupt():
             return self._interrupted_result()
         state.measurement_plan = await self._plan_measurement(state.classification, state.environment, request)
 
         # Phase 5: L3 Measurement
         state.phase = DiagnosisPhase.L3_MEASUREMENT
+        self._notify_progress()
         if self._check_interrupt():
             return self._interrupted_result()
         state.measurements = await self._execute_measurement(state.measurement_plan, state.environment)
 
         # Phase 6: L4 Analysis
         state.phase = DiagnosisPhase.L4_ANALYSIS
+        self._notify_progress()
         if self._check_interrupt():
             return self._interrupted_result()
         state.analysis = await self._analyze_and_report(
@@ -500,6 +517,7 @@ class DiagnosisController:
         # Complete
         state.phase = DiagnosisPhase.COMPLETED
         state.status = DiagnosisStatus.COMPLETED
+        self._notify_progress()
 
         self._log.info(
             "diagnosis_completed",
@@ -525,14 +543,17 @@ class DiagnosisController:
 
         # Phase 1: L1 Monitoring
         state.phase = DiagnosisPhase.L1_MONITORING
+        self._notify_progress()
         state.l1_context = await self._query_monitoring(request)
 
         # Phase 2: L2 Environment
         state.phase = DiagnosisPhase.L2_ENVIRONMENT
+        self._notify_progress()
         state.environment = await self._collect_environment(request, state.l1_context)
 
         # Phase 3: Classification
         state.phase = DiagnosisPhase.CLASSIFICATION
+        self._notify_progress()
         state.classification = await self._classify_problem(state.environment, request)
 
         # Checkpoint 1: Problem Classification
@@ -561,6 +582,7 @@ class DiagnosisController:
 
         # Phase 4: Measurement Planning
         state.phase = DiagnosisPhase.MEASUREMENT_PLANNING
+        self._notify_progress()
         state.measurement_plan = await self._plan_measurement(state.classification, state.environment, request)
 
         # Checkpoint 2: Measurement Plan
@@ -584,10 +606,12 @@ class DiagnosisController:
 
         # Phase 5: L3 Measurement
         state.phase = DiagnosisPhase.L3_MEASUREMENT
+        self._notify_progress()
         state.measurements = await self._execute_measurement(state.measurement_plan, state.environment)
 
         # Phase 6: L4 Analysis
         state.phase = DiagnosisPhase.L4_ANALYSIS
+        self._notify_progress()
         state.analysis = await self._analyze_and_report(
             state.measurements, state.environment, state.measurement_plan
         )
@@ -595,6 +619,7 @@ class DiagnosisController:
         # Complete
         state.phase = DiagnosisPhase.COMPLETED
         state.status = DiagnosisStatus.COMPLETED
+        self._notify_progress()
 
         self._log.info(
             "diagnosis_completed",
