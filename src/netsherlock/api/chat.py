@@ -4,14 +4,18 @@ LLM chat endpoint for natural language diagnosis creation.
 Users describe network problems in natural language (Chinese/English),
 and the LLM parses intent, extracts parameters, and creates diagnosis
 tasks via the existing queue.
+
+Uses claude-agent-sdk for LLM calls, inheriting Claude Code's auth
+(OAuth, API key, or cloud provider) automatically.
 """
 
+import json
 import logging
-import os
+import re
 from datetime import datetime
 from typing import Annotated, Literal
 
-import anthropic
+from claude_agent_sdk import AssistantMessage, ClaudeAgentOptions, ResultMessage, query
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -26,7 +30,6 @@ from netsherlock.api.webhook import (
     generate_diagnosis_id,
     verify_api_key,
 )
-from netsherlock.schemas.config import DiagnosisMode
 
 logger = logging.getLogger(__name__)
 
@@ -54,78 +57,41 @@ class ChatResponse(BaseModel):
 
 
 # ============================================================
-# System prompt & tool definition
+# System prompt
 # ============================================================
 
-SYSTEM_PROMPT = """你是 NetSherlock 网络诊断助手。用户会用中文或英文描述网络问题，你需要：
+SYSTEM_PROMPT = """你是 NetSherlock 网络诊断助手。用户会用中文或英文描述网络问题，你需要理解问题并提取诊断参数。
 
-1. 理解用户描述的网络问题
-2. 提取诊断所需的参数
-3. 当参数充分时，调用 create_diagnosis 工具创建诊断任务
+当用户提供了足够的信息来创建诊断任务时，请回复一个 JSON 代码块（用 ```json 包裹），格式如下：
+```json
+{"action": "create_diagnosis", "params": {"network_type": "...", "diagnosis_type": "...", ...}}
+```
+
+可用的参数字段：
+- network_type: "vm"（虚拟机网络）或 "system"（主机网络）【必填】
+- diagnosis_type: "latency"（延迟）、"packet_drop"（丢包）、"connectivity"（连通性）【必填】
+- src_host: 源主机管理 IP 地址
+- dst_host: 目标主机管理 IP 地址
+- src_vm: 源 VM UUID
+- dst_vm: 目标 VM UUID
+- src_vm_name: 源 VM 名称（用于通过 GlobalInventory 解析）
+- dst_vm_name: 目标 VM 名称
+- description: 问题描述
 
 参数推断规则：
 - "延迟"、"慢"、"latency" → diagnosis_type = "latency"
 - "丢包"、"丢失"、"drop"、"loss" → diagnosis_type = "packet_drop"
 - "不通"、"断开"、"connectivity" → diagnosis_type = "connectivity"
-- 如果提到 VM 名称（如 "vm-xxx"）但没有 IP，使用 src_vm_name/dst_vm_name 字段
-- 如果提到 IP 地址，使用 src_host/dst_host 字段
-- 如果涉及 VM，network_type = "vm"；如果是主机之间的问题，network_type = "system"
-- 如果没有明确说明网络类型，根据是否提到 VM 来推断：有 VM 信息则为 "vm"，否则为 "system"
+- 如果提到 VM 名称但没有 IP，使用 src_vm_name/dst_vm_name
+- 如果提到 IP 地址，使用 src_host/dst_host
+- 如果涉及 VM，network_type = "vm"；否则为 "system"
+- 如果没有明确说明网络类型，根据是否提到 VM 来推断
 
 交互原则：
-- 如果用户信息不足以创建诊断（例如缺少源地址），礼貌地询问缺少的信息
+- 如果用户信息不足（例如缺少源地址），礼貌地询问缺少的信息，不要输出 JSON
 - 用中文回复用户
-- 创建诊断后，简洁确认并告知诊断 ID
+- 创建诊断后，在 JSON 块之后简洁确认
 - 不要编造或猜测 IP 地址和 VM UUID"""
-
-CREATE_DIAGNOSIS_TOOL = {
-    "name": "create_diagnosis",
-    "description": "创建网络诊断任务。当用户提供了足够的参数时调用此工具。",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "network_type": {
-                "type": "string",
-                "enum": ["vm", "system"],
-                "description": "网络类型：vm（虚拟机网络）或 system（主机网络）",
-            },
-            "diagnosis_type": {
-                "type": "string",
-                "enum": ["latency", "packet_drop", "connectivity"],
-                "description": "诊断类型",
-            },
-            "src_host": {
-                "type": "string",
-                "description": "源主机管理 IP 地址",
-            },
-            "src_vm": {
-                "type": "string",
-                "description": "源 VM UUID",
-            },
-            "dst_host": {
-                "type": "string",
-                "description": "目标主机管理 IP 地址",
-            },
-            "dst_vm": {
-                "type": "string",
-                "description": "目标 VM UUID",
-            },
-            "src_vm_name": {
-                "type": "string",
-                "description": "源 VM 名称（用于通过 GlobalInventory 解析）",
-            },
-            "dst_vm_name": {
-                "type": "string",
-                "description": "目标 VM 名称（用于通过 GlobalInventory 解析）",
-            },
-            "description": {
-                "type": "string",
-                "description": "问题描述",
-            },
-        },
-        "required": ["network_type", "diagnosis_type"],
-    },
-}
 
 
 # ============================================================
@@ -133,22 +99,34 @@ CREATE_DIAGNOSIS_TOOL = {
 # ============================================================
 
 
-def _get_anthropic_client() -> anthropic.Anthropic:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="ANTHROPIC_API_KEY not configured",
-        )
-    return anthropic.Anthropic(api_key=api_key)
+def _extract_diagnosis_json(text: str) -> dict | None:
+    """Extract diagnosis JSON from assistant's response."""
+    # Match ```json ... ``` blocks
+    pattern = r"```json\s*\n?\s*(\{.*?\})\s*\n?\s*```"
+    match = re.search(pattern, text, re.DOTALL)
+    if not match:
+        return None
+
+    try:
+        data = json.loads(match.group(1))
+        if data.get("action") == "create_diagnosis" and "params" in data:
+            return data["params"]
+    except (json.JSONDecodeError, KeyError):
+        pass
+    return None
 
 
-async def _create_diagnosis_from_tool(params: dict) -> tuple[str, str]:
-    """Create a diagnosis from tool-use parameters.
+def _clean_reply(text: str) -> str:
+    """Remove the JSON block from the reply text shown to the user."""
+    cleaned = re.sub(r"```json\s*\n?\s*\{.*?\}\s*\n?\s*```", "", text, flags=re.DOTALL)
+    return cleaned.strip()
+
+
+async def _create_diagnosis_from_params(params: dict) -> tuple[str, str]:
+    """Create a diagnosis from extracted parameters.
 
     Returns (diagnosis_id, confirmation_message).
     """
-    # Build DiagnosticRequest for validation
     try:
         diag_request = DiagnosticRequest(
             network_type=params["network_type"],
@@ -166,19 +144,16 @@ async def _create_diagnosis_from_tool(params: dict) -> tuple[str, str]:
 
     diagnosis_id = generate_diagnosis_id("chat")
 
-    # Determine mode
     alert_type_for_mode = (
         "VMNetworkLatency" if diag_request.network_type == "vm" else "HostNetworkLatency"
     )
     effective_mode = determine_webhook_mode(alert_type=alert_type_for_mode)
 
-    # Queue for processing
     request_data = diag_request.model_dump()
     request_data["mode"] = effective_mode.value
     request_data["alert_type"] = alert_type_for_mode
     await diagnosis_queue.put(("manual", diagnosis_id, request_data))
 
-    # Store initial result
     diagnosis_store[diagnosis_id] = DiagnosisResult(
         diagnosis_id=diagnosis_id,
         status=DiagnosisStatus.PENDING,
@@ -204,52 +179,63 @@ async def handle_chat(
     _api_key: Annotated[str, Depends(verify_api_key)],
 ):
     """Handle a chat message, optionally creating a diagnosis."""
-    client = _get_anthropic_client()
+    # Build the full prompt with history context
+    prompt_parts = [SYSTEM_PROMPT, ""]
 
-    # Build messages from history (last 20) + current message
-    messages = []
     for msg in request.history[-20:]:
-        messages.append({"role": msg.role, "content": msg.content})
-    messages.append({"role": "user", "content": request.message})
+        role_label = "用户" if msg.role == "user" else "助手"
+        prompt_parts.append(f"{role_label}: {msg.content}")
+
+    prompt_parts.append(f"用户: {request.message}")
+    prompt_parts.append("")
+    prompt_parts.append("请回复用户（如果参数充分，包含 JSON 代码块）：")
+
+    full_prompt = "\n".join(prompt_parts)
 
     try:
-        response = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            tools=[CREATE_DIAGNOSIS_TOOL],
-            messages=messages,
+        # Use claude-agent-sdk which handles auth via claude CLI
+        options = ClaudeAgentOptions(
+            max_turns=1,
+            system_prompt=SYSTEM_PROMPT,
+            model="claude-haiku-4-5-20251001",
         )
-    except anthropic.APIError as e:
-        logger.error(f"Anthropic API error: {e}")
-        raise HTTPException(status_code=502, detail=f"LLM API error: {e}")
 
-    # Process response blocks
-    text_parts = []
-    diagnosis_id = None
+        result_text = ""
+        async for message in query(prompt=full_prompt, options=options):
+            if isinstance(message, ResultMessage):
+                if message.result:
+                    result_text = message.result
+            elif isinstance(message, AssistantMessage):
+                # Extract text from content blocks
+                for block in message.content:
+                    if hasattr(block, "text"):
+                        result_text += block.text
+
+    except Exception as e:
+        logger.error(f"LLM query error: {e}")
+        raise HTTPException(status_code=502, detail=f"LLM error: {e}")
+
+    if not result_text:
+        return ChatResponse(
+            reply="抱歉，我无法理解您的请求，请再描述一下。",
+            action="info",
+        )
+
+    # Check if the response contains a diagnosis creation JSON
+    diagnosis_params = _extract_diagnosis_json(result_text)
+
+    if diagnosis_params:
+        try:
+            diagnosis_id, confirmation = await _create_diagnosis_from_params(diagnosis_params)
+            reply = _clean_reply(result_text) or confirmation
+            return ChatResponse(reply=reply, diagnosis_id=diagnosis_id, action="created")
+        except ValueError as e:
+            reply = _clean_reply(result_text) or str(e)
+            return ChatResponse(reply=reply, action="clarified")
+
+    # No JSON → clarification or general info
     action = "info"
-
-    for block in response.content:
-        if block.type == "text":
-            text_parts.append(block.text)
-        elif block.type == "tool_use" and block.name == "create_diagnosis":
-            try:
-                diagnosis_id, confirmation = await _create_diagnosis_from_tool(block.input)
-                text_parts.append(confirmation)
-                action = "created"
-            except ValueError as e:
-                # Validation failed — return as clarification
-                text_parts.append(str(e))
-                action = "clarified"
-
-    reply = "\n".join(text_parts) if text_parts else "抱歉，我无法理解您的请求，请再描述一下。"
-
-    if action == "info" and response.stop_reason == "tool_use":
-        # Tool was invoked but we already handled it above
-        pass
-    elif action == "info" and any(
-        keyword in reply for keyword in ["请提供", "请告诉", "需要", "哪个", "什么"]
-    ):
+    if any(keyword in result_text for keyword in ["请提供", "请告诉", "需要", "哪个", "什么"]):
         action = "clarified"
 
-    return ChatResponse(reply=reply, diagnosis_id=diagnosis_id, action=action)
+    return ChatResponse(reply=result_text, action=action)
