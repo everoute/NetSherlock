@@ -74,6 +74,11 @@ export function TasksPage() {
     }
   }
 
+  const getTriggerSource = (task: DiagnosisResponse) => {
+    // Use trigger field if available (new), fallback to trigger_source (legacy)
+    return task.trigger || task.trigger_source
+  }
+
   const getActions = (task: DiagnosisResponse) => {
     const actions = []
 
@@ -209,7 +214,8 @@ export function TasksPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const { Icon, color, title } = getTriggerIcon(task.trigger_source)
+                          const triggerSource = getTriggerSource(task)
+                          const { Icon, color, title } = getTriggerIcon(triggerSource)
                           return (
                             <div title={title}>
                               <Icon className={`h-4 w-4 ${color} flex-shrink-0`} />

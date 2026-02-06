@@ -364,6 +364,23 @@ def _build_diagnosis_request(
         )
 
 
+def _map_source_to_trigger(source: DiagnosisRequestSource) -> str:
+    """Map DiagnosisRequestSource to trigger value for API response.
+
+    Args:
+        source: DiagnosisRequestSource enum value
+
+    Returns:
+        Trigger value: "manual", "webhook", or "alert"
+    """
+    if source == DiagnosisRequestSource.WEBHOOK:
+        return "webhook"
+    elif source == DiagnosisRequestSource.API:
+        return "manual"
+    else:
+        return "manual"
+
+
 def _map_alert_to_type(alertname: str) -> str:
     """Map alertname to request_type."""
     mapping = {
@@ -647,6 +664,7 @@ class DiagnosisResponse(BaseModel):
     diagnosis_id: str
     status: str  # "queued", "processing", "completed", "error"
     timestamp: str
+    trigger: str | None = None  # "manual", "webhook", "alert"
     mode: str | None = None  # "autonomous" or "interactive"
     summary: str | None = None
     root_cause: dict[str, Any] | None = None
@@ -797,6 +815,7 @@ async def receive_alertmanager_webhook(
             diagnosis_id=diagnosis_id,
             status="queued",
             timestamp=datetime.now(timezone.utc).isoformat(),
+            trigger="webhook",
             mode=effective_mode.value,
             message=f"Alert queued for diagnosis in {effective_mode.value} mode",
         ))
@@ -860,6 +879,7 @@ async def create_diagnosis(
         diagnosis_id=diagnosis_id,
         status="queued",
         timestamp=datetime.now(timezone.utc).isoformat(),
+        trigger="manual",
         mode=effective_mode.value,
         message=f"Diagnosis request queued in {effective_mode.value} mode",
     )
@@ -895,6 +915,7 @@ async def get_diagnosis(
         diagnosis_id=result.diagnosis_id,
         status=result.status.value,
         timestamp=timestamp,
+        trigger=_map_source_to_trigger(result.source),
         summary=result.summary,
         root_cause={
             "category": result.root_cause.category.value if result.root_cause else None,
@@ -944,6 +965,7 @@ async def list_diagnoses(
                 else d.started_at.isoformat() if d.started_at
                 else ""
             ),
+            trigger=_map_source_to_trigger(d.source),
             summary=d.summary,
         )
         for d in paginated

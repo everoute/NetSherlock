@@ -59,10 +59,11 @@ export interface DiagnosisResponse {
   timestamp: string
   started_at?: string
   completed_at?: string
+  trigger?: 'manual' | 'webhook' | 'alert'
+  trigger_source?: 'manual' | 'webhook' | 'alert'
   mode?: 'autonomous' | 'interactive'
   diagnosis_type?: 'latency' | 'packet_drop' | 'connectivity'
   network_type?: 'vm' | 'system'
-  trigger_source?: 'manual' | 'webhook' | 'alert'
   summary?: string
   root_cause?: RootCause
   recommendations?: Recommendation[]
