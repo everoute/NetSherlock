@@ -371,10 +371,10 @@ def _map_source_to_trigger(source: DiagnosisRequestSource) -> str:
         source: DiagnosisRequestSource enum value
 
     Returns:
-        Trigger value: "manual", "webhook", or "alert"
+        Trigger value: "manual" or "alert"
     """
     if source == DiagnosisRequestSource.WEBHOOK:
-        return "webhook"
+        return "alert"
     elif source == DiagnosisRequestSource.API:
         return "manual"
     else:
@@ -815,7 +815,7 @@ async def receive_alertmanager_webhook(
             diagnosis_id=diagnosis_id,
             status="queued",
             timestamp=datetime.now(timezone.utc).isoformat(),
-            trigger="webhook",
+            trigger="alert",
             mode=effective_mode.value,
             message=f"Alert queued for diagnosis in {effective_mode.value} mode",
         ))
