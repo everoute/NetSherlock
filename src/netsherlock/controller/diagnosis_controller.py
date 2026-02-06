@@ -397,6 +397,7 @@ class DiagnosisController:
 
         # Initialize state
         self._state = DiagnosisState(
+            diagnosis_id=request.request_id,
             mode=mode,
             status=DiagnosisStatus.RUNNING,
             started_at=datetime.now(),
