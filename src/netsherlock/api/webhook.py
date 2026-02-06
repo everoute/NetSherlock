@@ -665,6 +665,8 @@ class DiagnosisResponse(BaseModel):
     diagnosis_id: str
     status: str  # "queued", "processing", "completed", "error"
     timestamp: str
+    started_at: str | None = None
+    completed_at: str | None = None
     trigger: str | None = None  # "manual", "webhook", "alert"
     mode: str | None = None  # "autonomous" or "interactive"
     diagnosis_type: str | None = None  # latency, packet_drop, connectivity
@@ -943,7 +945,10 @@ async def get_diagnosis(
         diagnosis_id=result.diagnosis_id,
         status=result.status.value,
         timestamp=timestamp,
+        started_at=result.started_at.isoformat() if result.started_at else None,
+        completed_at=result.completed_at.isoformat() if result.completed_at else None,
         trigger=_map_source_to_trigger(result.source),
+        mode=result.mode.value if result.mode else None,
         diagnosis_type=result.request_type or None,
         network_type=result.network_type or None,
         src_host=result.src_host or None,
