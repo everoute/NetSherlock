@@ -225,6 +225,7 @@ class DiagnosisController:
         llm_model: str | None = None,
         llm_max_turns: int | None = None,
         llm_max_budget_usd: float | None = None,
+        llm_permission_mode: str | None = None,
         bpf_local_tools_path: str | Path | None = None,
         bpf_remote_tools_path: str | Path | None = None,
     ):
@@ -240,6 +241,7 @@ class DiagnosisController:
             llm_model: Claude model to use (e.g., "claude-haiku-4-5-20251001")
             llm_max_turns: Maximum agent turns (None for unlimited)
             llm_max_budget_usd: Maximum budget in USD (None for unlimited)
+            llm_permission_mode: Claude Agent SDK permission mode
             bpf_local_tools_path: Local path to BPF measurement tools
             bpf_remote_tools_path: Remote path for deployed tools on target hosts
         """
@@ -252,6 +254,7 @@ class DiagnosisController:
         self._llm_model = llm_model
         self._llm_max_turns = llm_max_turns
         self._llm_max_budget_usd = llm_max_budget_usd
+        self._llm_permission_mode = llm_permission_mode
         self._bpf_local_tools_path = Path(bpf_local_tools_path) if bpf_local_tools_path else None
         self._bpf_remote_tools_path = Path(bpf_remote_tools_path) if bpf_remote_tools_path else Path("/tmp/netsherlock-tools")
 
@@ -288,7 +291,7 @@ class DiagnosisController:
             project_path=self._project_path,
             allowed_tools=["Skill", "Bash", "Read", "Write"],
             model=self._llm_model,
-            permission_mode="bypassPermissions",
+            permission_mode=self._llm_permission_mode,
             max_turns=self._llm_max_turns,
             max_budget_usd=self._llm_max_budget_usd,
         )

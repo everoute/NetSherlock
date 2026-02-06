@@ -212,6 +212,7 @@ def _create_engine(settings: Any) -> Any:
             llm_model=settings.llm.model,
             llm_max_turns=settings.llm.max_turns,
             llm_max_budget_usd=settings.llm.max_budget_usd,
+            llm_permission_mode=settings.llm.permission_mode,
             bpf_local_tools_path=settings.bpf_tools.local_tools_path,
             bpf_remote_tools_path=settings.bpf_tools.remote_tools_path,
         )

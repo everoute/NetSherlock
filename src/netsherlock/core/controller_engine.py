@@ -38,6 +38,7 @@ class ControllerEngine:
         llm_model: str | None = None,
         llm_max_turns: int | None = None,
         llm_max_budget_usd: float | None = None,
+        llm_permission_mode: str | None = None,
         bpf_local_tools_path: str | Path | None = None,
         bpf_remote_tools_path: str | Path | None = None,
         checkpoint_callback: Any | None = None,
@@ -52,6 +53,7 @@ class ControllerEngine:
             llm_model: Claude model for L4 analysis skill.
             llm_max_turns: Maximum agent turns.
             llm_max_budget_usd: Maximum budget in USD.
+            llm_permission_mode: Claude Agent SDK permission mode.
             bpf_local_tools_path: Local path to BPF measurement tools.
             bpf_remote_tools_path: Remote path for deployed tools on targets.
             checkpoint_callback: Optional callback for interactive checkpoints.
@@ -64,6 +66,7 @@ class ControllerEngine:
         self._llm_model = llm_model
         self._llm_max_turns = llm_max_turns
         self._llm_max_budget_usd = llm_max_budget_usd
+        self._llm_permission_mode = llm_permission_mode
         self._bpf_local_tools_path = bpf_local_tools_path
         self._bpf_remote_tools_path = bpf_remote_tools_path
         self._checkpoint_callback = checkpoint_callback
@@ -119,6 +122,7 @@ class ControllerEngine:
             llm_model=self._llm_model,
             llm_max_turns=self._llm_max_turns,
             llm_max_budget_usd=self._llm_max_budget_usd,
+            llm_permission_mode=self._llm_permission_mode,
             bpf_local_tools_path=self._bpf_local_tools_path,
             bpf_remote_tools_path=self._bpf_remote_tools_path,
         )

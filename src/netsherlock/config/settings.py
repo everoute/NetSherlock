@@ -127,7 +127,7 @@ class LLMSettings(BaseSettings):
       3. Use cloud providers via CLAUDE_CODE_USE_BEDROCK/VERTEX/FOUNDRY=1
     """
 
-    model_config = SettingsConfigDict(env_prefix="LLM_")
+    model_config = SettingsConfigDict(env_prefix="LLM_", env_file=".env", extra="ignore")
 
     model: str = Field(
         default="claude-haiku-4-5-20251001",
@@ -140,6 +140,12 @@ class LLMSettings(BaseSettings):
     max_budget_usd: float | None = Field(
         default=None,
         description="Maximum budget in USD (None for unlimited)",
+    )
+    permission_mode: Literal["default", "acceptEdits", "plan", "bypassPermissions"] = Field(
+        default="bypassPermissions",
+        description="Claude Agent SDK permission mode (LLM_PERMISSION_MODE env var). "
+        "Set to 'acceptEdits' when running as root, since 'bypassPermissions' "
+        "is blocked with root/sudo privileges.",
     )
 
 
