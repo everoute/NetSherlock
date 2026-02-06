@@ -874,12 +874,20 @@ async def receive_alertmanager_webhook(
         await diagnosis_queue.put(("alert", diagnosis_id, alert_data))
 
         # Store initial result so GET /diagnose/{id} returns immediately
+        labels = alert.labels
         diagnosis_store[diagnosis_id] = DiagnosisResult(
             diagnosis_id=diagnosis_id,
             status=DiagnosisStatus.PENDING,
+            started_at=datetime.now(),
             phase="queued",
             source=DiagnosisRequestSource.WEBHOOK,
             mode=effective_mode,
+            network_type=labels.get("network_type", ""),
+            request_type=_map_alert_to_type(alert_type or ""),
+            src_host=labels.get("src_host") or labels.get("instance", "").split(":")[0],
+            src_vm=labels.get("src_vm"),
+            dst_host=labels.get("dst_host"),
+            dst_vm=labels.get("dst_vm"),
         )
 
         responses.append(DiagnosisResponse(
@@ -947,9 +955,16 @@ async def create_diagnosis(
     diagnosis_store[diagnosis_id] = DiagnosisResult(
         diagnosis_id=diagnosis_id,
         status=DiagnosisStatus.PENDING,
+        started_at=datetime.now(),
         phase="queued",
         source=DiagnosisRequestSource.API,
         mode=effective_mode,
+        network_type=request.network_type,
+        request_type=request.diagnosis_type,
+        src_host=request.src_host or "",
+        src_vm=request.src_vm,
+        dst_host=request.dst_host,
+        dst_vm=request.dst_vm,
     )
 
     logger.info(
