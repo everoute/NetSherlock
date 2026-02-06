@@ -36,6 +36,10 @@ export default defineConfig(({ command, mode }) => {
           target: apiUrl,
           changeOrigin: true,
         },
+        '^/chat': {
+          target: apiUrl,
+          changeOrigin: true,
+        },
       },
     },
   }

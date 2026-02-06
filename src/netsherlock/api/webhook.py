@@ -727,6 +727,10 @@ if _environment == 'development' or _cors_origins:
         max_age=600,  # Cache preflight requests for 10 minutes
     )
 
+# Chat router (LLM-based natural language diagnosis)
+from netsherlock.api.chat import router as chat_router
+app.include_router(chat_router)
+
 
 # Request/Response Models
 

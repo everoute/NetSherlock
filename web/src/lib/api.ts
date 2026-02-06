@@ -120,4 +120,25 @@ export const api = {
       throw new Error(`Failed to cancel diagnosis: ${response.statusText}`)
     }
   },
+
+  /**
+   * Send a chat message to the LLM assistant
+   */
+  async sendChatMessage(message: string, history: { role: 'user' | 'assistant'; content: string }[]): Promise<{
+    reply: string
+    diagnosis_id: string | null
+    action: 'created' | 'clarified' | 'info'
+  }> {
+    const response = await fetch(`${API_BASE_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message, history }),
+    })
+    if (!response.ok) {
+      throw new Error(`Chat request failed: ${response.statusText}`)
+    }
+    return response.json()
+  },
 }

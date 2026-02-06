@@ -83,3 +83,13 @@ export interface HealthResponse {
   queue_size: number
   engine?: string
 }
+
+// Chat types
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  diagnosis_id?: string
+  action?: 'created' | 'clarified' | 'info'
+  timestamp: Date
+}
