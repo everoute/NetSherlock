@@ -462,6 +462,35 @@ export const mockDiagnoses: DiagnosisResponse[] = [
     error:
       'Unable to establish SSH connection to receiver host. Verify network connectivity and SSH credentials.',
   },
+
+  // Cancelled: User-cancelled diagnosis
+  {
+    diagnosis_id: 'diag-20260205-100000-cancelled',
+    status: 'cancelled',
+    timestamp: '2026-02-05T10:00:00Z',
+    started_at: '2026-02-05T09:55:00Z',
+    completed_at: '2026-02-05T10:02:00Z',
+    mode: 'autonomous',
+    diagnosis_type: 'packet_drop',
+    network_type: 'vm',
+    trigger_source: 'manual',
+    summary: 'User cancelled the diagnosis execution',
+  },
+
+  // Interrupted: Diagnosis interrupted
+  {
+    diagnosis_id: 'diag-20260205-085000-interrupted',
+    status: 'interrupted',
+    timestamp: '2026-02-05T08:50:00Z',
+    started_at: '2026-02-05T08:45:00Z',
+    completed_at: '2026-02-05T08:52:00Z',
+    mode: 'interactive',
+    diagnosis_type: 'latency',
+    network_type: 'vm',
+    trigger_source: 'alert',
+    summary: 'Diagnosis interrupted by system',
+    error: 'Network timeout during measurement phase. Measurement interrupted.',
+  },
 ]
 
 /**
