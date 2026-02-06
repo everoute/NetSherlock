@@ -950,6 +950,48 @@ async def list_diagnoses(
     ]
 
 
+@app.post("/diagnose/{diagnosis_id}/cancel")
+async def cancel_diagnosis(
+    diagnosis_id: str,
+    _api_key: Annotated[str, Depends(verify_api_key)],
+):
+    """Cancel a pending or queued diagnosis.
+
+    Requires X-API-Key header for authentication.
+
+    Can only cancel diagnoses in pending or waiting status.
+    Returns 404 if not found, 400 if not in a cancellable state.
+    """
+    if diagnosis_id not in diagnosis_store:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Diagnosis {diagnosis_id} not found",
+        )
+
+    result = diagnosis_store[diagnosis_id]
+
+    # Check if cancellable
+    cancellable_statuses = {
+        DiagnosisStatus.PENDING,
+        DiagnosisStatus.WAITING,
+    }
+
+    if result.status not in cancellable_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot cancel diagnosis in {result.status.value} status",
+        )
+
+    # Update status to cancelled
+    result.status = DiagnosisStatus.CANCELLED
+    result.completed_at = datetime.now(timezone.utc)
+    result.summary = result.summary or "Diagnosis cancelled by user"
+
+    logger.info(f"Diagnosis cancelled: {diagnosis_id}")
+
+    return {"message": "Diagnosis cancelled successfully", "diagnosis_id": diagnosis_id}
+
+
 # CLI entry point for development
 def main():
     """Run the webhook server."""

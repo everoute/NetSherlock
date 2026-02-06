@@ -602,6 +602,122 @@ class TestListDiagnosesEndpoint:
                     assert response.json() == []
 
 
+class TestCancelDiagnosisEndpoint:
+    """Tests for /diagnose/{diagnosis_id}/cancel endpoint."""
+
+    @pytest.fixture
+    def client(self):
+        """Create test client."""
+        return TestClient(app, raise_server_exceptions=False)
+
+    def test_cancel_diagnosis_not_found(self, client):
+        """Canceling non-existent diagnosis should return 404."""
+        with patch("netsherlock.api.webhook._get_api_key", return_value=""):
+            with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
+                response = client.post("/diagnose/nonexistent-id/cancel")
+                assert response.status_code == 404
+                assert "not found" in response.json()["detail"]
+
+    def test_cancel_diagnosis_pending(self, client):
+        """Cancel should work on pending diagnosis."""
+        from datetime import datetime, timezone
+        from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
+
+        with patch("netsherlock.api.webhook._get_api_key", return_value=""):
+            with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
+                test_id = "test-cancel-pending"
+                test_result = DiagnosisResult(
+                    diagnosis_id=test_id,
+                    status=DiagnosisStatus.PENDING,
+                )
+                diagnosis_store[test_id] = test_result
+
+                response = client.post(f"/diagnose/{test_id}/cancel")
+                assert response.status_code == 200
+                data = response.json()
+                assert data["message"] == "Diagnosis cancelled successfully"
+                assert data["diagnosis_id"] == test_id
+
+                # Verify status was updated
+                assert diagnosis_store[test_id].status == DiagnosisStatus.CANCELLED
+                assert diagnosis_store[test_id].completed_at is not None
+
+                # Cleanup
+                del diagnosis_store[test_id]
+
+    def test_cancel_diagnosis_running_not_allowed(self, client):
+        """Cancel should fail on running diagnosis."""
+        from datetime import datetime, timezone
+        from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
+
+        with patch("netsherlock.api.webhook._get_api_key", return_value=""):
+            with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
+                test_id = "test-cancel-running"
+                test_result = DiagnosisResult(
+                    diagnosis_id=test_id,
+                    status=DiagnosisStatus.RUNNING,
+                )
+                diagnosis_store[test_id] = test_result
+
+                response = client.post(f"/diagnose/{test_id}/cancel")
+                assert response.status_code == 400
+                assert "Cannot cancel diagnosis in running status" in response.json()["detail"]
+
+                # Verify status was not changed
+                assert diagnosis_store[test_id].status == DiagnosisStatus.RUNNING
+
+                # Cleanup
+                del diagnosis_store[test_id]
+
+    def test_cancel_diagnosis_already_completed(self, client):
+        """Cancel should fail on completed diagnosis."""
+        from datetime import datetime, timezone
+        from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
+
+        with patch("netsherlock.api.webhook._get_api_key", return_value=""):
+            with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
+                test_id = "test-cancel-completed"
+                test_result = DiagnosisResult(
+                    diagnosis_id=test_id,
+                    status=DiagnosisStatus.COMPLETED,
+                )
+                diagnosis_store[test_id] = test_result
+
+                response = client.post(f"/diagnose/{test_id}/cancel")
+                assert response.status_code == 400
+                assert "Cannot cancel diagnosis in completed status" in response.json()["detail"]
+
+                # Cleanup
+                del diagnosis_store[test_id]
+
+    def test_cancel_diagnosis_already_cancelled(self, client):
+        """Cancel should fail on already cancelled diagnosis."""
+        from datetime import datetime, timezone
+        from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
+
+        with patch("netsherlock.api.webhook._get_api_key", return_value=""):
+            with patch("netsherlock.api.webhook._is_insecure_mode_allowed", return_value=True):
+                test_id = "test-cancel-already-cancelled"
+                test_result = DiagnosisResult(
+                    diagnosis_id=test_id,
+                    status=DiagnosisStatus.CANCELLED,
+                )
+                diagnosis_store[test_id] = test_result
+
+                response = client.post(f"/diagnose/{test_id}/cancel")
+                assert response.status_code == 400
+                assert "Cannot cancel diagnosis in cancelled status" in response.json()["detail"]
+
+                # Cleanup
+                del diagnosis_store[test_id]
+
+    def test_cancel_diagnosis_requires_auth(self, client):
+        """Cancel diagnosis should require authentication when configured."""
+        with patch("netsherlock.api.webhook._get_api_key", return_value=TEST_API_KEY):
+            response = client.post("/diagnose/some-id/cancel")
+            assert response.status_code == 401
+
+
 class TestHealthEndpoint:
     """Tests for /health endpoint."""
 
