@@ -82,8 +82,9 @@ export function TasksPage() {
         <Link
           key="logs"
           to={`/tasks/${task.diagnosis_id}`}
-          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
         >
+          <Eye className="h-4 w-4" />
           Logs
         </Link>,
       )
