@@ -1,0 +1,1446 @@
+=== System ICMP Path Tracer ===
+Direction: TX (local initiates ping)
+Source IP: 70.0.0.32
+Destination IP: 70.0.0.31
+Physical interface(s): enp24s0f0np0(ifindex=3)
+Timeout: 1000 ms
+
+Path: ip_send_skb -> phy TX -> phy RX -> ping_rcv
+  [0] ReqSnd@stack
+  [1] ReqTX@phy
+  [2] RepRX@phy
+  [3] RepRcv@stack
+
+Tracing... Hit Ctrl-C to end.
+
+2026-02-06 15:48:27.790 [new] ID=52658 Seq=291 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:27.810 [update] ID=52658 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:27.810 [update] ID=52658 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:27.810 [complete] ID=52658 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20045.7 External=130.4 RepPath=61.0 Total=20237.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:27.910 [new] ID=52658 Seq=297 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:27.930 [update] ID=52658 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:27.931 [update] ID=52658 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:27.931 [complete] ID=52658 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.9 External=112.0 RepPath=57.8 Total=20224.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.031 [new] ID=52658 Seq=303 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.054 [update] ID=52658 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.054 [update] ID=52658 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.054 [complete] ID=52658 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.1 External=130.2 RepPath=57.6 Total=20239.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.151 [new] ID=52658 Seq=309 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.181 [update] ID=52658 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.181 [update] ID=52658 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.181 [complete] ID=52658 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.9 External=151.7 RepPath=49.2 Total=20248.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.271 [new] ID=52658 Seq=315 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.291 [update] ID=52658 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.291 [update] ID=52658 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.291 [complete] ID=52658 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20060.9 External=130.5 RepPath=56.0 Total=20247.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.391 [new] ID=52658 Seq=321 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.411 [update] ID=52658 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.411 [update] ID=52658 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.411 [complete] ID=52658 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.5 External=142.0 RepPath=46.2 Total=20242.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.468 [new] ID=52725 Seq=7 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.488 [update] ID=52725 Seq=7 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.489 [update] ID=52725 Seq=7 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.489 [complete] ID=52725 Seq=7 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20065.8 External=106.3 RepPath=46.8 Total=20218.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.511 [new] ID=52658 Seq=327 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.533 [update] ID=52658 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.533 [update] ID=52658 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.533 [complete] ID=52658 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.3 External=132.1 RepPath=53.0 Total=20238.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.631 [new] ID=52658 Seq=333 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.652 [update] ID=52658 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.652 [update] ID=52658 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.652 [complete] ID=52658 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.0 External=126.2 RepPath=51.8 Total=20232.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.753 [new] ID=52658 Seq=339 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.772 [update] ID=52658 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.773 [update] ID=52658 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.773 [complete] ID=52658 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20037.4 External=135.9 RepPath=61.5 Total=20234.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.872 [new] ID=52658 Seq=345 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.893 [update] ID=52658 Seq=345 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:28.893 [update] ID=52658 Seq=345 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:28.893 [complete] ID=52658 Seq=345 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20046.8 External=125.0 RepPath=45.6 Total=20217.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:28.993 [new] ID=52658 Seq=351 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.013 [update] ID=52658 Seq=351 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.013 [update] ID=52658 Seq=351 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.013 [complete] ID=52658 Seq=351 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.9 External=144.0 RepPath=64.4 Total=20262.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.113 [new] ID=52658 Seq=357 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.133 [update] ID=52658 Seq=357 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.133 [update] ID=52658 Seq=357 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.133 [complete] ID=52658 Seq=357 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20043.2 External=139.1 RepPath=52.8 Total=20235.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.233 [new] ID=52658 Seq=363 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.253 [update] ID=52658 Seq=363 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.253 [update] ID=52658 Seq=363 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.253 [complete] ID=52658 Seq=363 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.2 External=147.0 RepPath=64.7 Total=20261.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.353 [new] ID=52658 Seq=369 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.373 [update] ID=52658 Seq=369 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.373 [update] ID=52658 Seq=369 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.373 [complete] ID=52658 Seq=369 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.0 External=133.6 RepPath=53.9 Total=20239.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.470 [new] ID=52725 Seq=8 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.473 [new] ID=52658 Seq=375 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.490 [update] ID=52725 Seq=8 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.490 [update] ID=52725 Seq=8 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.490 [complete] ID=52725 Seq=8 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20058.6 External=133.7 RepPath=56.2 Total=20248.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.493 [update] ID=52658 Seq=375 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.493 [update] ID=52658 Seq=375 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.494 [complete] ID=52658 Seq=375 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20048.2 External=83.2 RepPath=39.5 Total=20171.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.593 [new] ID=52658 Seq=381 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.613 [update] ID=52658 Seq=381 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.613 [update] ID=52658 Seq=381 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.613 [complete] ID=52658 Seq=381 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.4 External=131.8 RepPath=70.6 Total=20259.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.713 [new] ID=52658 Seq=387 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.733 [update] ID=52658 Seq=387 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.733 [update] ID=52658 Seq=387 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.733 [complete] ID=52658 Seq=387 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20058.2 External=138.0 RepPath=55.8 Total=20252.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.833 [new] ID=52658 Seq=393 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.853 [update] ID=52658 Seq=393 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.853 [update] ID=52658 Seq=393 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.853 [complete] ID=52658 Seq=393 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.4 External=125.4 RepPath=51.9 Total=20231.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:29.953 [new] ID=52658 Seq=399 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.973 [update] ID=52658 Seq=399 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:29.973 [update] ID=52658 Seq=399 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:29.973 [complete] ID=52658 Seq=399 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.9 External=128.1 RepPath=57.9 Total=20242.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.073 [new] ID=52658 Seq=405 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.093 [update] ID=52658 Seq=405 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.093 [update] ID=52658 Seq=405 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.093 [complete] ID=52658 Seq=405 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.7 External=133.3 RepPath=66.5 Total=20247.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.193 [new] ID=52658 Seq=411 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.213 [update] ID=52658 Seq=411 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.213 [update] ID=52658 Seq=411 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.214 [complete] ID=52658 Seq=411 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.7 External=125.4 RepPath=53.1 Total=20236.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.313 [new] ID=52658 Seq=417 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.333 [update] ID=52658 Seq=417 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.333 [update] ID=52658 Seq=417 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.334 [complete] ID=52658 Seq=417 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.2 External=136.6 RepPath=61.3 Total=20247.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.434 [new] ID=52658 Seq=423 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.454 [update] ID=52658 Seq=423 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.454 [complete] ID=52658 Seq=423 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20065.7 External=124.8 RepPath=48.1 Total=20238.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.454 [update] ID=52658 Seq=423 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+2026-02-06 15:48:30.471 [new] ID=52725 Seq=9 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.491 [update] ID=52725 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.491 [update] ID=52725 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.491 [complete] ID=52725 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.4 External=108.8 RepPath=52.0 Total=20216.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.554 [new] ID=52658 Seq=429 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.574 [update] ID=52658 Seq=429 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.574 [update] ID=52658 Seq=429 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.574 [complete] ID=52658 Seq=429 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20045.7 External=127.6 RepPath=43.9 Total=20217.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.674 [new] ID=52658 Seq=435 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.694 [update] ID=52658 Seq=435 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.694 [update] ID=52658 Seq=435 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.694 [complete] ID=52658 Seq=435 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.8 External=131.9 RepPath=60.3 Total=20236.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.794 [new] ID=52658 Seq=441 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.814 [update] ID=52658 Seq=441 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.814 [update] ID=52658 Seq=441 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.814 [complete] ID=52658 Seq=441 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.5 External=130.7 RepPath=50.1 Total=20235.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:30.914 [new] ID=52658 Seq=447 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.934 [update] ID=52658 Seq=447 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:30.934 [update] ID=52658 Seq=447 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:30.934 [complete] ID=52658 Seq=447 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20063.3 External=124.8 RepPath=57.2 Total=20245.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.034 [new] ID=52658 Seq=453 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.054 [update] ID=52658 Seq=453 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.054 [update] ID=52658 Seq=453 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.054 [complete] ID=52658 Seq=453 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20060.8 External=133.3 RepPath=47.7 Total=20241.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.155 [new] ID=52658 Seq=459 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.175 [update] ID=52658 Seq=459 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.175 [update] ID=52658 Seq=459 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.175 [complete] ID=52658 Seq=459 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20063.6 External=131.9 RepPath=67.4 Total=20262.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.275 [new] ID=52658 Seq=465 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.295 [update] ID=52658 Seq=465 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.295 [update] ID=52658 Seq=465 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.295 [complete] ID=52658 Seq=465 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.2 External=158.2 RepPath=58.5 Total=20260.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.395 [new] ID=52658 Seq=471 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.415 [update] ID=52658 Seq=471 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.415 [update] ID=52658 Seq=471 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.415 [complete] ID=52658 Seq=471 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20065.0 External=125.6 RepPath=60.2 Total=20250.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.471 [new] ID=52725 Seq=10 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.491 [update] ID=52725 Seq=10 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.492 [update] ID=52725 Seq=10 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.492 [complete] ID=52725 Seq=10 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20067.9 External=117.7 RepPath=60.4 Total=20246.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.515 [new] ID=52658 Seq=477 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.535 [update] ID=52658 Seq=477 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.535 [update] ID=52658 Seq=477 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.535 [complete] ID=52658 Seq=477 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.4 External=143.8 RepPath=51.1 Total=20250.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.635 [new] ID=52658 Seq=483 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.655 [update] ID=52658 Seq=483 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.655 [update] ID=52658 Seq=483 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.655 [complete] ID=52658 Seq=483 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.6 External=128.1 RepPath=64.3 Total=20255.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.755 [new] ID=52658 Seq=489 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.775 [update] ID=52658 Seq=489 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.775 [update] ID=52658 Seq=489 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.775 [complete] ID=52658 Seq=489 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.7 External=147.4 RepPath=54.0 Total=20257.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.875 [new] ID=52658 Seq=495 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.895 [update] ID=52658 Seq=495 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:31.895 [update] ID=52658 Seq=495 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:31.895 [complete] ID=52658 Seq=495 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.9 External=129.5 RepPath=52.4 Total=20238.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:31.995 [new] ID=52658 Seq=501 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.015 [update] ID=52658 Seq=501 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.015 [update] ID=52658 Seq=501 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.015 [complete] ID=52658 Seq=501 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.4 External=140.0 RepPath=58.1 Total=20242.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.115 [new] ID=52658 Seq=507 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.135 [update] ID=52658 Seq=507 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.135 [update] ID=52658 Seq=507 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.135 [complete] ID=52658 Seq=507 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.4 External=120.4 RepPath=50.3 Total=20224.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.235 [new] ID=52658 Seq=513 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.256 [update] ID=52658 Seq=513 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.256 [update] ID=52658 Seq=513 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.256 [complete] ID=52658 Seq=513 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.9 External=147.9 RepPath=57.6 Total=20259.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.355 [new] ID=52658 Seq=519 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.375 [update] ID=52658 Seq=519 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.376 [update] ID=52658 Seq=519 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.376 [complete] ID=52658 Seq=519 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.9 External=128.1 RepPath=52.8 Total=20237.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.473 [new] ID=52725 Seq=11 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.475 [new] ID=52658 Seq=525 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.493 [update] ID=52725 Seq=11 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.493 [update] ID=52725 Seq=11 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.493 [complete] ID=52725 Seq=11 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.3 External=120.3 RepPath=53.7 Total=20225.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.495 [update] ID=52658 Seq=525 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.495 [update] ID=52658 Seq=525 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.496 [complete] ID=52658 Seq=525 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.1 External=71.1 RepPath=42.9 Total=20166.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.595 [new] ID=52658 Seq=531 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.615 [update] ID=52658 Seq=531 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.616 [update] ID=52658 Seq=531 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.616 [complete] ID=52658 Seq=531 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20041.4 External=117.5 RepPath=42.0 Total=20200.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.715 [new] ID=52658 Seq=537 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.736 [update] ID=52658 Seq=537 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.736 [update] ID=52658 Seq=537 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.736 [complete] ID=52658 Seq=537 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.1 External=148.1 RepPath=60.9 Total=20271.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.835 [new] ID=52658 Seq=543 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.858 [update] ID=52658 Seq=543 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.859 [update] ID=52658 Seq=543 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.859 [complete] ID=52658 Seq=543 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.5 External=118.2 RepPath=56.0 Total=20229.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:32.958 [new] ID=52658 Seq=549 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.978 [update] ID=52658 Seq=549 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:32.979 [update] ID=52658 Seq=549 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:32.979 [complete] ID=52658 Seq=549 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20690.0 External=142.3 RepPath=57.8 Total=20890.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.078 [new] ID=52658 Seq=555 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.099 [update] ID=52658 Seq=555 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.099 [update] ID=52658 Seq=555 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.099 [complete] ID=52658 Seq=555 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20066.2 External=156.5 RepPath=50.2 Total=20273.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.198 [new] ID=52658 Seq=561 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.218 [update] ID=52658 Seq=561 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.218 [update] ID=52658 Seq=561 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.218 [complete] ID=52658 Seq=561 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.6 External=116.9 RepPath=55.9 Total=20230.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.318 [new] ID=52658 Seq=567 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.338 [update] ID=52658 Seq=567 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.338 [update] ID=52658 Seq=567 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.338 [complete] ID=52658 Seq=567 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.0 External=120.9 RepPath=51.5 Total=20226.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.440 [new] ID=52658 Seq=573 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.459 [update] ID=52658 Seq=573 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.459 [update] ID=52658 Seq=573 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.459 [complete] ID=52658 Seq=573 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.0 External=128.4 RepPath=54.6 Total=20240.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.473 [new] ID=52725 Seq=12 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.493 [update] ID=52725 Seq=12 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.494 [update] ID=52725 Seq=12 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.494 [complete] ID=52725 Seq=12 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.0 External=112.9 RepPath=65.0 Total=20221.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.566 [new] ID=52658 Seq=579 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.589 [update] ID=52658 Seq=579 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.589 [update] ID=52658 Seq=579 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.589 [complete] ID=52658 Seq=579 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20075.2 External=126.5 RepPath=57.7 Total=20259.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.686 [new] ID=52658 Seq=585 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.706 [update] ID=52658 Seq=585 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.706 [update] ID=52658 Seq=585 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.706 [complete] ID=52658 Seq=585 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.3 External=108.5 RepPath=60.6 Total=20219.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.806 [new] ID=52658 Seq=591 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.826 [update] ID=52658 Seq=591 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.826 [update] ID=52658 Seq=591 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.826 [complete] ID=52658 Seq=591 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.9 External=132.9 RepPath=60.1 Total=20250.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.926 [new] ID=52658 Seq=597 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.946 [update] ID=52658 Seq=597 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.946 [update] ID=52658 Seq=597 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.946 [complete] ID=52658 Seq=597 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.6 External=122.3 RepPath=48.4 Total=20228.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:33.959 [new] ID=54882 Seq=3 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.979 [update] ID=54882 Seq=3 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:33.980 [update] ID=54882 Seq=3 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:33.980 [complete] ID=54882 Seq=3 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20067.4 External=156.7 RepPath=59.0 Total=20283.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.079 [new] ID=54882 Seq=9 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.099 [update] ID=54882 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.100 [update] ID=54882 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.100 [complete] ID=54882 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.0 External=131.7 RepPath=51.9 Total=20237.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.203 [new] ID=54882 Seq=15 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.223 [update] ID=54882 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.223 [update] ID=54882 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.223 [complete] ID=54882 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.6 External=113.9 RepPath=50.5 Total=20218.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.322 [new] ID=54882 Seq=21 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.343 [update] ID=54882 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.343 [update] ID=54882 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.343 [complete] ID=54882 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.2 External=157.4 RepPath=65.1 Total=20271.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.443 [new] ID=54882 Seq=27 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.463 [update] ID=54882 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.463 [update] ID=54882 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.463 [complete] ID=54882 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20069.1 External=136.3 RepPath=54.9 Total=20260.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.474 [new] ID=52725 Seq=13 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.494 [update] ID=52725 Seq=13 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.495 [update] ID=52725 Seq=13 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.495 [complete] ID=52725 Seq=13 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20063.8 External=113.1 RepPath=52.5 Total=20229.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.563 [new] ID=54882 Seq=33 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.583 [update] ID=54882 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.583 [update] ID=54882 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.583 [complete] ID=54882 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.0 External=128.0 RepPath=55.4 Total=20239.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.683 [new] ID=54882 Seq=39 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.703 [update] ID=54882 Seq=39 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.703 [update] ID=54882 Seq=39 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.703 [complete] ID=54882 Seq=39 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.9 External=150.6 RepPath=66.5 Total=20271.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.803 [new] ID=54882 Seq=45 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.823 [update] ID=54882 Seq=45 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.823 [update] ID=54882 Seq=45 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.823 [complete] ID=54882 Seq=45 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.3 External=135.0 RepPath=55.3 Total=20234.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:34.923 [new] ID=54882 Seq=51 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.943 [update] ID=54882 Seq=51 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:34.943 [update] ID=54882 Seq=51 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:34.943 [complete] ID=54882 Seq=51 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.3 External=176.9 RepPath=60.9 Total=20300.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.043 [new] ID=54882 Seq=57 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.063 [update] ID=54882 Seq=57 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.063 [update] ID=54882 Seq=57 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.063 [complete] ID=54882 Seq=57 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.7 External=121.1 RepPath=62.0 Total=20240.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.163 [new] ID=54882 Seq=63 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.185 [update] ID=54882 Seq=63 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.185 [update] ID=54882 Seq=63 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.185 [complete] ID=54882 Seq=63 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20061.9 External=144.3 RepPath=58.1 Total=20264.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.283 [new] ID=54882 Seq=69 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.303 [update] ID=54882 Seq=69 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.303 [update] ID=54882 Seq=69 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.303 [complete] ID=54882 Seq=69 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20061.1 External=128.3 RepPath=56.1 Total=20245.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.403 [new] ID=54882 Seq=75 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.423 [update] ID=54882 Seq=75 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.423 [update] ID=54882 Seq=75 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.423 [complete] ID=54882 Seq=75 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20046.6 External=155.6 RepPath=56.6 Total=20258.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.476 [new] ID=52725 Seq=14 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.496 [update] ID=52725 Seq=14 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.496 [update] ID=52725 Seq=14 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.496 [complete] ID=52725 Seq=14 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.8 External=146.5 RepPath=59.3 Total=20261.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.523 [new] ID=54882 Seq=81 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.543 [update] ID=54882 Seq=81 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.543 [update] ID=54882 Seq=81 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.543 [complete] ID=54882 Seq=81 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20048.4 External=132.6 RepPath=59.2 Total=20240.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.643 [new] ID=54882 Seq=87 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.663 [update] ID=54882 Seq=87 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.663 [update] ID=54882 Seq=87 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.663 [complete] ID=54882 Seq=87 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.3 External=129.1 RepPath=53.9 Total=20239.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.763 [new] ID=54882 Seq=93 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.783 [update] ID=54882 Seq=93 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.783 [update] ID=54882 Seq=93 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.783 [complete] ID=54882 Seq=93 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.2 External=129.5 RepPath=54.7 Total=20234.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:35.883 [new] ID=54882 Seq=99 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.903 [update] ID=54882 Seq=99 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:35.903 [update] ID=54882 Seq=99 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:35.903 [complete] ID=54882 Seq=99 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.7 External=132.7 RepPath=63.6 Total=20245.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.003 [new] ID=54882 Seq=105 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.023 [update] ID=54882 Seq=105 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.023 [update] ID=54882 Seq=105 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.023 [complete] ID=54882 Seq=105 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.1 External=133.6 RepPath=48.1 Total=20236.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.123 [new] ID=54882 Seq=111 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.143 [update] ID=54882 Seq=111 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.143 [update] ID=54882 Seq=111 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.143 [complete] ID=54882 Seq=111 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20059.0 External=126.0 RepPath=60.3 Total=20245.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.243 [new] ID=54882 Seq=117 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.263 [update] ID=54882 Seq=117 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.263 [update] ID=54882 Seq=117 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.263 [complete] ID=54882 Seq=117 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.2 External=123.1 RepPath=57.2 Total=20236.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.363 [new] ID=54882 Seq=123 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.383 [update] ID=54882 Seq=123 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.383 [update] ID=54882 Seq=123 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.383 [complete] ID=54882 Seq=123 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.2 External=141.9 RepPath=54.3 Total=20251.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.477 [new] ID=52725 Seq=15 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.483 [new] ID=54882 Seq=129 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.497 [update] ID=52725 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.497 [update] ID=52725 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.497 [complete] ID=52725 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.8 External=151.2 RepPath=56.2 Total=20263.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.503 [update] ID=54882 Seq=129 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.503 [update] ID=54882 Seq=129 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.503 [complete] ID=54882 Seq=129 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.0 External=160.0 RepPath=77.5 Total=20288.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.603 [new] ID=54882 Seq=135 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.623 [update] ID=54882 Seq=135 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.623 [update] ID=54882 Seq=135 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.623 [complete] ID=54882 Seq=135 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.1 External=121.1 RepPath=55.7 Total=20231.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.723 [new] ID=54882 Seq=141 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.743 [update] ID=54882 Seq=141 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.743 [update] ID=54882 Seq=141 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.743 [complete] ID=54882 Seq=141 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.4 External=125.1 RepPath=49.3 Total=20227.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.843 [new] ID=54882 Seq=147 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.863 [update] ID=54882 Seq=147 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.863 [update] ID=54882 Seq=147 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.863 [complete] ID=54882 Seq=147 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20071.8 External=142.9 RepPath=55.9 Total=20270.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:36.963 [new] ID=54882 Seq=153 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.983 [update] ID=54882 Seq=153 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:36.984 [update] ID=54882 Seq=153 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:36.984 [complete] ID=54882 Seq=153 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.6 External=126.0 RepPath=55.8 Total=20232.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.083 [new] ID=54882 Seq=159 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.103 [update] ID=54882 Seq=159 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.104 [update] ID=54882 Seq=159 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.104 [complete] ID=54882 Seq=159 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.9 External=131.0 RepPath=57.1 Total=20251.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.203 [new] ID=54882 Seq=165 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.223 [update] ID=54882 Seq=165 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.224 [update] ID=54882 Seq=165 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.224 [complete] ID=54882 Seq=165 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20064.2 External=144.2 RepPath=59.6 Total=20268.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.323 [new] ID=54882 Seq=171 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.344 [update] ID=54882 Seq=171 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.344 [update] ID=54882 Seq=171 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.344 [complete] ID=54882 Seq=171 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.6 External=133.7 RepPath=59.2 Total=20246.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.444 [new] ID=54882 Seq=177 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.464 [update] ID=54882 Seq=177 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.464 [update] ID=54882 Seq=177 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.464 [complete] ID=54882 Seq=177 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20061.0 External=148.6 RepPath=56.0 Total=20265.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.477 [new] ID=52725 Seq=16 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.497 [update] ID=52725 Seq=16 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.498 [update] ID=52725 Seq=16 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.498 [complete] ID=52725 Seq=16 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.0 External=121.2 RepPath=63.8 Total=20235.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.564 [new] ID=54882 Seq=183 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.584 [update] ID=54882 Seq=183 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.584 [update] ID=54882 Seq=183 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.584 [complete] ID=54882 Seq=183 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.8 External=120.8 RepPath=50.5 Total=20219.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.684 [new] ID=54882 Seq=189 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.704 [update] ID=54882 Seq=189 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.704 [update] ID=54882 Seq=189 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.704 [complete] ID=54882 Seq=189 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20075.8 External=130.5 RepPath=62.0 Total=20268.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.804 [new] ID=54882 Seq=195 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.824 [update] ID=54882 Seq=195 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.824 [update] ID=54882 Seq=195 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.824 [complete] ID=54882 Seq=195 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20060.0 External=130.7 RepPath=59.1 Total=20249.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:37.924 [new] ID=54882 Seq=201 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.944 [update] ID=54882 Seq=201 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:37.944 [update] ID=54882 Seq=201 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:37.944 [complete] ID=54882 Seq=201 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.1 External=123.4 RepPath=51.7 Total=20225.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.044 [new] ID=54882 Seq=207 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.064 [update] ID=54882 Seq=207 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.064 [update] ID=54882 Seq=207 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.064 [complete] ID=54882 Seq=207 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20060.5 External=157.9 RepPath=54.4 Total=20272.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.164 [new] ID=54882 Seq=213 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.184 [update] ID=54882 Seq=213 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.184 [update] ID=54882 Seq=213 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.184 [complete] ID=54882 Seq=213 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20046.0 External=133.8 RepPath=61.2 Total=20240.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.284 [new] ID=54882 Seq=219 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.304 [update] ID=54882 Seq=219 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.304 [update] ID=54882 Seq=219 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.304 [complete] ID=54882 Seq=219 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.9 External=123.9 RepPath=49.0 Total=20222.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.404 [new] ID=54882 Seq=225 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.424 [update] ID=54882 Seq=225 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.424 [update] ID=54882 Seq=225 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.424 [complete] ID=54882 Seq=225 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20048.0 External=126.8 RepPath=56.0 Total=20230.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.478 [new] ID=52725 Seq=17 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.498 [update] ID=52725 Seq=17 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.499 [update] ID=52725 Seq=17 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.499 [complete] ID=52725 Seq=17 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.5 External=131.6 RepPath=56.5 Total=20238.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.524 [new] ID=54882 Seq=231 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.544 [update] ID=54882 Seq=231 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.544 [update] ID=54882 Seq=231 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.544 [complete] ID=54882 Seq=231 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.0 External=117.1 RepPath=46.3 Total=20216.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.644 [new] ID=54882 Seq=237 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.664 [update] ID=54882 Seq=237 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.664 [update] ID=54882 Seq=237 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.664 [complete] ID=54882 Seq=237 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.4 External=136.1 RepPath=53.1 Total=20242.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.764 [new] ID=54882 Seq=243 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.784 [update] ID=54882 Seq=243 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.784 [update] ID=54882 Seq=243 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.784 [complete] ID=54882 Seq=243 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.6 External=133.9 RepPath=49.2 Total=20230.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:38.884 [new] ID=54882 Seq=249 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.904 [update] ID=54882 Seq=249 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:38.904 [update] ID=54882 Seq=249 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:38.904 [complete] ID=54882 Seq=249 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.2 External=131.8 RepPath=61.0 Total=20248.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.004 [new] ID=54882 Seq=255 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.024 [update] ID=54882 Seq=255 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.024 [update] ID=54882 Seq=255 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.024 [complete] ID=54882 Seq=255 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.5 External=137.4 RepPath=54.2 Total=20239.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.124 [new] ID=54882 Seq=261 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.144 [update] ID=54882 Seq=261 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.144 [update] ID=54882 Seq=261 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.144 [complete] ID=54882 Seq=261 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.7 External=186.0 RepPath=51.3 Total=20287.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.258 [new] ID=54882 Seq=267 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.278 [update] ID=54882 Seq=267 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.278 [update] ID=54882 Seq=267 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.278 [complete] ID=54882 Seq=267 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.4 External=171.7 RepPath=43.6 Total=20271.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.378 [new] ID=54882 Seq=273 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.398 [update] ID=54882 Seq=273 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.398 [update] ID=54882 Seq=273 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.398 [complete] ID=54882 Seq=273 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.2 External=124.0 RepPath=51.8 Total=20232.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.483 [new] ID=52725 Seq=18 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.498 [new] ID=54882 Seq=279 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.503 [update] ID=52725 Seq=18 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.503 [update] ID=52725 Seq=18 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.503 [complete] ID=52725 Seq=18 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.5 External=126.8 RepPath=60.0 Total=20239.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.518 [update] ID=54882 Seq=279 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.518 [update] ID=54882 Seq=279 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.518 [complete] ID=54882 Seq=279 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.0 External=122.6 RepPath=64.3 Total=20244.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.618 [new] ID=54882 Seq=285 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.638 [update] ID=54882 Seq=285 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.638 [update] ID=54882 Seq=285 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.638 [complete] ID=54882 Seq=285 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20059.4 External=137.6 RepPath=52.3 Total=20249.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.738 [new] ID=54882 Seq=291 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.758 [update] ID=54882 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.758 [update] ID=54882 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.759 [complete] ID=54882 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.9 External=116.7 RepPath=48.6 Total=20223.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.862 [new] ID=54882 Seq=297 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.882 [update] ID=54882 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:39.882 [update] ID=54882 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:39.882 [complete] ID=54882 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20059.4 External=132.5 RepPath=69.4 Total=20261.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:39.982 [new] ID=54882 Seq=303 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.002 [update] ID=54882 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.002 [update] ID=54882 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.002 [complete] ID=54882 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20068.0 External=129.8 RepPath=57.0 Total=20254.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.102 [new] ID=54882 Seq=309 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.122 [update] ID=54882 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.122 [update] ID=54882 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.122 [complete] ID=54882 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20043.8 External=139.9 RepPath=65.2 Total=20248.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.222 [new] ID=54882 Seq=315 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.242 [update] ID=54882 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.242 [update] ID=54882 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.242 [complete] ID=54882 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20042.9 External=127.8 RepPath=46.9 Total=20217.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.342 [new] ID=54882 Seq=321 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.362 [update] ID=54882 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.362 [update] ID=54882 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.362 [complete] ID=54882 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.7 External=116.2 RepPath=49.7 Total=20217.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.465 [new] ID=54882 Seq=327 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.483 [update] ID=54882 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.483 [update] ID=54882 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.483 [complete] ID=54882 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.6 External=132.2 RepPath=48.8 Total=20231.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.483 [new] ID=52725 Seq=19 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.503 [update] ID=52725 Seq=19 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.504 [update] ID=52725 Seq=19 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.504 [complete] ID=52725 Seq=19 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.6 External=116.5 RepPath=58.1 Total=20229.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.583 [new] ID=54882 Seq=333 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.603 [update] ID=54882 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.603 [update] ID=54882 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.603 [complete] ID=54882 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.7 External=128.7 RepPath=53.2 Total=20237.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.703 [new] ID=54882 Seq=339 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.723 [update] ID=54882 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.723 [update] ID=54882 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.723 [complete] ID=54882 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20063.8 External=122.9 RepPath=75.3 Total=20262.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.823 [new] ID=54882 Seq=345 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.843 [update] ID=54882 Seq=345 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.843 [update] ID=54882 Seq=345 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.843 [complete] ID=54882 Seq=345 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.6 External=130.5 RepPath=64.5 Total=20242.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:40.943 [new] ID=54882 Seq=351 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.963 [update] ID=54882 Seq=351 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:40.963 [update] ID=54882 Seq=351 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:40.964 [complete] ID=54882 Seq=351 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20281.9 External=117.6 RepPath=60.2 Total=20459.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.065 [new] ID=54882 Seq=357 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.084 [update] ID=54882 Seq=357 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.084 [update] ID=54882 Seq=357 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.084 [complete] ID=54882 Seq=357 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20058.8 External=131.1 RepPath=63.7 Total=20253.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.185 [new] ID=54882 Seq=363 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.205 [update] ID=54882 Seq=363 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.205 [update] ID=54882 Seq=363 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.205 [complete] ID=54882 Seq=363 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20065.3 External=143.8 RepPath=58.5 Total=20267.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.305 [new] ID=54882 Seq=369 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.325 [update] ID=54882 Seq=369 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.325 [update] ID=54882 Seq=369 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.325 [complete] ID=54882 Seq=369 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.7 External=148.6 RepPath=56.5 Total=20252.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.425 [new] ID=54882 Seq=375 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.445 [update] ID=54882 Seq=375 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.445 [update] ID=54882 Seq=375 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.445 [complete] ID=54882 Seq=375 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20071.8 External=130.4 RepPath=60.4 Total=20262.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.484 [new] ID=52725 Seq=20 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.504 [update] ID=52725 Seq=20 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.505 [update] ID=52725 Seq=20 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.505 [complete] ID=52725 Seq=20 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.7 External=118.7 RepPath=57.5 Total=20221.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.545 [new] ID=54882 Seq=381 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.565 [update] ID=54882 Seq=381 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.565 [update] ID=54882 Seq=381 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.565 [complete] ID=54882 Seq=381 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.1 External=132.0 RepPath=62.5 Total=20247.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.665 [new] ID=54882 Seq=387 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.685 [update] ID=54882 Seq=387 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.685 [update] ID=54882 Seq=387 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.685 [complete] ID=54882 Seq=387 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.1 External=138.9 RepPath=52.8 Total=20248.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.785 [new] ID=54882 Seq=393 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.805 [update] ID=54882 Seq=393 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.805 [update] ID=54882 Seq=393 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.805 [complete] ID=54882 Seq=393 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.0 External=118.5 RepPath=70.3 Total=20237.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:41.905 [new] ID=54882 Seq=399 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.925 [update] ID=54882 Seq=399 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:41.925 [update] ID=54882 Seq=399 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:41.925 [complete] ID=54882 Seq=399 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20042.8 External=135.3 RepPath=50.6 Total=20228.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.025 [new] ID=54882 Seq=405 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.045 [update] ID=54882 Seq=405 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.046 [update] ID=54882 Seq=405 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.046 [complete] ID=54882 Seq=405 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20059.7 External=120.5 RepPath=63.1 Total=20243.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.146 [new] ID=54882 Seq=411 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.165 [update] ID=54882 Seq=411 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.166 [update] ID=54882 Seq=411 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.166 [complete] ID=54882 Seq=411 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.9 External=111.7 RepPath=58.1 Total=20220.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.265 [new] ID=54882 Seq=417 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.285 [update] ID=54882 Seq=417 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.286 [update] ID=54882 Seq=417 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.286 [complete] ID=54882 Seq=417 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.2 External=118.8 RepPath=54.5 Total=20225.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.385 [new] ID=54882 Seq=423 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.406 [update] ID=54882 Seq=423 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.406 [update] ID=54882 Seq=423 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.406 [complete] ID=54882 Seq=423 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.1 External=118.8 RepPath=50.5 Total=20220.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.486 [new] ID=52725 Seq=21 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.506 [new] ID=54882 Seq=429 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.506 [update] ID=52725 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.506 [update] ID=52725 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.506 [complete] ID=52725 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20040.7 External=124.5 RepPath=57.7 Total=20222.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.526 [update] ID=54882 Seq=429 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.526 [update] ID=54882 Seq=429 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.526 [complete] ID=54882 Seq=429 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.0 External=114.2 RepPath=50.5 Total=20226.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.626 [new] ID=54882 Seq=435 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.646 [update] ID=54882 Seq=435 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.646 [update] ID=54882 Seq=435 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.646 [complete] ID=54882 Seq=435 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20078.7 External=115.6 RepPath=47.7 Total=20242.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.746 [new] ID=54882 Seq=441 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.766 [update] ID=54882 Seq=441 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.766 [update] ID=54882 Seq=441 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.766 [complete] ID=54882 Seq=441 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.3 External=97.8 RepPath=37.6 Total=20187.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.866 [new] ID=54882 Seq=447 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.886 [update] ID=54882 Seq=447 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:42.886 [update] ID=54882 Seq=447 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:42.886 [complete] ID=54882 Seq=447 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.9 External=116.2 RepPath=36.9 Total=20198.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:42.986 [new] ID=54882 Seq=453 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.006 [update] ID=54882 Seq=453 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.006 [update] ID=54882 Seq=453 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.006 [complete] ID=54882 Seq=453 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20085.5 External=118.1 RepPath=48.8 Total=20252.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.106 [new] ID=54882 Seq=459 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.126 [update] ID=54882 Seq=459 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.126 [update] ID=54882 Seq=459 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.126 [complete] ID=54882 Seq=459 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.5 External=122.7 RepPath=48.4 Total=20225.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.226 [new] ID=54882 Seq=465 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.246 [update] ID=54882 Seq=465 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.246 [update] ID=54882 Seq=465 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.246 [complete] ID=54882 Seq=465 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20059.9 External=127.3 RepPath=54.5 Total=20241.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.346 [new] ID=54882 Seq=471 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.366 [update] ID=54882 Seq=471 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.366 [update] ID=54882 Seq=471 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.366 [complete] ID=54882 Seq=471 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20058.0 External=146.3 RepPath=45.2 Total=20249.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.466 [new] ID=54882 Seq=477 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.486 [update] ID=54882 Seq=477 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.486 [update] ID=54882 Seq=477 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.486 [complete] ID=54882 Seq=477 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20058.0 External=134.9 RepPath=57.6 Total=20250.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.486 [new] ID=52725 Seq=22 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.507 [update] ID=52725 Seq=22 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.507 [update] ID=52725 Seq=22 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.507 [complete] ID=52725 Seq=22 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20036.7 External=110.2 RepPath=46.3 Total=20193.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.586 [new] ID=54882 Seq=483 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.606 [update] ID=54882 Seq=483 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.606 [update] ID=54882 Seq=483 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.606 [complete] ID=54882 Seq=483 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.5 External=193.4 RepPath=34.8 Total=20282.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.706 [new] ID=54882 Seq=489 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.726 [update] ID=54882 Seq=489 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.726 [update] ID=54882 Seq=489 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.726 [complete] ID=54882 Seq=489 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20066.1 External=141.0 RepPath=91.5 Total=20298.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.827 [new] ID=54882 Seq=495 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.846 [update] ID=54882 Seq=495 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.846 [update] ID=54882 Seq=495 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.846 [complete] ID=54882 Seq=495 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20058.6 External=140.3 RepPath=57.4 Total=20256.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:43.946 [new] ID=54882 Seq=501 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.966 [update] ID=54882 Seq=501 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:43.966 [update] ID=54882 Seq=501 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:43.966 [complete] ID=54882 Seq=501 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20060.6 External=108.7 RepPath=76.4 Total=20245.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.066 [new] ID=54882 Seq=507 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.086 [update] ID=54882 Seq=507 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.086 [update] ID=54882 Seq=507 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.086 [complete] ID=54882 Seq=507 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.7 External=138.5 RepPath=47.9 Total=20238.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.187 [new] ID=54882 Seq=513 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.206 [update] ID=54882 Seq=513 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.207 [update] ID=54882 Seq=513 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.207 [complete] ID=54882 Seq=513 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20086.1 External=121.9 RepPath=38.4 Total=20246.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.308 [new] ID=54882 Seq=519 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.327 [update] ID=54882 Seq=519 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.327 [update] ID=54882 Seq=519 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.327 [complete] ID=54882 Seq=519 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20045.3 External=117.8 RepPath=38.4 Total=20201.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.427 [new] ID=54882 Seq=525 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.447 [update] ID=54882 Seq=525 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.447 [update] ID=54882 Seq=525 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.447 [complete] ID=54882 Seq=525 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.8 External=144.7 RepPath=52.6 Total=20260.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.488 [new] ID=52725 Seq=23 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.508 [update] ID=52725 Seq=23 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.508 [update] ID=52725 Seq=23 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.508 [complete] ID=52725 Seq=23 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.2 External=132.2 RepPath=57.9 Total=20241.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.547 [new] ID=54882 Seq=531 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.568 [update] ID=54882 Seq=531 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.568 [update] ID=54882 Seq=531 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.568 [complete] ID=54882 Seq=531 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20042.8 External=116.6 RepPath=47.9 Total=20207.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.667 [new] ID=54882 Seq=537 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.687 [update] ID=54882 Seq=537 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.687 [update] ID=54882 Seq=537 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.687 [complete] ID=54882 Seq=537 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.1 External=131.1 RepPath=39.2 Total=20232.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.787 [new] ID=54882 Seq=543 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.807 [update] ID=54882 Seq=543 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.807 [update] ID=54882 Seq=543 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.807 [complete] ID=54882 Seq=543 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.0 External=121.3 RepPath=38.8 Total=20204.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:44.907 [new] ID=54882 Seq=549 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.927 [update] ID=54882 Seq=549 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:44.928 [update] ID=54882 Seq=549 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:44.928 [complete] ID=54882 Seq=549 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20041.9 External=128.9 RepPath=58.4 Total=20229.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.028 [new] ID=54882 Seq=555 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.048 [update] ID=54882 Seq=555 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.048 [update] ID=54882 Seq=555 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.048 [complete] ID=54882 Seq=555 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.6 External=115.1 RepPath=35.5 Total=20205.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.150 [new] ID=54882 Seq=561 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.171 [update] ID=54882 Seq=561 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.171 [update] ID=54882 Seq=561 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.171 [complete] ID=54882 Seq=561 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.2 External=143.3 RepPath=64.9 Total=20252.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.271 [new] ID=54882 Seq=567 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.291 [update] ID=54882 Seq=567 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.291 [update] ID=54882 Seq=567 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.291 [complete] ID=54882 Seq=567 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.1 External=118.2 RepPath=42.5 Total=20211.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.391 [new] ID=54882 Seq=573 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.411 [update] ID=54882 Seq=573 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.411 [update] ID=54882 Seq=573 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.411 [complete] ID=54882 Seq=573 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20060.6 External=119.2 RepPath=43.9 Total=20223.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.490 [new] ID=52725 Seq=24 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.511 [update] ID=52725 Seq=24 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.511 [new] ID=54882 Seq=579 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.511 [update] ID=52725 Seq=24 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.511 [complete] ID=52725 Seq=24 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.7 External=142.4 RepPath=57.8 Total=20256.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.531 [update] ID=54882 Seq=579 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.531 [update] ID=54882 Seq=579 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.531 [complete] ID=54882 Seq=579 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20043.8 External=119.9 RepPath=59.8 Total=20223.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.631 [new] ID=54882 Seq=585 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.652 [update] ID=54882 Seq=585 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.652 [update] ID=54882 Seq=585 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.653 [complete] ID=54882 Seq=585 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.9 External=134.9 RepPath=70.7 Total=20257.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.751 [new] ID=54882 Seq=591 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.771 [update] ID=54882 Seq=591 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.771 [update] ID=54882 Seq=591 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.771 [complete] ID=54882 Seq=591 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.5 External=124.2 RepPath=53.1 Total=20234.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:45.871 [new] ID=54882 Seq=597 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.891 [update] ID=54882 Seq=597 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:45.891 [update] ID=54882 Seq=597 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:45.891 [complete] ID=54882 Seq=597 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20068.0 External=113.0 RepPath=38.8 Total=20219.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:46.495 [new] ID=52725 Seq=25 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:46.515 [update] ID=52725 Seq=25 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:46.516 [update] ID=52725 Seq=25 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:46.516 [complete] ID=52725 Seq=25 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20037.3 External=103.2 RepPath=40.2 Total=20180.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:47.496 [new] ID=52725 Seq=26 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:47.517 [update] ID=52725 Seq=26 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:47.517 [update] ID=52725 Seq=26 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:47.517 [complete] ID=52725 Seq=26 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.2 External=126.8 RepPath=55.2 Total=20226.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:48.498 [new] ID=52725 Seq=27 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:48.518 [update] ID=52725 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:48.518 [update] ID=52725 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:48.518 [complete] ID=52725 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.8 External=131.2 RepPath=60.4 Total=20246.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:48.959 [new] ID=57295 Seq=3 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:48.979 [update] ID=57295 Seq=3 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:48.979 [update] ID=57295 Seq=3 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:48.979 [complete] ID=57295 Seq=3 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20061.2 External=150.4 RepPath=65.9 Total=20277.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.079 [new] ID=57295 Seq=9 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.099 [update] ID=57295 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.099 [update] ID=57295 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.099 [complete] ID=57295 Seq=9 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20081.6 External=129.5 RepPath=57.8 Total=20268.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.199 [new] ID=57295 Seq=15 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.219 [update] ID=57295 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.219 [update] ID=57295 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.219 [complete] ID=57295 Seq=15 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.0 External=136.7 RepPath=53.5 Total=20247.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.319 [new] ID=57295 Seq=21 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.339 [update] ID=57295 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.339 [update] ID=57295 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.339 [complete] ID=57295 Seq=21 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.0 External=121.9 RepPath=61.2 Total=20234.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.439 [new] ID=57295 Seq=27 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.459 [update] ID=57295 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.459 [update] ID=57295 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.459 [complete] ID=57295 Seq=27 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.1 External=122.6 RepPath=61.4 Total=20233.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.499 [new] ID=52725 Seq=28 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.519 [update] ID=52725 Seq=28 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.519 [update] ID=52725 Seq=28 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.519 [complete] ID=52725 Seq=28 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.0 External=113.7 RepPath=54.1 Total=20219.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.559 [new] ID=57295 Seq=33 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.579 [update] ID=57295 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.579 [update] ID=57295 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.579 [complete] ID=57295 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.7 External=131.5 RepPath=55.9 Total=20243.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.679 [new] ID=57295 Seq=39 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.699 [update] ID=57295 Seq=39 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.699 [update] ID=57295 Seq=39 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.699 [complete] ID=57295 Seq=39 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.8 External=148.2 RepPath=51.6 Total=20256.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.799 [new] ID=57295 Seq=45 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.819 [update] ID=57295 Seq=45 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.819 [update] ID=57295 Seq=45 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.819 [complete] ID=57295 Seq=45 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.7 External=166.5 RepPath=56.7 Total=20278.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:49.919 [new] ID=57295 Seq=51 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.939 [update] ID=57295 Seq=51 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:49.939 [update] ID=57295 Seq=51 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:49.940 [complete] ID=57295 Seq=51 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.5 External=150.3 RepPath=52.3 Total=20260.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.039 [new] ID=57295 Seq=57 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.059 [update] ID=57295 Seq=57 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.060 [update] ID=57295 Seq=57 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.060 [complete] ID=57295 Seq=57 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.1 External=122.8 RepPath=55.1 Total=20229.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.159 [new] ID=57295 Seq=63 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.179 [update] ID=57295 Seq=63 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.180 [update] ID=57295 Seq=63 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.180 [complete] ID=57295 Seq=63 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20045.1 External=123.9 RepPath=61.4 Total=20230.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.279 [new] ID=57295 Seq=69 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.300 [update] ID=57295 Seq=69 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.300 [update] ID=57295 Seq=69 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.300 [complete] ID=57295 Seq=69 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20080.0 External=139.4 RepPath=48.1 Total=20267.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.400 [new] ID=57295 Seq=75 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.420 [update] ID=57295 Seq=75 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.420 [update] ID=57295 Seq=75 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.420 [complete] ID=57295 Seq=75 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20046.9 External=127.9 RepPath=45.3 Total=20220.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.502 [new] ID=52725 Seq=29 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.521 [update] ID=52725 Seq=29 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.521 [update] ID=52725 Seq=29 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.522 [complete] ID=52725 Seq=29 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.7 External=121.4 RepPath=55.2 Total=20231.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.526 [new] ID=57295 Seq=81 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.546 [update] ID=57295 Seq=81 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.546 [update] ID=57295 Seq=81 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.547 [complete] ID=57295 Seq=81 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.0 External=133.4 RepPath=68.6 Total=20254.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.644 [new] ID=57295 Seq=87 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.664 [update] ID=57295 Seq=87 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.665 [update] ID=57295 Seq=87 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.665 [complete] ID=57295 Seq=87 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.7 External=132.0 RepPath=52.1 Total=20233.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.764 [new] ID=57295 Seq=93 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.785 [update] ID=57295 Seq=93 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.785 [update] ID=57295 Seq=93 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.785 [complete] ID=57295 Seq=93 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20092.7 External=123.2 RepPath=46.2 Total=20262.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:50.884 [new] ID=57295 Seq=99 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.904 [update] ID=57295 Seq=99 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:50.905 [update] ID=57295 Seq=99 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:50.905 [complete] ID=57295 Seq=99 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20089.3 External=128.7 RepPath=55.6 Total=20273.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.004 [new] ID=57295 Seq=105 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.026 [update] ID=57295 Seq=105 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.026 [update] ID=57295 Seq=105 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.026 [complete] ID=57295 Seq=105 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20069.3 External=167.3 RepPath=50.6 Total=20287.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.125 [new] ID=57295 Seq=111 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.145 [update] ID=57295 Seq=111 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.145 [update] ID=57295 Seq=111 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.145 [complete] ID=57295 Seq=111 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.8 External=118.7 RepPath=50.8 Total=20224.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.245 [new] ID=57295 Seq=117 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.265 [update] ID=57295 Seq=117 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.265 [update] ID=57295 Seq=117 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.265 [complete] ID=57295 Seq=117 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20046.4 External=126.6 RepPath=47.2 Total=20220.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.365 [new] ID=57295 Seq=123 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.385 [update] ID=57295 Seq=123 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.385 [update] ID=57295 Seq=123 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.385 [complete] ID=57295 Seq=123 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20058.0 External=161.0 RepPath=56.4 Total=20275.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.485 [new] ID=57295 Seq=129 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.502 [new] ID=52725 Seq=30 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.505 [update] ID=57295 Seq=129 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.505 [update] ID=57295 Seq=129 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.505 [complete] ID=57295 Seq=129 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.5 External=129.6 RepPath=46.3 Total=20229.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.522 [update] ID=52725 Seq=30 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.522 [update] ID=52725 Seq=30 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.522 [complete] ID=52725 Seq=30 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.6 External=140.6 RepPath=67.3 Total=20258.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.605 [new] ID=57295 Seq=135 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.625 [update] ID=57295 Seq=135 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.625 [update] ID=57295 Seq=135 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.625 [complete] ID=57295 Seq=135 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.7 External=126.4 RepPath=50.9 Total=20229.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.725 [new] ID=57295 Seq=141 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.745 [update] ID=57295 Seq=141 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.745 [update] ID=57295 Seq=141 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.745 [complete] ID=57295 Seq=141 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.2 External=146.9 RepPath=65.7 Total=20274.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.845 [new] ID=57295 Seq=147 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.865 [update] ID=57295 Seq=147 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.865 [update] ID=57295 Seq=147 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.865 [complete] ID=57295 Seq=147 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.4 External=148.4 RepPath=53.6 Total=20253.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:51.965 [new] ID=57295 Seq=153 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.985 [update] ID=57295 Seq=153 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:51.985 [update] ID=57295 Seq=153 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:51.985 [complete] ID=57295 Seq=153 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.9 External=155.6 RepPath=72.5 Total=20281.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.085 [new] ID=57295 Seq=159 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.105 [update] ID=57295 Seq=159 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.105 [update] ID=57295 Seq=159 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.105 [complete] ID=57295 Seq=159 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.5 External=136.2 RepPath=54.1 Total=20240.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.205 [new] ID=57295 Seq=165 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.225 [update] ID=57295 Seq=165 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.226 [update] ID=57295 Seq=165 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.226 [complete] ID=57295 Seq=165 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20070.9 External=165.1 RepPath=67.3 Total=20303.3
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.325 [new] ID=57295 Seq=171 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.345 [update] ID=57295 Seq=171 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.346 [update] ID=57295 Seq=171 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.346 [complete] ID=57295 Seq=171 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20043.0 External=133.0 RepPath=44.9 Total=20220.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.446 [new] ID=57295 Seq=177 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.466 [update] ID=57295 Seq=177 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.466 [update] ID=57295 Seq=177 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.466 [complete] ID=57295 Seq=177 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.2 External=127.6 RepPath=48.3 Total=20226.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.503 [new] ID=52725 Seq=31 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.523 [update] ID=52725 Seq=31 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.524 [update] ID=52725 Seq=31 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.524 [complete] ID=52725 Seq=31 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.8 External=143.7 RepPath=59.4 Total=20259.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.566 [new] ID=57295 Seq=183 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.586 [update] ID=57295 Seq=183 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.586 [update] ID=57295 Seq=183 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.586 [complete] ID=57295 Seq=183 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20052.1 External=116.7 RepPath=65.4 Total=20234.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.686 [new] ID=57295 Seq=189 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.706 [update] ID=57295 Seq=189 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.706 [update] ID=57295 Seq=189 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.706 [complete] ID=57295 Seq=189 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20047.8 External=139.8 RepPath=78.9 Total=20266.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.806 [new] ID=57295 Seq=195 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.826 [update] ID=57295 Seq=195 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.826 [update] ID=57295 Seq=195 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.826 [complete] ID=57295 Seq=195 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20059.5 External=155.4 RepPath=65.2 Total=20280.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:52.926 [new] ID=57295 Seq=201 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.946 [update] ID=57295 Seq=201 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:52.947 [update] ID=57295 Seq=201 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:52.947 [complete] ID=57295 Seq=201 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20044.6 External=136.6 RepPath=69.5 Total=20250.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.046 [new] ID=57295 Seq=207 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.066 [update] ID=57295 Seq=207 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.067 [update] ID=57295 Seq=207 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.067 [complete] ID=57295 Seq=207 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.9 External=173.8 RepPath=82.9 Total=20313.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.166 [new] ID=57295 Seq=213 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.186 [update] ID=57295 Seq=213 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.186 [update] ID=57295 Seq=213 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.187 [complete] ID=57295 Seq=213 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.2 External=124.0 RepPath=49.1 Total=20224.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.286 [new] ID=57295 Seq=219 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.306 [update] ID=57295 Seq=219 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.307 [update] ID=57295 Seq=219 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.307 [complete] ID=57295 Seq=219 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20061.1 External=123.2 RepPath=52.8 Total=20237.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.406 [new] ID=57295 Seq=225 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.428 [update] ID=57295 Seq=225 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.428 [update] ID=57295 Seq=225 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.428 [complete] ID=57295 Seq=225 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.6 External=126.5 RepPath=58.2 Total=20240.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.505 [new] ID=52725 Seq=32 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.525 [update] ID=52725 Seq=32 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.525 [update] ID=52725 Seq=32 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.525 [complete] ID=52725 Seq=32 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20062.3 External=168.4 RepPath=56.8 Total=20287.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.527 [new] ID=57295 Seq=231 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.547 [update] ID=57295 Seq=231 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.547 [update] ID=57295 Seq=231 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.547 [complete] ID=57295 Seq=231 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20049.7 External=162.8 RepPath=57.2 Total=20269.7
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.647 [new] ID=57295 Seq=237 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.667 [update] ID=57295 Seq=237 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.667 [update] ID=57295 Seq=237 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.667 [complete] ID=57295 Seq=237 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20064.2 External=137.4 RepPath=52.0 Total=20253.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.767 [new] ID=57295 Seq=243 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.787 [update] ID=57295 Seq=243 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.787 [update] ID=57295 Seq=243 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.787 [complete] ID=57295 Seq=243 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20045.9 External=130.3 RepPath=62.7 Total=20238.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:53.887 [new] ID=57295 Seq=249 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.907 [update] ID=57295 Seq=249 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:53.907 [update] ID=57295 Seq=249 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:53.907 [complete] ID=57295 Seq=249 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20050.8 External=122.2 RepPath=52.2 Total=20225.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.007 [new] ID=57295 Seq=255 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.027 [update] ID=57295 Seq=255 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.027 [update] ID=57295 Seq=255 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.027 [complete] ID=57295 Seq=255 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20055.2 External=117.3 RepPath=65.7 Total=20238.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.128 [new] ID=57295 Seq=261 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.147 [update] ID=57295 Seq=261 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.147 [update] ID=57295 Seq=261 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.147 [complete] ID=57295 Seq=261 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20042.8 External=131.0 RepPath=56.2 Total=20229.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.247 [new] ID=57295 Seq=267 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.267 [update] ID=57295 Seq=267 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.267 [update] ID=57295 Seq=267 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.267 [complete] ID=57295 Seq=267 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20054.6 External=133.7 RepPath=56.0 Total=20244.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.367 [new] ID=57295 Seq=273 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.388 [update] ID=57295 Seq=273 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.388 [update] ID=57295 Seq=273 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.388 [complete] ID=57295 Seq=273 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20067.7 External=139.1 RepPath=61.9 Total=20268.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.487 [new] ID=57295 Seq=279 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.506 [new] ID=52725 Seq=33 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.507 [update] ID=57295 Seq=279 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.507 [update] ID=57295 Seq=279 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.507 [complete] ID=57295 Seq=279 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20056.3 External=125.8 RepPath=45.9 Total=20228.1
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.526 [update] ID=52725 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.526 [update] ID=52725 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.526 [complete] ID=52725 Seq=33 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20057.0 External=106.8 RepPath=49.0 Total=20212.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.608 [new] ID=57295 Seq=285 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.628 [update] ID=57295 Seq=285 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.628 [update] ID=57295 Seq=285 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.628 [complete] ID=57295 Seq=285 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20048.6 External=117.5 RepPath=56.8 Total=20222.9
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.728 [new] ID=57295 Seq=291 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.748 [update] ID=57295 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.748 [update] ID=57295 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.748 [complete] ID=57295 Seq=291 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.3 External=128.6 RepPath=49.5 Total=20231.5
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.856 [new] ID=57295 Seq=297 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.876 [update] ID=57295 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.877 [update] ID=57295 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.877 [complete] ID=57295 Seq=297 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20060.5 External=149.7 RepPath=58.9 Total=20269.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:54.977 [new] ID=57295 Seq=303 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.997 [update] ID=57295 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:54.997 [update] ID=57295 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:54.997 [complete] ID=57295 Seq=303 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.3 External=135.3 RepPath=58.4 Total=20247.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:55.097 [new] ID=57295 Seq=309 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.117 [update] ID=57295 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.117 [update] ID=57295 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:55.117 [complete] ID=57295 Seq=309 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20061.2 External=134.8 RepPath=56.3 Total=20252.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:55.217 [new] ID=57295 Seq=315 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.237 [update] ID=57295 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.237 [update] ID=57295 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:55.237 [complete] ID=57295 Seq=315 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20066.0 External=126.2 RepPath=51.2 Total=20243.4
+--------------------------------------------------------------------------------
+2026-02-06 15:48:55.337 [new] ID=57295 Seq=321 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.357 [update] ID=57295 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.357 [update] ID=57295 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:55.357 [complete] ID=57295 Seq=321 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20051.5 External=137.8 RepPath=59.3 Total=20248.6
+--------------------------------------------------------------------------------
+2026-02-06 15:48:55.457 [new] ID=57295 Seq=327 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.477 [update] ID=57295 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.477 [update] ID=57295 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:55.477 [complete] ID=57295 Seq=327 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20069.8 External=120.8 RepPath=69.4 Total=20260.0
+--------------------------------------------------------------------------------
+2026-02-06 15:48:55.506 [new] ID=52725 Seq=34 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.526 [update] ID=52725 Seq=34 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.527 [update] ID=52725 Seq=34 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:55.527 [complete] ID=52725 Seq=34 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20053.7 External=103.4 RepPath=59.7 Total=20216.8
+--------------------------------------------------------------------------------
+2026-02-06 15:48:55.577 [new] ID=57295 Seq=333 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.598 [update] ID=57295 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.598 [update] ID=57295 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:55.598 [complete] ID=57295 Seq=333 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20042.8 External=112.8 RepPath=49.6 Total=20205.2
+--------------------------------------------------------------------------------
+2026-02-06 15:48:55.697 [new] ID=57295 Seq=339 ReqSnd@stack:Y ReqTX@phy:- RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.719 [update] ID=57295 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:- RepRcv@stack:-
+2026-02-06 15:48:55.719 [update] ID=57295 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:-
+2026-02-06 15:48:55.719 [complete] ID=57295 Seq=339 ReqSnd@stack:Y ReqTX@phy:Y RepRX@phy:Y RepRcv@stack:Y
+  Latency(us): ReqPath=20046.6 External=98.9 RepPath=44.9 Total=20190.4
+--------------------------------------------------------------------------------
+
+Detaching...
+
+=== ICMP System Path Statistics (TX mode) ===
+Total flows tracked: 237
+Complete flows: 237
+Request internal drops: 0
+External drops: 0
+Reply internal drops: 0

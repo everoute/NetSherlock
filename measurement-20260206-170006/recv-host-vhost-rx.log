@@ -1,0 +1,158 @@
+Detected kernel version: 4.19, distro: centos
+IRQ bypass module: loaded
+Using 4.x (pointer only, 8 bytes) vhost structure layout
+Packet filters:
+  Protocol: ICMP
+  Source IP: 192.168.77.83
+  Destination IP: 192.168.76.244
+Successfully attached to tun_net_xmit
+Successfully attached to vhost_add_used_and_signal_n
+Successfully attached to eventfd_signal
+Successfully attached to irqfd_wakeup (KVM interrupt injection)
+Successfully attached to vmx_deliver_posted_interrupt (IRQ bypass hardware path)
+Device filter: vnet130
+Queue filter: All queues
+
+================================================================================
+TUN TX QUEUE INTERRUPT TRACING STARTED
+================================================================================
+Tracing: tun_net_xmit -> vhost_signal -> eventfd_signal -> irqfd_wakeup -> posted_int
+Correlation: Stage 2->3->4 via eventfd_ctx, Stage 4->5 via GSI/vector
+Press Ctrl+C to stop
+
+Clearing BPF maps for clean state...
+Maps cleared. Ready for tracing.
+
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:24.855 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16404 seq=1
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:24.855 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.032ms CPU=71 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:24.855 EventFD(arg)=0xffff8979ca494700 Delay=0.011ms CPU=71 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:24.855 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.014ms CPU=71 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:24.855 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.004ms CPU=71 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.060ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:25.855 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16404 seq=2
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:25.855 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.032ms CPU=77 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:25.855 EventFD(arg)=0xffff8979ca494700 Delay=0.012ms CPU=77 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:25.855 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.015ms CPU=77 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:25.855 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=77 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.061ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:26.860 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16404 seq=3
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:26.860 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.026ms CPU=71 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:26.860 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=71 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:26.860 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=71 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:26.860 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=71 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.049ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:27.866 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16404 seq=4
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:27.866 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.028ms CPU=65 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:27.866 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=65 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:27.866 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=65 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:27.866 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=65 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.052ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:28.872 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16404 seq=5
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:28.872 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.028ms CPU=75 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:28.872 EventFD(arg)=0xffff8979ca494700 Delay=0.010ms CPU=75 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:28.872 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.013ms CPU=75 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:28.872 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.002ms CPU=75 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.053ms
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:30.947 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.028ms CPU=41 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:30.947 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=41 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:30.947 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=41 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:30.947 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.002ms CPU=41 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.050ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:30.947 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16405 seq=1
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:31.952 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16405 seq=2
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:31.952 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.026ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:31.952 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:31.952 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:31.952 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.002ms CPU=67 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.047ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:32.952 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16405 seq=3
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:32.952 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.022ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:32.952 EventFD(arg)=0xffff8979ca494700 Delay=0.010ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:32.952 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.012ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:32.952 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.002ms CPU=67 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.046ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:33.952 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16405 seq=4
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:33.952 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.032ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:33.952 EventFD(arg)=0xffff8979ca494700 Delay=0.010ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:33.952 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.013ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:33.952 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=63 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.058ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:34.952 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16405 seq=5
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:34.952 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.034ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:34.952 EventFD(arg)=0xffff8979ca494700 Delay=0.011ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:34.952 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.014ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:34.952 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=63 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.062ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:37.028 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16406 seq=1
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:37.028 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.026ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:37.028 EventFD(arg)=0xffff8979ca494700 Delay=0.008ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:37.028 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.010ms CPU=63 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:37.028 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.002ms CPU=63 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.047ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:38.033 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16406 seq=2
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:38.033 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.031ms CPU=65 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:38.033 EventFD(arg)=0xffff8979ca494700 Delay=0.010ms CPU=65 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:38.033 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.013ms CPU=65 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:38.033 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=65 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.057ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:39.039 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16406 seq=3
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:39.039 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.024ms CPU=76 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:39.039 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=76 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:39.039 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=76 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:39.039 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=76 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.047ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:40.044 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16406 seq=4
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:40.044 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.027ms CPU=23 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:40.044 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=23 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:40.044 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.012ms CPU=23 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:40.044 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=23 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.050ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:41.050 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16406 seq=5
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:41.050 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.026ms CPU=77 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:41.050 EventFD(arg)=0xffff8979ca494700 Delay=0.016ms CPU=77 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:41.050 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.018ms CPU=77 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:41.050 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=77 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.062ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:43.125 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=55424 COMM=CPU 1/KVM ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16407 seq=1
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:43.125 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.023ms CPU=46 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:43.125 EventFD(arg)=0xffff8979ca494700 Delay=0.008ms CPU=46 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:43.125 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=46 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:43.125 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=46 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.044ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:44.130 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16407 seq=2
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:44.130 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.032ms CPU=51 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:44.130 EventFD(arg)=0xffff8979ca494700 Delay=0.011ms CPU=51 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:44.130 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.014ms CPU=51 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:44.130 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=51 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.060ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:45.136 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16407 seq=3
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:45.136 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.031ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:45.136 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:45.136 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=67 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:45.136 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=67 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.054ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:46.141 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16407 seq=4
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:46.141 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.045ms CPU=42 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:46.142 EventFD(arg)=0xffff8979ca494700 Delay=0.008ms CPU=42 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:46.142 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.012ms CPU=42 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:46.142 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.006ms CPU=42 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.071ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:47.147 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16407 seq=5
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:47.147 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.051ms CPU=42 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:47.147 EventFD(arg)=0xffff8979ca494700 Delay=0.008ms CPU=42 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:47.147 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.012ms CPU=42 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:47.147 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.006ms CPU=42 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.078ms
+TUN TX INTERRUPT [vnet130:q7] Stage 1 [tun_net_xmit]: Time=1970-02-20 08:17:49.222 Queue=7 Sock(tfile)=0xffff89a3fde9b378 CPU=42 PID=0 COMM=swapper/42 ICMP 192.168.77.83 -> 192.168.76.244 type=8 code=0 id=16408 seq=1
+TUN TX INTERRUPT [vnet130:q7] Stage 2 [vhost_signal]: Time=1970-02-20 08:17:49.222 Sock(vq)=0xffff89a3fde9b378 EventFD(vq)=0xffff8979ca494700 VQ=0xffff89a6827a00b0 Delay=0.028ms CPU=75 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 3 [eventfd_signal]: Time=1970-02-20 08:17:49.222 EventFD(arg)=0xffff8979ca494700 Delay=0.009ms CPU=75 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 4 [irqfd_wakeup]: Time=1970-02-20 08:17:49.222 EventFD(irqfd)=0xffff8979ca494700 GSI(irqfd)=37 Delay=0.011ms CPU=75 PID=51217 COMM=vhost-43272
+TUN TX INTERRUPT [vnet130:q7] Stage 5 [posted_int]: Time=1970-02-20 08:17:49.222 Vector(arg)=37 VCPU=0xffff89a3dd1c0000 Delay=0.003ms CPU=75 PID=51217 COMM=vhost-43272
+  -> Total(S1->S5): 0.051ms
+
+================================================================================
+TUN TX INTERRUPT TRACING STOPPED - FINAL SUMMARY
+================================================================================
+
+TUN TX Queue Interrupt Tracing completed.
+Total events collected: 105

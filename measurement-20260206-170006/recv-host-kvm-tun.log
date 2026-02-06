@@ -1,0 +1,37 @@
+Auto-detecting QEMU PID for device vnet130...
+QEMU PID: 43272
+Found 8 vhost threads: [51210, 51211, 51212, 51213, 51214, 51215, 51216, 51217]
+Device filter: vnet130
+Target vhost TIDs: [51210, 51211, 51212, 51213, 51214, 51215, 51216, 51217]
+Flow filter: proto=icmp,src=192.168.76.244,dst=192.168.77.83
+
+Warmup: 2s (learning eventfds)...
+Warmup complete.
+
+Tracing... Hit Ctrl+C to end.
+[17:00:29.439] tid=51217 queue=7 s0=11us s1=4us s2=18us total=33us
+[17:00:30.445] tid=51217 queue=7 s0=8us s1=3us s2=18us total=29us
+[17:00:32.528] tid=51217 queue=7 s0=17us s1=7us s2=21us total=45us
+[17:00:33.525] tid=51217 queue=7 s0=8us s1=4us s2=17us total=29us
+[17:00:34.525] tid=51217 queue=7 s0=10us s1=4us s2=16us total=30us
+[17:00:35.525] tid=51217 queue=7 s0=13us s1=4us s2=18us total=35us
+[17:00:36.526] tid=51217 queue=7 s0=10us s1=4us s2=13us total=27us
+[17:00:38.601] tid=51217 queue=7 s0=8us s1=4us s2=12us total=24us
+[17:00:39.606] tid=51217 queue=7 s0=11us s1=6us s2=17us total=34us
+[17:00:40.612] tid=51217 queue=7 s0=12us s1=7us s2=21us total=40us
+[17:00:41.617] tid=51217 queue=7 s0=10us s1=4us s2=20us total=34us
+[17:00:42.623] tid=51217 queue=7 s0=9us s1=4us s2=14us total=27us
+[17:00:44.698] tid=51217 queue=7 s0=10us s1=4us s2=22us total=36us
+[17:00:45.703] tid=51217 queue=7 s0=12us s1=5us s2=20us total=37us
+[17:00:46.709] tid=51217 queue=7 s0=11us s1=4us s2=13us total=28us
+[17:00:47.714] tid=51217 queue=7 s0=15us s1=11us s2=19us total=45us
+[17:00:48.720] tid=51217 queue=7 s0=16us s1=10us s2=22us total=48us
+[17:00:50.796] tid=51217 queue=7 s0=10us s1=5us s2=13us total=28us
+
+============================================================
+Summary Statistics
+============================================================
+S0 (ioeventfd->kick):   cnt=      18  avg=      11.2us
+S1 (kick->sendmsg):     cnt=      18  avg=       5.2us
+S2 (sendmsg->receive):  cnt=      18  avg=      17.4us
+Total chain:            cnt=      18  avg=      33.8us

@@ -1,0 +1,65 @@
+=== Measurement Commands Log ===
+Timestamp: 2026-02-06T17:00:06.258985
+Measurement Directory: measurement-20260206-170006
+
+Environment Variables:
+  DURATION=30
+  GENERATE_TRAFFIC=false
+  LOCAL_TOOLS=/Users/admin/workspace/troubleshooting-tools/measurement-tools
+  MEASUREMENT_DIR=./measurement-20260206-170006
+  PING_INTERVAL=1
+  RECEIVER_HOST_SSH=smartx@192.168.70.31
+  RECEIVER_VM_IP=192.168.76.244
+  RECEIVER_VM_SSH=root@192.168.76.244
+  RECEIVER_WARMUP=2
+  RECV_PHY_IF=enp24s0f0np0
+  RECV_VM_IF=ens4
+  RECV_VNET_IF=vnet130
+  SENDER_HOST_SSH=smartx@192.168.70.32
+  SENDER_VM_IP=192.168.77.83
+  SENDER_VM_SSH=root@192.168.77.83
+  SEND_PHY_IF=enp24s0f0np0
+  SEND_VM_IF=ens4
+  SEND_VNET_IF=vnet35
+  SHUTDOWN_WAIT=3
+  TIMESTAMP=20260206-170006
+
+
+=== Starting 8 Measurement Tools ===
+Timestamp: Fri Feb  6 17:00:10 CST 2026
+DURATION=30s, RECEIVER_WARMUP=2s, SHUTDOWN_WAIT=3s
+
+      CMD: ssh smartx@192.168.70.31 'sudo python3 /tmp/kvm_vhost_tun_latency_no_discovery.py --device vnet130 --flow 'proto=icmp,src=192.168.76.244,dst=192.168.77.83''
+      PID: 13747, LOG: recv-host-kvm-tun.log
+      CMD: ssh smartx@192.168.70.32 'sudo python3 /tmp/kvm_vhost_tun_latency_no_discovery.py --device vnet35 --flow 'proto=icmp,src=192.168.77.83,dst=192.168.76.244''
+      PID: 13750, LOG: send-host-kvm-tun.log
+      CMD: ssh smartx@192.168.70.31 'sudo python3 /tmp/icmp_path_tracer.py --src-ip 192.168.77.83 --dst-ip 192.168.76.244 --rx-iface enp24s0f0np0 --tx-iface vnet130 --verbose'
+      PID: 13753, LOG: recv-host-icmp.log
+      CMD: ssh smartx@192.168.70.32 'sudo python3 /tmp/icmp_path_tracer.py --src-ip 192.168.77.83 --dst-ip 192.168.76.244 --rx-iface vnet35 --tx-iface enp24s0f0np0 --verbose'
+      PID: 13756, LOG: send-host-icmp.log
+      CMD: ssh smartx@192.168.70.31 'sudo python3 /tmp/tun_tx_to_kvm_irq.py --device vnet130 --src-ip 192.168.77.83 --dst-ip 192.168.76.244 --protocol icmp'
+      PID: 13759, LOG: recv-host-vhost-rx.log
+      CMD: ssh smartx@192.168.70.32 'sudo python3 /tmp/tun_tx_to_kvm_irq.py --device vnet35 --src-ip 192.168.76.244 --dst-ip 192.168.77.83 --protocol icmp'
+      PID: 13762, LOG: send-host-vhost-rx.log
+      CMD: ssh root@192.168.76.244 'sudo python3 /tmp/kernel_icmp_rtt.py --src-ip 192.168.77.83 --dst-ip 192.168.76.244 --interface ens4 --direction rx --disable-kernel-stacks'
+      PID: 13765, LOG: recv-vm-icmp.log
+      CMD: ssh root@192.168.77.83 'sudo python3 /tmp/kernel_icmp_rtt.py --src-ip 192.168.77.83 --dst-ip 192.168.76.244 --interface ens4 --direction tx --disable-kernel-stacks'
+      PID: 13768, LOG: send-vm-icmp.log
+
+=== All 8 tools started ===
+=== Measurement Duration ===
+Waiting 30s for measurement...
+=== Stopping Tools ===
+
+=== Log Verification ===
+  send-vm-icmp.log:      525 lines,    26423 bytes
+  recv-vm-icmp.log:      536 lines,    26749 bytes
+  send-host-icmp.log:      168 lines,    11007 bytes
+  recv-host-icmp.log:      157 lines,    10908 bytes
+  send-host-vhost-rx.log:      158 lines,    21544 bytes
+  recv-host-vhost-rx.log:      158 lines,    21632 bytes
+  send-host-kvm-tun.log:       36 lines,     1880 bytes
+  recv-host-kvm-tun.log:       37 lines,     1951 bytes
+
+=== Measurement Complete ===
+Timestamp: Fri Feb  6 17:00:46 CST 2026
