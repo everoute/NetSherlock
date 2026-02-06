@@ -1,0 +1,42 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="centerGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:0.8" />
+    </radialGradient>
+  </defs>
+
+  <!-- Outer background circle -->
+  <circle cx="24" cy="24" r="22.5" fill="none" stroke="url(#radarGradient)" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Radar circles -->
+  <circle cx="24" cy="24" r="15" fill="none" stroke="#0EA5E9" stroke-width="0.8" opacity="0.6"/>
+  <circle cx="24" cy="24" r="9" fill="none" stroke="#06B6D4" stroke-width="0.8" opacity="0.8"/>
+  <circle cx="24" cy="24" r="4" fill="none" stroke="#0284C7" stroke-width="0.8" opacity="0.9"/>
+
+  <!-- Radar scan lines (cross pattern) -->
+  <line x1="24" y1="4" x2="24" y2="44" stroke="url(#radarGradient)" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/>
+  <line x1="4" y1="24" x2="44" y2="24" stroke="url(#radarGradient)" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Diagonal scan lines for network effect -->
+  <line x1="10" y1="10" x2="38" y2="38" stroke="#06B6D4" stroke-width="0.9" stroke-linecap="round" opacity="0.7"/>
+  <line x1="38" y1="10" x2="10" y2="38" stroke="#06B6D4" stroke-width="0.9" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Center diagnostic node -->
+  <circle cx="24" cy="24" r="2.5" fill="url(#centerGradient)"/>
+  <circle cx="24" cy="24" r="2.5" fill="none" stroke="#06B6D4" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Diagnostic points (network nodes) -->
+  <circle cx="15" cy="15" r="1.5" fill="#0284C7" opacity="0.9"/>
+  <circle cx="33" cy="15" r="1.5" fill="#0284C7" opacity="0.9"/>
+  <circle cx="15" cy="33" r="1.5" fill="#0284C7" opacity="0.9"/>
+  <circle cx="33" cy="33" r="1.5" fill="#0284C7" opacity="0.9"/>
+
+  <!-- Additional subtle radar sweep -->
+  <path d="M 24 24 L 24 6 A 18 18 0 0 1 32.7 8.3" fill="none" stroke="#06B6D4" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+</svg>
