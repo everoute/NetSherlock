@@ -31,6 +31,44 @@ class DiagnosisStatus(str, Enum):
     INTERRUPTED = "interrupted"
 
 
+
+@dataclass
+class StageResult:
+    """Result of one measurement→analysis stage in interactive multi-stage diagnosis.
+
+    Each stage represents a complete L3 measurement → L4 analysis cycle.
+    The stage_history in DiagnosisResult accumulates these as the diagnosis
+    progresses through boundary → segment escalation.
+    """
+
+    stage_number: int
+    stage_label: str  # e.g. "boundary", "segment"
+    workflow_mode: str  # "boundary" or "segment"
+    measurement_skill: str
+    analysis_skill: str
+    measurements: dict[str, Any] = field(default_factory=dict)
+    analysis: dict[str, Any] = field(default_factory=dict)
+    markdown_report: str = ""
+    suggestions: list[dict[str, Any]] = field(default_factory=list)
+    user_choice: str = ""  # What user selected at checkpoint
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to serializable dict."""
+        return {
+            "stage_number": self.stage_number,
+            "stage_label": self.stage_label,
+            "workflow_mode": self.workflow_mode,
+            "measurement_skill": self.measurement_skill,
+            "analysis_skill": self.analysis_skill,
+            "markdown_report": self.markdown_report,
+            "suggestions": self.suggestions,
+            "user_choice": self.user_choice,
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+        }
+
 @dataclass
 class DiagnosisResult:
     """Unified diagnosis result — both engines output this type.
@@ -76,6 +114,7 @@ class DiagnosisResult:
 
     # === Controller-specific ===
     checkpoint_history: list[Any] = field(default_factory=list)
+    stage_history: list[StageResult] = field(default_factory=list)
 
     # === Error information ===
     error: str | None = None
@@ -88,6 +127,7 @@ class DiagnosisResult:
         state: Any,
         analysis_result: AnalysisResult | None = None,
         checkpoint_history: list[Any] | None = None,
+        stage_history: list[StageResult] | None = None,
     ) -> DiagnosisResult:
         """Create result from controller's DiagnosisState.
 
@@ -170,6 +210,7 @@ class DiagnosisResult:
             markdown_report=state.analysis.get("markdown_report", ""),
             report_path=state.analysis.get("report_path", ""),
             checkpoint_history=checkpoint_history or [],
+            stage_history=stage_history or [],
             error=state.error,
         )
         return result

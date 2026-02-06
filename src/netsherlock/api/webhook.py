@@ -39,6 +39,9 @@ logger = logging.getLogger(__name__)
 diagnosis_store: dict[str, DiagnosisResult] = {}
 diagnosis_queue: asyncio.Queue = asyncio.Queue()
 
+# Registry of running DiagnosisController instances for interactive checkpoint access
+active_controllers: dict[str, Any] = {}  # diagnosis_id → DiagnosisController
+
 # Global engine instance (DiagnosisEngine protocol)
 engine: Any = None  # DiagnosisEngine protocol — Any to avoid circular import
 _global_inventory: Any = None  # GlobalInventory instance — loaded during lifespan
@@ -587,12 +590,15 @@ class DiagnosisResponse(BaseModel):
     """Diagnosis response."""
 
     diagnosis_id: str
-    status: str  # "queued", "processing", "completed", "error"
+    status: str  # "queued", "processing", "completed", "error", "waiting"
     timestamp: str
     mode: str | None = None  # "autonomous" or "interactive"
     summary: str | None = None
     root_cause: dict[str, Any] | None = None
     recommendations: list[dict[str, Any]] | None = None
+    markdown_report: str | None = None
+    stage_history: list[dict[str, Any]] | None = None
+    checkpoint: dict[str, Any] | None = None  # Current waiting checkpoint data
     message: str | None = None
 
 
@@ -640,6 +646,15 @@ async def diagnosis_worker():
                             error="Invalid request (self-ping detected)",
                         )
                         continue
+
+                    # Store initial running state so frontend can see progress
+                    requested_mode = request_data.get("mode", "autonomous") if isinstance(request_data, dict) else "autonomous"
+                    diagnosis_store[request_id] = DiagnosisResult(
+                        diagnosis_id=request_id,
+                        status=DiagnosisStatus.RUNNING,
+                        started_at=datetime.now(),
+                        mode=DiagnosisMode(requested_mode) if requested_mode in ("autonomous", "interactive") else DiagnosisMode.AUTONOMOUS,
+                    )
 
                     # Execute via engine protocol
                     result = await engine.execute(request=request)
@@ -817,10 +832,10 @@ async def get_diagnosis(
     Requires X-API-Key header for authentication.
 
     Returns the current status and results (if completed) for a
-    specific diagnosis ID.
+    specific diagnosis ID. For interactive mode diagnoses that are
+    waiting at a checkpoint, includes the checkpoint data.
     """
     if diagnosis_id not in diagnosis_store:
-        # Check if in queue
         raise HTTPException(
             status_code=404,
             detail=f"Diagnosis {diagnosis_id} not found",
@@ -833,10 +848,32 @@ async def get_diagnosis(
         else result.started_at.isoformat() if result.started_at
         else ""
     )
+
+    # Check for waiting checkpoint on active controller
+    checkpoint_data = None
+    if engine is not None and hasattr(engine, "get_controller"):
+        controller = engine.get_controller(diagnosis_id)
+        if controller is not None and controller.is_waiting:
+            cp_data = controller.waiting_checkpoint_data
+            if cp_data is not None:
+                checkpoint_data = {
+                    "checkpoint_type": cp_data.checkpoint_type.value,
+                    "summary": cp_data.summary,
+                    "details": cp_data.details,
+                    "options": cp_data.options,
+                    "recommendation": cp_data.recommendation,
+                }
+
+    # Build stage history
+    stage_history_data = None
+    if result.stage_history:
+        stage_history_data = [s.to_dict() for s in result.stage_history]
+
     return DiagnosisResponse(
         diagnosis_id=result.diagnosis_id,
         status=result.status.value,
         timestamp=timestamp,
+        mode=result.mode.value if result.mode else None,
         summary=result.summary,
         root_cause={
             "category": result.root_cause.category.value if result.root_cause else None,
@@ -848,6 +885,9 @@ async def get_diagnosis(
             {"priority": r.priority, "action": r.action, "command": r.command}
             for r in result.recommendations
         ] if result.recommendations else None,
+        markdown_report=result.markdown_report or None,
+        stage_history=stage_history_data,
+        checkpoint=checkpoint_data,
     )
 
 
@@ -890,6 +930,134 @@ async def list_diagnoses(
         )
         for d in paginated
     ]
+
+
+class CheckpointAction(BaseModel):
+    """Request body for checkpoint interaction."""
+
+    action: Literal["confirm", "cancel", "modify"] = Field(
+        description="Action to take: confirm, cancel, or modify"
+    )
+    user_input: str | None = Field(
+        default=None,
+        description="User input or selected option (e.g. 'deeper_measurement', 'exit')",
+    )
+
+
+class CheckpointResponse(BaseModel):
+    """Response for checkpoint queries."""
+
+    diagnosis_id: str
+    has_checkpoint: bool
+    checkpoint_type: str | None = None
+    summary: str | None = None
+    details: dict[str, Any] | None = None
+    options: list[str] | None = None
+    recommendation: str | None = None
+
+
+@app.get("/diagnose/{diagnosis_id}/checkpoint", response_model=CheckpointResponse)
+async def get_checkpoint(
+    diagnosis_id: str,
+    _api_key: Annotated[str, Depends(verify_api_key)],
+):
+    """Get the current waiting checkpoint for an interactive diagnosis.
+
+    Returns checkpoint data if the diagnosis is waiting for user input,
+    or has_checkpoint=false if not waiting.
+    """
+    if engine is None or not hasattr(engine, "get_controller"):
+        return CheckpointResponse(
+            diagnosis_id=diagnosis_id,
+            has_checkpoint=False,
+        )
+
+    controller = engine.get_controller(diagnosis_id)
+    if controller is None:
+        logger.debug(f"checkpoint_get: no controller for {diagnosis_id}, active={list(engine._active_controllers.keys()) if hasattr(engine, '_active_controllers') else '?'}")
+        return CheckpointResponse(
+            diagnosis_id=diagnosis_id,
+            has_checkpoint=False,
+        )
+    if not controller.is_waiting:
+        logger.debug(f"checkpoint_get: controller found but not waiting, status={controller._state.status.value if controller._state else 'no_state'}")
+        return CheckpointResponse(
+            diagnosis_id=diagnosis_id,
+            has_checkpoint=False,
+        )
+
+    cp_data = controller.waiting_checkpoint_data
+    if cp_data is None:
+        return CheckpointResponse(
+            diagnosis_id=diagnosis_id,
+            has_checkpoint=False,
+        )
+
+    return CheckpointResponse(
+        diagnosis_id=diagnosis_id,
+        has_checkpoint=True,
+        checkpoint_type=cp_data.checkpoint_type.value,
+        summary=cp_data.summary,
+        details=cp_data.details,
+        options=cp_data.options,
+        recommendation=cp_data.recommendation,
+    )
+
+
+@app.post("/diagnose/{diagnosis_id}/checkpoint")
+async def respond_to_checkpoint(
+    diagnosis_id: str,
+    action: CheckpointAction,
+    _api_key: Annotated[str, Depends(verify_api_key)],
+):
+    """Respond to a waiting checkpoint in an interactive diagnosis.
+
+    Actions:
+    - confirm: Proceed with the recommended option or user_input selection
+    - cancel: Cancel the diagnosis at this checkpoint
+    - modify: Modify the current step with user_input
+    """
+    if engine is None or not hasattr(engine, "get_controller"):
+        raise HTTPException(
+            status_code=404,
+            detail="No active controller for this diagnosis",
+        )
+
+    controller = engine.get_controller(diagnosis_id)
+    if controller is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No active controller for diagnosis {diagnosis_id}",
+        )
+
+    if not controller.is_waiting:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Diagnosis {diagnosis_id} is not waiting at a checkpoint",
+        )
+
+    if action.action == "confirm":
+        success = controller.confirm_checkpoint(user_input=action.user_input)
+        if not success:
+            raise HTTPException(status_code=409, detail="Failed to confirm checkpoint")
+        return {"status": "confirmed", "diagnosis_id": diagnosis_id}
+
+    elif action.action == "cancel":
+        success = controller.cancel_checkpoint()
+        if not success:
+            raise HTTPException(status_code=409, detail="Failed to cancel checkpoint")
+        return {"status": "cancelled", "diagnosis_id": diagnosis_id}
+
+    elif action.action == "modify":
+        if not action.user_input:
+            raise HTTPException(status_code=400, detail="user_input required for modify action")
+        success = controller.modify_checkpoint(user_input=action.user_input)
+        if not success:
+            raise HTTPException(status_code=409, detail="Failed to modify checkpoint")
+        return {"status": "modified", "diagnosis_id": diagnosis_id}
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown action: {action.action}")
 
 
 # CLI entry point for development

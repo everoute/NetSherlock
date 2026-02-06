@@ -38,7 +38,7 @@ from netsherlock.schemas.config import (
 )
 from netsherlock.schemas.minimal_input import MinimalInputConfig
 from netsherlock.schemas.request import DiagnosisRequest
-from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus
+from netsherlock.schemas.result import DiagnosisResult, DiagnosisStatus, StageResult
 
 from .checkpoints import (
     CheckpointCallback,
@@ -89,6 +89,9 @@ class DiagnosisState:
     measurements: dict[str, Any] = field(default_factory=dict)
     analysis: dict[str, Any] = field(default_factory=dict)
     report: dict[str, Any] = field(default_factory=dict)
+
+    # Multi-stage interactive mode
+    stage_history: list[StageResult] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert state to dictionary."""
@@ -506,7 +509,14 @@ class DiagnosisController:
         return DiagnosisResult.from_controller_state(state, analysis_result=self._analysis_result)
 
     async def _run_interactive(self, request: DiagnosisRequest) -> DiagnosisResult:
-        """Run in interactive mode - with checkpoints.
+        """Run in interactive mode - multi-stage with checkpoints.
+
+        The workflow is:
+        1. L1→L2→Classification→Planning (with optional checkpoints)
+        2. Stage loop: L3 measurement → L4 analysis → STAGE_RESULT checkpoint
+           - User can choose to escalate (e.g. boundary→segment), exit, or complete
+           - Maximum MAX_INTERACTIVE_STAGES iterations
+        3. Final result with accumulated stage history
 
         Args:
             request: Diagnosis request
@@ -514,6 +524,8 @@ class DiagnosisController:
         Returns:
             Diagnosis result
         """
+        MAX_INTERACTIVE_STAGES = 3
+
         state = self._state
         assert state is not None
         assert self._checkpoint_manager is not None
@@ -531,7 +543,7 @@ class DiagnosisController:
         state.phase = DiagnosisPhase.CLASSIFICATION
         state.classification = await self._classify_problem(state.environment, request)
 
-        # Checkpoint 1: Problem Classification
+        # Checkpoint 1: Problem Classification (optional)
         state.status = DiagnosisStatus.WAITING
         checkpoint_result = await self._checkpoint_manager.wait_at(
             CheckpointData(
@@ -549,7 +561,6 @@ class DiagnosisController:
             return DiagnosisResult.create_cancelled(state.diagnosis_id, mode=state.mode)
 
         if checkpoint_result.status == CheckpointStatus.MODIFIED:
-            # User modified classification
             state.classification["user_modified"] = True
             state.classification["user_input"] = checkpoint_result.user_input
 
@@ -559,7 +570,7 @@ class DiagnosisController:
         state.phase = DiagnosisPhase.MEASUREMENT_PLANNING
         state.measurement_plan = await self._plan_measurement(state.classification, state.environment, request)
 
-        # Checkpoint 2: Measurement Plan
+        # Checkpoint 2: Measurement Plan (optional)
         state.status = DiagnosisStatus.WAITING
         checkpoint_result = await self._checkpoint_manager.wait_at(
             CheckpointData(
@@ -578,15 +589,104 @@ class DiagnosisController:
 
         state.status = DiagnosisStatus.RUNNING
 
-        # Phase 5: L3 Measurement
-        state.phase = DiagnosisPhase.L3_MEASUREMENT
-        state.measurements = await self._execute_measurement(state.measurement_plan, state.environment)
+        # === Multi-stage L3→L4 loop ===
+        current_plan = state.measurement_plan
+        stage_number = 0
 
-        # Phase 6: L4 Analysis
-        state.phase = DiagnosisPhase.L4_ANALYSIS
-        state.analysis = await self._analyze_and_report(
-            state.measurements, state.environment, state.measurement_plan
-        )
+        for stage_number in range(MAX_INTERACTIVE_STAGES):
+            stage_start = datetime.now()
+            workflow_mode = current_plan.get("workflow_mode", "boundary")
+            measurement_skill = current_plan.get("skill", "unknown")
+            analysis_skill = current_plan.get("analysis_skill", "unknown")
+
+            self._log.info(
+                "interactive_stage_starting",
+                stage=stage_number + 1,
+                workflow_mode=workflow_mode,
+                measurement_skill=measurement_skill,
+            )
+
+            # L3 Measurement
+            state.phase = DiagnosisPhase.L3_MEASUREMENT
+            state.measurements = await self._execute_measurement(current_plan, state.environment)
+
+            # L4 Analysis
+            state.phase = DiagnosisPhase.L4_ANALYSIS
+            state.analysis = await self._analyze_and_report(
+                state.measurements, state.environment, current_plan
+            )
+
+            # Build StageResult
+            stage_result = StageResult(
+                stage_number=stage_number + 1,
+                stage_label=workflow_mode,
+                workflow_mode=workflow_mode,
+                measurement_skill=measurement_skill,
+                analysis_skill=analysis_skill,
+                measurements=state.measurements,
+                analysis=state.analysis,
+                markdown_report=state.analysis.get("markdown_report", ""),
+                started_at=stage_start,
+                completed_at=datetime.now(),
+            )
+
+            # Generate suggestions for next action
+            suggestions = self._generate_stage_suggestions(
+                stage_result, state.classification, request
+            )
+            stage_result.suggestions = suggestions
+
+            # STAGE_RESULT checkpoint - present results and ask for next action
+            state.status = DiagnosisStatus.WAITING
+            option_labels = [s["label"] for s in suggestions]
+
+            checkpoint_result = await self._checkpoint_manager.wait_at(
+                CheckpointData(
+                    checkpoint_type=CheckpointType.STAGE_RESULT,
+                    summary=f"Stage {stage_number + 1} ({workflow_mode}) complete",
+                    details={
+                        "stage": stage_result.to_dict(),
+                        "suggestions": suggestions,
+                        "markdown_report": stage_result.markdown_report,
+                    },
+                    options=option_labels,
+                    recommendation=suggestions[0]["label"] if suggestions else "Complete",
+                )
+            )
+
+            # Record user's choice
+            user_choice = checkpoint_result.user_input or ""
+            if checkpoint_result.is_cancelled:
+                user_choice = "exit"
+            stage_result.user_choice = user_choice
+
+            # Save stage to history
+            state.stage_history.append(stage_result)
+
+            state.status = DiagnosisStatus.RUNNING
+
+            # Handle user choice
+            if checkpoint_result.is_cancelled or user_choice == "exit":
+                self._log.info("interactive_user_exit", stage=stage_number + 1)
+                break
+
+            # Check if user wants deeper measurement
+            next_plan = self._get_next_stage_workflow(
+                user_choice, workflow_mode, state.classification, state.environment, request
+            )
+
+            if next_plan is None:
+                # No further escalation available - done
+                self._log.info("interactive_no_more_stages", stage=stage_number + 1)
+                break
+
+            # Escalate to next stage
+            current_plan = next_plan
+            self._log.info(
+                "interactive_escalating",
+                stage=stage_number + 2,
+                next_mode=next_plan.get("workflow_mode"),
+            )
 
         # Complete
         state.phase = DiagnosisPhase.COMPLETED
@@ -596,13 +696,124 @@ class DiagnosisController:
             "diagnosis_completed",
             diagnosis_id=state.diagnosis_id,
             mode="interactive",
+            total_stages=len(state.stage_history),
         )
 
         return DiagnosisResult.from_controller_state(
             state,
             analysis_result=self._analysis_result,
             checkpoint_history=self._checkpoint_manager.history,
+            stage_history=state.stage_history,
         )
+
+    def _generate_stage_suggestions(
+        self,
+        stage_result: StageResult,
+        classification: dict[str, Any],
+        request: DiagnosisRequest,
+    ) -> list[dict[str, Any]]:
+        """Generate suggestions for next action after a measurement stage.
+
+        Based on the current stage's results and available workflow escalation
+        paths, produce a list of actionable suggestions for the user.
+
+        Args:
+            stage_result: Results of current stage
+            classification: Problem classification data
+            request: Original diagnosis request
+
+        Returns:
+            List of suggestion dicts with label, description, action keys
+        """
+        suggestions: list[dict[str, Any]] = []
+        network_type = classification.get("network_type", "vm")
+        request_type = classification.get("request_type", "latency")
+        current_mode = stage_result.workflow_mode
+
+        # Check if deeper measurement is available
+        if current_mode == "boundary":
+            # Can we escalate to segment mode?
+            segment_workflow = _lookup_workflow(network_type, request_type, "segment")
+            if segment_workflow is not None:
+                suggestions.append({
+                    "label": "deeper_measurement",
+                    "description": (
+                        f"Run detailed segment measurement ({segment_workflow[0]}) "
+                        f"for precise fault localization within the identified area"
+                    ),
+                    "action": "escalate_to_segment",
+                    "next_mode": "segment",
+                })
+
+        # Always offer complete and exit
+        suggestions.append({
+            "label": "complete",
+            "description": "Accept current results and complete the diagnosis",
+            "action": "complete",
+        })
+        suggestions.append({
+            "label": "exit",
+            "description": "Exit the diagnosis without further action",
+            "action": "exit",
+        })
+
+        return suggestions
+
+    def _get_next_stage_workflow(
+        self,
+        user_choice: str,
+        current_mode: str,
+        classification: dict[str, Any],
+        environment: dict[str, Any],
+        request: DiagnosisRequest,
+    ) -> dict[str, Any] | None:
+        """Determine next stage's measurement plan based on user choice.
+
+        Args:
+            user_choice: User's selection from suggestions
+            current_mode: Current workflow mode (boundary/segment)
+            classification: Problem classification
+            environment: Environment data
+            request: Original request
+
+        Returns:
+            New measurement plan dict, or None if no further stages
+        """
+        if user_choice in ("complete", "exit", ""):
+            return None
+
+        network_type = classification.get("network_type", "vm")
+        request_type = classification.get("request_type", "latency")
+
+        if user_choice == "deeper_measurement" and current_mode == "boundary":
+            # Escalate boundary → segment
+            workflow = _lookup_workflow(network_type, request_type, "segment")
+            if workflow is None:
+                return None
+
+            measurement_skill, analysis_skill, param_builder_name = workflow
+
+            # Build parameters for the new workflow
+            param_builder = getattr(self, param_builder_name, None)
+            if param_builder is None:
+                self._log.error(
+                    "stage_escalation_param_builder_not_found",
+                    param_builder=param_builder_name,
+                )
+                return None
+
+            skill_params = param_builder(environment, request)
+
+            return {
+                "mode": "skill",
+                "skill": measurement_skill,
+                "analysis_skill": analysis_skill,
+                "parameters": skill_params,
+                "duration": request.options.get("duration", 30),
+                "workflow_mode": "segment",
+            }
+
+        return None
 
     # === Phase Implementation ===
 
@@ -1623,6 +1834,22 @@ class DiagnosisController:
             waiting = self._checkpoint_manager.waiting_checkpoint
             if waiting:
                 waiting.confirm(user_input)
+                return True
+        return False
+
+    def modify_checkpoint(self, user_input: str) -> bool:
+        """Modify current waiting checkpoint with user input.
+
+        Args:
+            user_input: User's modified input
+
+        Returns:
+            True if checkpoint was modified
+        """
+        if self._checkpoint_manager:
+            waiting = self._checkpoint_manager.waiting_checkpoint
+            if waiting:
+                waiting.modify(user_input)
                 return True
         return False
 

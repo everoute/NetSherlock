@@ -26,6 +26,7 @@ class CheckpointType(str, Enum):
     PROBLEM_CLASSIFICATION = "problem_classification"
     MEASUREMENT_PLAN = "measurement_plan"
     FURTHER_DIAGNOSIS = "further_diagnosis"
+    STAGE_RESULT = "stage_result"
 
 
 class AutonomousConfig(BaseModel):
@@ -56,6 +57,8 @@ class InteractiveConfig(BaseModel):
         default_factory=lambda: [
             CheckpointType.PROBLEM_CLASSIFICATION,
             CheckpointType.MEASUREMENT_PLAN,
+            CheckpointType.STAGE_RESULT,
+            CheckpointType.FURTHER_DIAGNOSIS,
         ],
         description="Checkpoints requiring user confirmation",
     )

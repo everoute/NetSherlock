@@ -190,6 +190,8 @@ class DiagnosisSettings(BaseSettings):
         default_factory=lambda: [
             CheckpointType.PROBLEM_CLASSIFICATION,
             CheckpointType.MEASUREMENT_PLAN,
+            CheckpointType.STAGE_RESULT,
+            CheckpointType.FURTHER_DIAGNOSIS,
         ],
         description="Checkpoints requiring user confirmation",
     )

@@ -67,6 +67,7 @@ class ControllerEngine:
         self._bpf_local_tools_path = bpf_local_tools_path
         self._bpf_remote_tools_path = bpf_remote_tools_path
         self._checkpoint_callback = checkpoint_callback
+        self._active_controllers: dict[str, Any] = {}
 
     @property
     def engine_type(self) -> str:
@@ -123,11 +124,22 @@ class ControllerEngine:
             bpf_remote_tools_path=self._bpf_remote_tools_path,
         )
 
-        return await controller.run(
-            request=request,
-            source=request.source,
-            force_mode=mode,
-        )
+        # Register controller for external access (e.g. API checkpoint interaction)
+        diagnosis_id = request.request_id or "unknown"
+        self._active_controllers[diagnosis_id] = controller
+
+        try:
+            return await controller.run(
+                request=request,
+                source=request.source,
+                force_mode=mode,
+            )
+        finally:
+            self._active_controllers.pop(diagnosis_id, None)
+
+    def get_controller(self, diagnosis_id: str) -> Any | None:
+        """Get a running controller by diagnosis ID for checkpoint interaction."""
+        return self._active_controllers.get(diagnosis_id)
 
     async def health_check(self) -> dict[str, Any]:
         """Return engine health status."""
