@@ -679,6 +679,7 @@ class DiagnosisResponse(BaseModel):
     root_cause: dict[str, Any] | None = None
     recommendations: list[dict[str, Any]] | None = None
     markdown_report: str | None = None
+    error: str | None = None
     message: str | None = None
 
 
@@ -753,10 +754,18 @@ async def diagnosis_worker():
                     logger.info(f"Diagnosis completed: {request_id}")
 
                 except Exception as e:
-                    logger.exception(f"Diagnosis failed for {request_id}: {e}")
+                    import traceback
+                    tb = traceback.format_exc()
+                    req_ctx = ""
+                    if request is not None:
+                        req_ctx = (
+                            f" [request: {request.network_type}/{request.request_type}"
+                            f" src={request.src_host} dst={request.dst_host}]"
+                        )
+                    logger.exception(f"Diagnosis failed for {request_id}{req_ctx}: {e}")
                     error_result = DiagnosisResult.create_error(
                         diagnosis_id=request_id,
-                        error=str(e),
+                        error=f"{e}\n\n{tb}",
                         started_at=started_at,
                     )
                     # Attach request context even on error
@@ -975,6 +984,7 @@ async def get_diagnosis(
             for r in result.recommendations
         ] if result.recommendations else None,
         markdown_report=result.markdown_report or None,
+        error=result.error,
     )
 
 
