@@ -748,9 +748,11 @@ async def diagnosis_worker():
                         progress_callback=_make_progress_callback(request_id),
                     )
 
-                    # Ensure started_at is set
+                    # Ensure started_at/completed_at are set
                     if not result.started_at:
                         result.started_at = started_at
+                    if not result.completed_at:
+                        result.completed_at = datetime.now()
 
                     # Store result
                     diagnosis_store[request_id] = result
