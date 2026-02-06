@@ -101,7 +101,6 @@ export function Sidebar() {
               <User className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500 truncate">Logged in as</p>
               <p className="text-sm font-semibold text-gray-900 truncate">@{username}</p>
             </div>
           </div>
