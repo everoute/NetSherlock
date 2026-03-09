@@ -4,328 +4,351 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-316%20passing-brightgreen.svg)](#testing)
 
-> AI-driven network troubleshooting agent with eBPF-based diagnostics
+> AI-driven network troubleshooting agent — encoding expert diagnostic methodology into automated workflows powered by 65+ eBPF tools and Claude AI.
 
-NetSherlock is an intelligent network diagnosis tool that combines Claude AI with eBPF-based measurement tools to automatically diagnose network latency issues in virtualized environments.
+---
 
-## Table of Contents
+## The Problem
 
-- [Features](#features)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Testing](#testing)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
-- [License](#license)
+In large-scale virtualized network environments, troubleshooting network issues is exceptionally difficult:
 
-## Features
+| Challenge | What it looks like | Impact |
+|-----------|-------------------|--------|
+| **Path complexity** | VM → virtio → vhost → TUN/TAP → OVS → physical NIC — 6+ network stack layers | Fault isolation requires layer-by-layer investigation |
+| **Tool expertise** | 65+ eBPF measurement tools, each with unique parameters, filters, and output formats | Extremely high barrier for operators |
+| **Methodology gap** | Requires "boundary-first, then details" layered diagnosis experience | Expert knowledge is hard to transfer and replicate |
 
-- **Skill-Driven Architecture**: L2/L3/L4 diagnostic phases executed through Claude Code Skills
-- **8-Point Coordinated Measurement**: BPF tools deployed across sender/receiver VMs and hosts
-- **Coordinated Measurement**: 8-point BPF measurement with automatic tool coordination
-- **Dual-Mode Operation**: Interactive (human-in-the-loop) and Autonomous (fully automated) modes
-- **Grafana Integration**: Query metrics and logs from existing monitoring infrastructure
-- **Webhook API**: Automatic diagnosis triggered by Alertmanager alerts
+We built a comprehensive eBPF toolset ([troubleshooting-tools](https://github.com/echken/troubleshooting-tools)) covering the full network path — but the more capable the tools, the harder they are to use correctly.
+
+## The Solution
+
+NetSherlock encodes the layered diagnostic methodology into an AI Agent's control logic, achieving **end-to-end automation**: alert/config input → diagnosis report output.
+
+```
+Expert manual workflow:                    NetSherlock automated workflow:
+┌──────────────────────┐                   ┌──────────────────────┐
+│ Phase 1: Boundary    │                   │ Boundary Mode        │
+│ "Internal or external│       ══►         │ path_tracer deploy   │
+│  problem?"           │                   │ Dual-endpoint coord  │
+│ Run path_tracer      │                   │ Auto attribution     │
+└──────┬───────────────┘                   └──────┬───────────────┘
+       │ internal issue                           │ auto decision
+       ▼                                          ▼
+┌──────────────────────┐                   ┌──────────────────────┐
+│ Phase 2: Segment     │                   │ Segment Mode         │
+│ "Which segment is    │       ══►         │ 8-point BPF deploy   │
+│  slow?"              │                   │ Full-path latency    │
+│ Run detail tools     │                   │ LLM root cause       │
+│ Expert interprets    │                   │ analysis             │
+└──────────────────────┘                   └──────────────────────┘
+```
 
 ## Architecture
 
-NetSherlock implements a four-layer diagnostic architecture:
+### Four-Layer Diagnostic Model
+
+NetSherlock implements a four-layer architecture where each layer's output feeds the next:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ L4: Diagnostic Analysis    │ vm-latency-analysis Skill      │
-│     Root cause identification, latency attribution          │
-├─────────────────────────────────────────────────────────────┤
-│ L3: Precise Measurement    │ vm-latency-measurement Skill   │
-│     BPF tool deployment, 8-point coordinated measurement    │
-├─────────────────────────────────────────────────────────────┤
-│ L2: Environment Awareness  │ network-env-collector Skill    │
-│     OVS topology, vhost mapping, NIC discovery              │
-├─────────────────────────────────────────────────────────────┤
-│ L1: Base Monitoring        │ Direct tool calls              │
-│     Grafana/Loki queries, node log collection               │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ L4: Diagnostic Analysis     │ Latency/drop analysis Skills      │
+│     Root cause identification, attribution tables, reports      │
+├─────────────────────────────────────────────────────────────────┤
+│ L3: Precise Measurement     │ path-tracer / latency-measurement │
+│     BPF tool deployment, coordinated multi-point measurement    │
+├─────────────────────────────────────────────────────────────────┤
+│ L2: Environment Awareness   │ network-env-collector Skill       │
+│     OVS topology, vhost mapping, NIC discovery                  │
+├─────────────────────────────────────────────────────────────────┤
+│ L1: Base Monitoring         │ Direct Grafana/Loki queries       │
+│     Metrics, logs, pingmesh data collection                     │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### Skill-Driven Execution
+
+L2–L4 phases are executed through **Claude Code Skills** — reusable diagnostic procedures that invoke the LLM for intelligent tool coordination and data interpretation. This is the core innovation: each Skill encapsulates expert knowledge about *when*, *how*, and *in what order* to use specific eBPF tools.
+
+```
+10 Claude Code Skills
+├── L2: network-env-collector
+├── L3: vm-network-path-tracer, vm-latency-measurement,
+│       system-network-path-tracer
+└── L4: vm-network-latency-analysis, vm-network-drop-analysis,
+        system-network-latency-analysis, system-network-drop-analysis,
+        kernel-stack-analyzer
+```
+
+### Dual-Engine Design
+
+| | ControllerEngine (MVP) | OrchestratorEngine (Future) |
+|---|---|---|
+| **Paradigm** | Deterministic orchestration (LangGraph-style) | ReAct loop (autonomous agent) |
+| **Control flow** | Python-coded L1→L2→L3→L4 sequence | LLM dynamically decides next action |
+| **Skill selection** | WORKFLOW_TABLE lookup (deterministic) | LLM chooses which Skill to invoke |
+| **Predictability** | High — same path every time | Variable — LLM may skip/repeat steps |
+| **LLM calls** | 3–4 (only within Skill execution) | 5+ (orchestration + Skill execution) |
+| **Status** | Production-ready, 316 tests | Framework ready, orchestration in progress |
+
+### System Data Flow
+
+```
+                    ┌─────────────────────┐
+                    │    Trigger Layer     │
+                    │  Alertmanager / API  │
+                    │      / CLI          │
+                    └─────────┬───────────┘
+                              │
+                    ┌─────────▼───────────┐
+                    │  DiagnosisEngine     │
+                    │  Protocol            │
+                    └──┬──────────────┬────┘
+                       │              │
+            ┌──────────▼──┐    ┌──────▼──────────┐
+            │ Controller  │    │  Orchestrator   │
+            │ Engine      │    │  Engine (future) │
+            └──────┬──────┘    └─────────────────┘
+                   │
+        ┌──────────▼──────────┐
+        │    Skill Layer      │
+        │  SkillExecutor →    │
+        │  Claude Agent SDK   │
+        │  (L2/L3/L4 Skills)  │
+        └──────────┬──────────┘
+                   │
+        ┌──────────▼──────────┐
+        │  Infrastructure     │
+        │  SSH Manager        │
+        │  65+ BPF Tools      │
+        │  Grafana / Loki     │
+        └─────────────────────┘
+```
+
+## Diagnosis Coverage
+
+### Workflow Matrix
+
+NetSherlock supports multiple network types, problem types, and diagnosis modes:
+
+| Network | Problem | Boundary Mode | Segment Mode | Event Mode |
+|---------|---------|:---:|:---:|:---:|
+| **VM** | Latency | vm-network-path-tracer | vm-latency-measurement (8-point) | — |
+| **VM** | Packet Drop | vm-network-path-tracer | — | kfree_skb tracing |
+| **System** | Latency | system-network-path-tracer | kernel full-stack tracing | — |
+| **System** | Packet Drop | system-network-path-tracer | — | kfree_skb tracing |
+
+### Diagnosis Modes
+
+| Mode | Scope | Use Case | Dependency |
+|------|-------|----------|------------|
+| **Boundary** | Edge points only (vnet↔phy) | Quick triage: internal vs external | Minimal |
+| **Segment** | Full path, all major modules | Precise: segment-level latency breakdown | Medium |
+| **Event** | Per-packet event tracing | Detailed: drop events, latency anomalies | Higher |
+| **Specialized** | Specific module/protocol | Deep: OVS datapath, TCP retransmission | Varies |
+
+## Features
+
+- **Skill-Driven Architecture** — L2/L3/L4 diagnostic phases as reusable Claude Code Skills
+- **8-Point Coordinated Measurement** — BPF tools deployed across sender/receiver VMs and hosts simultaneously
+- **Dual-Mode Operation** — Interactive (human-in-the-loop checkpoints) and Autonomous (fully automated)
+- **Multi-Stage Diagnosis** — Iterative L3→L4 loops with escalation between diagnosis modes
+- **Grafana Integration** — Query metrics and logs from VictoriaMetrics, Loki, ClickHouse
+- **Alertmanager Webhook** — Alert-triggered automatic diagnosis with asset inventory lookup
+- **Web Dashboard** — React-based UI for task management, real-time status, and report viewing
+- **Workflow Registry** — Extensible mapping of (network_type, problem_type, mode) → Skill combinations
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.10+
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (for Skill execution)
 - SSH access to target hosts
-- Grafana instance with VictoriaMetrics/Loki datasources
+- Grafana instance with VictoriaMetrics/Loki datasources (for L1 monitoring)
 
-### Install with uv (Recommended)
+### Install
 
 ```bash
 git clone https://github.com/echken/netsherlock.git
 cd netsherlock
+
+# Option A: uv (recommended)
 uv sync
-```
 
-### Install with pip
-
-```bash
-git clone https://github.com/echken/netsherlock.git
-cd netsherlock
+# Option B: pip
 pip install -e .
 ```
 
-## Quick Start
-
-### 1. Configure Environment
+### Configure
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your settings:
+Key environment variables:
+
+| Variable | Description | Required |
+|----------|-------------|:---:|
+| `GRAFANA_BASE_URL` | Grafana server URL | Yes |
+| `GRAFANA_USERNAME` / `GRAFANA_PASSWORD` | Grafana credentials | Yes |
+| `SSH_PRIVATE_KEY_PATH` | SSH private key for remote hosts | Yes |
+| `WEBHOOK_API_KEY` | API key for webhook authentication | Webhook only |
+| `DIAGNOSIS_DEFAULT_MODE` | `interactive` or `autonomous` | No |
+
+## Usage
+
+### CLI — Manual Diagnosis
 
 ```bash
-# Required
-GRAFANA_BASE_URL=http://192.168.79.79/grafana
-GRAFANA_USERNAME=admin
-GRAFANA_PASSWORD=your_password
-SSH_PRIVATE_KEY_PATH=~/.ssh/id_rsa
-```
-
-### 2. Prepare Configuration File
-
-**This is required.** Create a configuration file with SSH and test parameters:
-
-```bash
+# 1. Prepare config file with SSH and test parameters
 cp config/minimal-input-template.yaml config/my-diagnosis.yaml
+# Edit with actual SSH IPs, test_ips, VM UUIDs
+
+# 2. Run VM latency diagnosis (interactive mode)
+netsherlock diagnose \
+  --config config/my-diagnosis.yaml \
+  --network-type vm \
+  --src-host 192.168.75.101 --src-vm <UUID> \
+  --dst-host 192.168.75.102 --dst-vm <UUID> \
+  --type latency
+
+# 3. Run in autonomous mode (no checkpoints)
+netsherlock diagnose \
+  --config config/my-diagnosis.yaml \
+  --network-type vm \
+  --src-host 192.168.75.101 --src-vm <UUID> \
+  --type latency \
+  --autonomous
+
+# Query Grafana metrics directly
+netsherlock query metrics 'host_network_ping_time_ns{hostname="node1"}'
 ```
 
-Edit `config/my-diagnosis.yaml`:
+### Webhook API — Alert-Driven
 
+```bash
+# Start the webhook server
+uvicorn netsherlock.api.webhook:app --host 0.0.0.0 --port 8080
+
+# Or use the CLI shortcut
+netsherlock-webhook
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/diagnose` | Create a new diagnosis task |
+| `GET` | `/diagnose/{id}` | Get task status and results |
+| `GET` | `/diagnoses` | List all diagnosis tasks |
+| `POST` | `/diagnose/{id}/checkpoint` | Confirm interactive checkpoint |
+| `GET` | `/diagnose/{id}/report` | Get final diagnosis report |
+| `DELETE` | `/diagnose/{id}` | Cancel a pending diagnosis |
+| `POST` | `/webhook/alertmanager` | Alertmanager webhook receiver |
+
+### Web Dashboard
+
+The React-based frontend provides task management, real-time status tracking, and diagnostic report viewing.
+
+```bash
+cd web
+npm install
+npm run dev    # Development server at http://localhost:5173
+```
+
+**Tech stack**: React 19, TypeScript, Vite, Tailwind CSS
+
+## Configuration
+
+### Two Configuration Modes
+
+**Manual Mode** — for development and ad-hoc diagnosis:
 ```yaml
+# config/minimal-input.yaml
 nodes:
   host-sender:
     ssh: smartx@192.168.75.101
     role: host
-
   vm-sender:
     ssh: root@192.168.2.100
     role: vm
     host_ref: host-sender
     uuid: ae6aa164-604c-4cb0-84b8-2dea034307f1
-    test_ip: 10.0.0.1    # BPF packet filter IP (may differ from SSH IP)
-
-  host-receiver:
-    ssh: smartx@192.168.75.102
-    role: host
-
-  vm-receiver:
-    ssh: root@192.168.2.200
-    role: vm
-    host_ref: host-receiver
-    uuid: bf7bb275-715d-5dc1-95c9-3feb045418g2
-    test_ip: 10.0.0.2
-
+    test_ip: 10.0.0.1    # BPF filter IP (may differ from SSH IP)
 test_pairs:
   vm:
     server: vm-receiver
     client: vm-sender
 ```
 
-### 3. Run Diagnosis
-
-```bash
-netsherlock diagnose \
-  --config config/my-diagnosis.yaml \
-  --network-type vm \
-  --src-host 192.168.75.101 \
-  --src-vm ae6aa164-604c-4cb0-84b8-2dea034307f1 \
-  --dst-host 192.168.75.102 \
-  --dst-vm bf7bb275-715d-5dc1-95c9-3feb045418g2 \
-  --type latency
+**Auto Mode** — for alert-triggered diagnosis with asset inventory:
+```yaml
+# config/global-inventory.yaml
+# Pre-configured asset list; alerts auto-construct MinimalInputConfig
 ```
-
-## Configuration
-
-### Configuration Modes
-
-| Mode | File | CLI Flag | Use Case |
-|------|------|----------|----------|
-| **Manual** | `minimal-input.yaml` | `--config` | Development, single diagnosis |
-| **Automatic** | `global-inventory.yaml` | `--inventory` | Alert-triggered, batch diagnosis |
-
-### Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `GRAFANA_BASE_URL` | Grafana server URL | Yes |
-| `GRAFANA_USERNAME` | Grafana username | Yes |
-| `GRAFANA_PASSWORD` | Grafana password | Yes |
-| `SSH_PRIVATE_KEY_PATH` | SSH private key path | Yes |
-| `WEBHOOK_API_KEY` | API key for webhook auth | For webhook |
-| `DIAGNOSIS_DEFAULT_MODE` | Default mode (`interactive`/`autonomous`) | No |
 
 See [User Guide](docs/user-guide.md) for complete configuration reference.
-
-## Usage
-
-### CLI Commands
-
-```bash
-# Single VM diagnosis (interactive mode)
-netsherlock diagnose \
-  --config config/minimal-input.yaml \
-  --network-type vm \
-  --src-host <IP> --src-vm <UUID> \
-  --type latency
-
-# VM-to-VM diagnosis (autonomous mode)
-netsherlock diagnose \
-  --config config/minimal-input.yaml \
-  --network-type vm \
-  --src-host <SRC_IP> --src-vm <SRC_UUID> \
-  --dst-host <DST_IP> --dst-vm <DST_UUID> \
-  --type latency \
-  --autonomous
-
-# Using asset inventory (automatic mode)
-netsherlock diagnose \
-  --inventory config/global-inventory.yaml \
-  --network-type vm \
-  --src-host <IP> --src-vm <UUID> \
-  --autonomous
-
-# Query Grafana metrics
-netsherlock query metrics 'host_network_ping_time_ns{hostname="node1"}'
-
-# View configuration
-netsherlock config
-```
-
-### Webhook API
-
-```bash
-# Start webhook server
-uvicorn netsherlock.api.webhook:app --host 0.0.0.0 --port 8080
-
-# Trigger diagnosis via API
-curl -X POST http://localhost:8080/diagnose \
-  -H "X-API-Key: your-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "network_type": "vm",
-    "diagnosis_type": "latency",
-    "src_host": "192.168.75.101",
-    "src_vm": "ae6aa164-604c-4cb0-84b8-2dea034307f1"
-  }'
-```
-
-### Diagnosis Modes
-
-| Mode | Description | Flag |
-|------|-------------|------|
-| **Interactive** | Pauses at checkpoints for confirmation | `--interactive` (default) |
-| **Autonomous** | Fully automated, no user intervention | `--autonomous` |
-
-## Testing
-
-### Install Dev Dependencies
-
-```bash
-uv sync --dev
-# or
-pip install -e ".[dev]"
-```
-
-### Run Tests
-
-```bash
-# Run all tests (316 total)
-pytest
-
-# Run unit tests only (196 tests)
-pytest tests/ --ignore=tests/integration/
-
-# Run integration tests only (120 tests)
-pytest tests/integration/
-
-# Run with coverage report
-pytest --cov=netsherlock --cov-report=html
-
-# Run with verbose output
-pytest -v
-
-# Run specific test file
-pytest tests/test_skill_executor.py
-```
-
-### Test Structure
-
-```
-tests/
-├── test_*.py              # Unit tests
-│   ├── test_skill_executor.py
-│   ├── test_minimal_input.py
-│   ├── test_controller.py
-│   └── ...
-├── fixtures/              # Test data
-└── integration/           # Integration tests
-    ├── test_cli_controller.py
-    ├── test_diagnosis_flow.py
-    ├── test_dual_mode.py
-    └── ...
-```
-
-### Code Quality
-
-```bash
-# Type checking
-mypy src/netsherlock/
-
-# Linting
-ruff check src/netsherlock/
-
-# Format check
-ruff format --check src/netsherlock/
-```
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [User Guide](docs/user-guide.md) | Complete usage instructions, CLI reference |
-| [Implementation Guide](docs/implementation-guide.md) | Architecture, components, APIs |
-| [Design Document](docs/design/phase1-mvp-design.md) | System design, data flows |
 
 ## Project Structure
 
 ```
 netsherlock/
 ├── src/netsherlock/
-│   ├── api/               # Webhook API
-│   ├── config/            # Settings, GlobalInventory
-│   ├── controller/        # DiagnosisController
-│   ├── core/              # SkillExecutor, SSH, Grafana clients
-│   ├── schemas/           # Data models, MinimalInputConfig
-│   └── tools/             # L1-L4 tool implementations
-├── .claude/skills/        # Claude Code Skills (L2/L3/L4)
-├── config/                # Configuration templates
-├── docs/                  # Documentation
-└── tests/                 # Test suite
+│   ├── main.py                  # CLI entry point (Click)
+│   ├── api/webhook.py           # FastAPI webhook server
+│   ├── controller/              # DiagnosisController (L1→L2→L3→L4)
+│   ├── core/                    # SkillExecutor, SSH Manager, Grafana client
+│   ├── config/                  # Settings, GlobalInventory
+│   ├── schemas/                 # Pydantic models (MinimalInputConfig, alerts, etc.)
+│   └── tools/                   # L1–L4 tool implementations
+├── .claude/skills/              # 10 Claude Code Skills (L2/L3/L4)
+├── config/                      # YAML configuration templates
+├── web/                         # React frontend (Vite + Tailwind)
+├── docs/                        # Design docs, user guide, architecture
+└── tests/                       # 316 tests (unit + integration)
 ```
 
-## Contributing
+## Testing
 
-Contributions are welcome! Please follow these steps:
+```bash
+# Install dev dependencies
+uv sync --dev  # or: pip install -e ".[dev]"
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests (`pytest`)
-5. Run linting (`ruff check src/`)
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
+# Run all tests (316 total)
+pytest
+
+# Unit tests only
+pytest tests/ --ignore=tests/integration/
+
+# Integration tests only
+pytest tests/integration/
+
+# With coverage
+pytest --cov=netsherlock --cov-report=html
+
+# Code quality
+mypy src/netsherlock/         # Type checking
+ruff check src/netsherlock/   # Linting
+```
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [NetSherlock Design](docs/design/NetSherlock-design.md) | Complete system design with architecture diagrams |
+| [Phase 1 MVP Design](docs/design/phase1-mvp-design.md) | MVP scope, Skill-driven architecture details |
+| [Workflow Architecture](docs/design/diagnosis-workflow-architecture.md) | Workflow matrix, diagnosis modes |
+| [Agent Architecture](docs/design/agent-architecture-analysis.md) | Dual-engine comparison and analysis |
+| [Implementation Guide](docs/implementation-guide.md) | Component details, internal APIs |
+| [User Guide](docs/user-guide.md) | Usage instructions and configuration reference |
+| [E2E Test Guide](docs/e2e-diagnosis-test-guide.md) | End-to-end testing procedures |
+
+## Related Repositories
+
+| Repository | Description |
+|------------|-------------|
+| [troubleshooting-tools](https://github.com/echken/troubleshooting-tools) | 65+ eBPF network measurement tools (BCC Python, bpftrace, shell scripts) |
+| [network-measurement-analyzer](https://github.com/echken/network-measurement-analyzer) | Network measurement data analysis tools |
 
 ## License
 
@@ -333,8 +356,4 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## Acknowledgments
-
-- [Anthropic Claude](https://www.anthropic.com/) - AI capabilities
-- [BCC/eBPF](https://github.com/iovisor/bcc) - Network measurement tools
-- [Grafana](https://grafana.com/) - Monitoring integration
+**Acknowledgments**: [Anthropic Claude](https://www.anthropic.com/) for AI capabilities, [BCC/eBPF](https://github.com/iovisor/bcc) for network measurement, [Grafana](https://grafana.com/) for monitoring integration.
