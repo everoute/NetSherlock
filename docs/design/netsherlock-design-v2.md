@@ -49,7 +49,13 @@ troubleshooting  NetSherlock       NetSherlock       NetSherlock
 
 - **渐进智能化**：确定性编排 → LLM 辅助 → 自主 Agent，按需演进而非一步到位。我们在 Phase 1 选择了 ControllerEngine（确定性编排）作为生产引擎，同时保留了 OrchestratorEngine（ReAct）的框架。这不是技术债，而是有意为之——在诊断类型有限（2-3 种）时，确定性编排的可靠性和可调试性远优于 LLM 自主决策。
 
-- **Context 结构化**：系统处理两层 Context，每层都能独立构成 ReAct 闭环。**Layer 1 Context**（已有监控数据）通过 L1 查询 Grafana/Loki 指标和日志获取——仅靠这一层就能完成告警分类、指标关联、常见问题初步定位，形成基础排查闭环。**Layer 2 Context**（深度测量数据）通过 L2 环境采集和 L3 eBPF 工具部署主动获取——提供微秒级延迟分布、内核调用栈等 Layer 1 无法触及的深层信息。L4 层在两层 Context 基础上进行智能分析。当前实现中，Layer 1 闭环体现在 Controller 的 L1 阶段（查询监控 → 分类 → 路由到工作流），Layer 2 闭环体现在 Skill 内部（拓扑采集 → 工具部署 → 数据收集 → 分析归因）。Skill 封装的本质就是将领域知识结构化为模型可用的 context。
+- **Context 结构化**：系统处理两层 Context，每层都能独立构成 ReAct 闭环。
+
+  **Layer 1 Context**（已有监控数据的结构化组织）本身就能驱动有价值的排查闭环。以系统网络高延迟告警为例：Agent 收到 `host_network_ping_time_ns > 5ms` 告警 → 结合"系统网络路径经过 OVS internal port → OVS kernel datapath → 物理网卡"的结构化知识，判断需要查看路径上各模块的指标 → 查询 `openvswitch_ovs_async_counter`（OVS upcall 频率）和 `node_network_transmit_errs_total`（物理网卡错误） → 发现 OVS upcall 计数器激增 → 进一步查询 `ovs-vswitchd` 进程 CPU 使用率和 flow table 相关日志 → 初步判定 OVS 慢路径导致延迟，建议检查 flow table 规则或直接进入 Layer 2 的 `ovs_upcall_latency_summary` 深度测量。这个过程中，每一步"查什么指标"的决策都依赖于结构化的领域知识（网络类型→路径→模块→对应指标→解读方式）——这正是 Layer 1 Context 组织要解决的核心问题。
+
+  **Layer 2 Context**（深度测量数据）通过 L2 环境采集和 L3 eBPF 工具部署主动获取——提供微秒级延迟分布、内核调用栈等 Layer 1 无法触及的深层信息。当 Layer 1 闭环无法精确定位根因时（如"延迟在发送端内部，但不知道是 vhost 还是 OVS"），Layer 2 的 eBPF 测量工具提供逐模块微秒级数据。
+
+  当前实现中，Layer 1 闭环体现在 Controller 的 L1 阶段和工作流路由（查询监控 → 分类 → WORKFLOW_TABLE 查表），Layer 2 闭环体现在 Skill 内部（拓扑采集 → 工具部署 → 数据收集 → 分析归因）。Skill 封装的本质就是将领域知识结构化为模型可用的 context（详见需求文档 §1.2）。
 
 ---
 
