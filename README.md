@@ -6,6 +6,8 @@
 
 > AI-driven network troubleshooting agent — encoding expert diagnostic methodology into automated workflows powered by 65+ eBPF tools and Claude AI.
 
+> **[Design Document](docs/design/NetSherlock-design.md)** | **[Requirements & User Stories](docs/network-aiops-requirement-and-user-stories.md)**
+
 ---
 
 ## The Problem
@@ -18,7 +20,7 @@ In large-scale virtualized network environments, troubleshooting network issues 
 | **Tool expertise** | 65+ eBPF measurement tools, each with unique parameters, filters, and output formats | Extremely high barrier for operators |
 | **Methodology gap** | Requires "boundary-first, then details" layered diagnosis experience | Expert knowledge is hard to transfer and replicate |
 
-We built a comprehensive eBPF toolset ([troubleshooting-tools](https://github.com/echken/troubleshooting-tools)) covering the full network path — but the more capable the tools, the harder they are to use correctly.
+We built a comprehensive eBPF toolset ([troubleshooting-tools](https://github.com/everoute/troubleshooting-tools)) covering the full network path — but the more capable the tools, the harder they are to use correctly.
 
 ## The Solution
 
@@ -169,7 +171,7 @@ NetSherlock supports multiple network types, problem types, and diagnosis modes:
 ### Install
 
 ```bash
-git clone https://github.com/echken/netsherlock.git
+git clone https://github.com/everoute/netsherlock.git
 cd netsherlock
 
 # Option A: uv (recommended)
@@ -287,7 +289,7 @@ test_pairs:
 # Pre-configured asset list; alerts auto-construct MinimalInputConfig
 ```
 
-See [User Guide](docs/user-guide.md) for complete configuration reference.
+See [User Guide](docs/guides/user-guide.md) for complete configuration reference.
 
 ## Project Structure
 
@@ -335,24 +337,22 @@ ruff check src/netsherlock/   # Linting
 
 | Document | Description |
 |----------|-------------|
-| [NetSherlock Design](docs/design/NetSherlock-design.md) | Complete system design with architecture diagrams |
-| [Phase 1 MVP Design](docs/design/phase1-mvp-design.md) | MVP scope, Skill-driven architecture details |
-| [Workflow Architecture](docs/design/diagnosis-workflow-architecture.md) | Workflow matrix, diagnosis modes |
-| [Agent Architecture](docs/design/agent-architecture-analysis.md) | Dual-engine comparison and analysis |
-| [Implementation Guide](docs/implementation-guide.md) | Component details, internal APIs |
-| [User Guide](docs/user-guide.md) | Usage instructions and configuration reference |
-| [E2E Test Guide](docs/e2e-diagnosis-test-guide.md) | End-to-end testing procedures |
+| [Design Document](docs/design/NetSherlock-design.md) | Complete system design with architecture diagrams |
+| [Requirements & User Stories](docs/network-aiops-requirement-and-user-stories.md) | User analysis, functional requirements, and roadmap |
+| [Implementation Guide](docs/guides/implementation-guide.md) | Component details, internal APIs |
+| [User Guide](docs/guides/user-guide.md) | Usage instructions and configuration reference |
+| [E2E Test Guide](docs/guides/e2e-diagnosis-test-guide.md) | End-to-end testing procedures |
 
 ## Related Repositories
 
 | Repository | Description |
 |------------|-------------|
-| [troubleshooting-tools](https://github.com/echken/troubleshooting-tools) | 65+ eBPF network measurement tools (BCC Python, bpftrace, shell scripts) |
-| [network-measurement-analyzer](https://github.com/echken/network-measurement-analyzer) | Network measurement data analysis tools |
+| [troubleshooting-tools](https://github.com/everoute/troubleshooting-tools) | 65+ eBPF network measurement tools (BCC Python, bpftrace, shell scripts) |
+| [network-measurement-analyzer](https://github.com/everoute/network-measurement-analyzer) | Network measurement data analysis tools |
 
 ## License
 
-[MIT](LICENSE) © echken
+[MIT](LICENSE) © everoute
 
 ---
 

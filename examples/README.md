@@ -503,9 +503,6 @@ jobs:
 
 ## 参考资源
 
-- 📖 [诊断状态对齐报告](../docs/diagnosis-status-alignment-report.md)
-- 📋 [诊断状态执行摘要](../docs/diagnosis-status-analysis-summary.md)
-- ⚡ [快速参考指南](../docs/diagnosis-status-quick-reference.md)
 - 📚 [系统网络探测完整指南](./SYSTEM_NETWORK_PROBE_GUIDE.md)
 
 ---
