@@ -592,11 +592,72 @@ sequenceDiagram
 
 ### 4.1 为什么 Skill 驱动
 
+选择 Skill 驱动架构而非让 LLM 直接操作底层工具，基于三个核心理由：
+
+**1. 复用已有 Skills**：`network-env-collector`、`vm-latency-measurement`、`vm-network-path-tracer` 等 10 个 Skill 在 Claude Code 环境中已经过实战验证——它们从 troubleshooting-tools 的 65+ 个底层工具中提炼而来，经历了数十次真实诊断场景的打磨。重新让 LLM 学习操作这些底层工具，等于丢弃了已有的实践积累。
+
+**2. 封装领域知识**：网络测量存在大量隐式约束，最典型的是 receiver-first 时序——BPF 抓包工具必须先在接收端部署并就绪，然后发送端才能开始发包，否则前几秒的数据会丢失。类似的还有 8 点位 BPF 部署逻辑（VM 内核 → vnet → OVS → 物理网卡，双端各 4 个点位）。这些领域知识封装在 Skill 内部，编排层（无论是 Controller 还是 Orchestrator）无需理解这些细节，只需按名称调用 Skill。
+
+**3. 成本可控**：编排层（Controller）不调用 LLM，LLM 消耗集中在 Skill 执行阶段（`SkillExecutor` → Claude Agent SDK）。一次完整诊断仅需 3-4 次 LLM 调用（L2 拓扑采集、L3 测量执行、L4 分析归因），编排层的控制流、参数映射、工作流查表全部是零 token 消耗的 Python 代码。
+
+**与替代方案的对比**：如果让 LLM 直接操作底层工具（类似纯 ReAct 模式），会面临三个问题：
+- LLM 需理解工具部署时序 → 可能搞错 receiver-first 顺序，导致测量数据无效
+- 每次诊断的大量 token 消耗在工具协调上（SSH 连接管理、文件传输、进程等待），而非真正的智能分析
+- 工具参数组合复杂（host SSH、test IP、vnet 名称、OVS bridge、物理网卡……），LLM 容易出错
+
+从 Context 结构化的视角来看，Skill 的本质是将领域知识以结构化方式组织为模型可用的 context。底层工具的原始输出（日志文件、时间戳序列、内核调用栈）经过 Skill 封装后，变为 LLM 能够理解和分析的结构化诊断数据。Skill 不仅是执行单元，更是 Context 组织单元。
+
 ### 4.2 为什么 MVP 选确定性编排
+
+在 Phase 1 选择 ControllerEngine（确定性编排）而非 OrchestratorEngine（ReAct）作为生产引擎，是基于网络诊断场景的四个特性：
+
+**1. 流程确定性要求高**：L3 测量阶段涉及远程节点 BPF 工具部署和多点协调——先 SSH 到接收端部署 `icmp_path_tracer`、等待就绪信号、再 SSH 到发送端启动发包、等待测量完成、收集两端日志。任何步骤的顺序错误都会导致无效数据。确定性编排用 Python 代码硬编码这个流程，每次执行路径完全一致。
+
+**2. 成本敏感**：ReAct 循环的主 Agent 在每一轮 Thought/Action/Observation 中都消耗 token，而实际上大部分"决策"在网络诊断中是固定的——确定了问题类型（vm/latency）和模式（boundary），执行流程就完全确定了。将编排层的 token 消耗降为零，意味着同样的预算可以支持更多次诊断。
+
+**3. 可调试性**：生产环境中诊断失败时，需要精确定位是哪个阶段出了问题。ControllerEngine 的线性流程（L1→L2→classify→plan→L3→L4）使得每个阶段的输入输出都可追溯，日志清晰标记了 `phase: L2_ENV_COLLECTION`、`phase: L3_MEASUREMENT` 等。ReAct 循环的执行路径不可预测，同一个输入可能走不同的路径，调试时需要还原 LLM 的推理过程。
+
+**4. 当前诊断类型单一**：Phase 1 仅覆盖 2-3 种诊断类型（vm/system 的 latency/packet_drop），线性 L1→L2→L3→L4 工作流足以覆盖所有场景。引入 ReAct 的动态决策能力在此阶段属于过度设计——增加了复杂度却没有带来收益。
 
 ### 4.3 确定性 vs ReAct 的选择策略
 
+ControllerEngine 和 OrchestratorEngine 不是竞争关系，而是渐进演进：
+
+| Phase | 诊断类型数 | 推荐引擎 | 理由 |
+|-------|-----------|---------|------|
+| Phase 1 | 2-3 种 | Controller | 工作流固定，代码编排最可靠 |
+| Phase 2 | 3-5 种 | Controller + LLM suggestions | LLM 做跨工作流推荐，执行仍确定性 |
+| Phase 3 | 5+ 种 | Orchestrator | 工作流组合爆炸，需 LLM 动态编排 |
+
+**Phase 1 → Phase 2 的关键桥梁**：Interactive 模式的 Controller + LLM 建议引擎本质上是一种 **"受控的 ReAct"**。Controller 保证每一轮 L3→L4 的执行是确定性的、可靠的，而 LLM 建议引擎负责在两轮之间做智能决策——推荐下一步应该用什么 Skill 组合、为什么。用户（或未来的自动评估）在 Checkpoint 处选择后，Controller 再次确定性地执行选定的工作流。
+
+这种设计在确定性框架内引入了智能决策能力，同时保持了执行的可靠性和可调试性。它也是向 Phase 3 过渡的最佳跳板——当建议引擎的决策质量经过验证后，将 Checkpoint 的人工确认替换为 LLM 自动确认，就自然演进为 Orchestrator 的自主编排。
+
+从 Context×Action 成熟度的角度理解这个演进：Phase 1 用代码硬编码 Context→Action 映射（WORKFLOW_TABLE 查表）；Phase 2 引入 LLM 理解 Context 并建议 Action，但最终执行仍由 Controller 把控；Phase 3 由 LLM 完全自主完成 Context 理解 → Action 决策 → 执行闭环。每一步都建立在前一步积累的 Skill、Context 结构和验证经验之上。
+
 ### 4.4 MinimalInputConfig "唯一真相源"
+
+`MinimalInputConfig` 是整个诊断流程的参数起点——所有诊断参数均从中派生，不存在第二个配置源。
+
+**test_ip vs SSH IP 的关键区分**：BPF 抓包工具使用 `test_ip` 作为包过滤条件（如 `icmp_path_tracer --filter-ip 10.0.0.1`），而 SSH 连接使用 management IP。两者可能不同：
+
+| 场景 | SSH IP | test_ip | 原因 |
+|------|--------|---------|------|
+| 管理网与业务网分离 | 192.168.2.100 | 10.0.0.1 | 延迟问题发生在业务网络 |
+| 多网卡 VM | 192.168.2.100 (eth0) | 172.16.0.1 (eth1) | 测试存储网络延迟 |
+| 跨网段主机 | 192.168.70.31 (mgmt) | 192.168.10.31 (storage) | 存储网络丢包 |
+
+如果混淆两者，BPF 工具会过滤错误的 IP，导致整个测量抓不到有效数据——这是一个容易犯但后果严重的错误，因此在 `MinimalInputConfig` 中显式分开定义。
+
+**参数派生链路**：`MinimalInputConfig` 中的最小信息集（源/目标的 SSH 信息 + test_ip + 网络类型 + 问题类型）经过以下链路派生出完整的诊断参数：
+
+1. `MinimalInputConfig` → `DiagnosisRequest`：填充 request_type、network_type、src/dst host 信息
+2. `MinimalInputConfig` + L2 拓扑 → L3 参数：SSH 信息用于远程连接，test_ip 用于 BPF 包过滤，L2 采集的 vnet/bridge/phy_nic 用于工具部署位置
+3. L3 测量结果 → L4 分析参数：测量日志路径、持续时间、协议类型等自动传递
+
+**两种构建路径**：
+- **手动 YAML**（开发调试）：直接编写 `minimal-input.yaml` 文件，指定源/目标的 SSH 和 test_ip
+- **自动构建**（告警触发）：`GlobalInventory` 根据告警标签（src_vm、dst_host 等）自动查找对应的 SSH 信息和 test_ip，构建 `MinimalInputConfig`
 
 ---
 
@@ -604,7 +665,92 @@ sequenceDiagram
 
 ### 5.1 DiagnosisRequest / DiagnosisResult
 
+诊断流程的输入和输出由两个核心数据模型定义，所有引擎、API、持久化逻辑均围绕这两个模型构建。
+
+**DiagnosisRequest**（诊断请求）：
+
+```python
+DiagnosisRequest:
+  request_id: str              # 唯一请求 ID（UUID）
+  request_type: latency | packet_drop | connectivity
+  network_type: vm | system
+  src_host: str                # 源主机
+  dst_host: str | None         # 目标主机
+  src_vm: str | None           # 源 VM
+  dst_vm: str | None           # 目标 VM
+  source: CLI | WEBHOOK | API  # 触发来源
+  mode: AUTONOMOUS | INTERACTIVE
+  alert: AlertPayload | None   # 原始告警（Webhook 触发时）
+  options: dict                # 扩展选项（duration, segment, protocol 等）
+```
+
+`request_type` + `network_type` 决定了 WORKFLOW_TABLE 的查表键（再加上 `mode` 中的 boundary/segment 选择）。`source` 字段标记触发来源，用于日志追溯和行为差异化（如 Webhook 触发默认走 Autonomous 模式）。`options` 提供扩展能力，当前用于传递测量持续时间（duration）、协议类型（protocol）等非核心参数。
+
+**DiagnosisResult**（诊断结果）：
+
+```python
+DiagnosisResult:
+  diagnosis_id: str
+  status: PENDING | RUNNING | WAITING | COMPLETED | ERROR
+  started_at / completed_at: datetime
+  summary: str                 # 一句话诊断摘要
+  root_cause: RootCause        # (category, description, evidence)
+  recommendations: [Recommendation]  # (priority, action, rationale)
+  confidence: float            # 0-1 置信度
+  l1_observations: dict        # L1 监控数据
+  l2_environment: dict         # L2 网络拓扑
+  l3_measurements: dict        # L3 测量结果
+  l4_analysis: dict            # L4 分析详情
+  markdown_report: str         # 完整 Markdown 报告
+  checkpoint_history: list     # Interactive 模式: 各 Stage 的决策记录
+```
+
+`DiagnosisResult` 的设计有两个关键考虑：
+
+1. **分层结果保留**：`l1_observations` 到 `l4_analysis` 四个字段分别保存各层的原始数据，不仅用于最终报告生成，也用于 Interactive 模式中 LLM 建议引擎的输入——LLM 需要完整的分层 Context 才能给出有意义的下一步建议。
+
+2. **Stage 历史追溯**：`checkpoint_history` 记录了 Interactive 模式下每一轮 L3→L4 的执行结果和用户决策，使得最终报告能够完整呈现诊断的递进过程（如 "Stage 1 boundary 定界 → Stage 2 segment 分段 → 最终定位"）。
+
+**状态生命周期**：
+
+```
+PENDING → RUNNING → WAITING (checkpoint) → RUNNING → COMPLETED
+                                                   ↘ ERROR
+```
+
+`WAITING` 状态仅在 Interactive 模式下出现，表示诊断流程在 Checkpoint 处等待用户决策。API 端点 `GET /diagnose/{id}/checkpoint` 可获取当前等待的建议列表，`POST /diagnose/{id}/checkpoint` 提交用户选择后状态回到 `RUNNING`。
+
 ### 5.2 参数映射数据流
+
+L2 拓扑采集结果到 L3 测量工具参数的自动映射是系统最关键的数据流之一。这个映射消除了手动配置测量参数的需要——所有信息都从 L2 采集结果和 MinimalInputConfig 自动派生。
+
+```
+L2 网络拓扑采集结果:                          L3 测量工具参数:
+┌─────────────────────────────┐            ┌─────────────────────────────┐
+│ src_env:                    │            │ sender_host_ssh: "root@..."  │
+│   vm_uuid: "abc-123"       │   ═══►     │ sender_vm_ip: "10.0.0.1"    │
+│   qemu_pid: 12345          │  自动映射   │ sender_vnet: "vnet0"        │
+│   nics:                    │            │ sender_phy_nic: "eth0"       │
+│     - host_vnet: "vnet0"   │            │ receiver_host_ssh: "root@..." │
+│       ovs_bridge: "ovsbr"  │            │ receiver_vm_ip: "10.0.0.2"   │
+│       physical_nics:       │            │ receiver_vnet: "vnet1"       │
+│         - name: "eth0"     │            │ receiver_phy_nic: "eth0"     │
+│                            │            │ duration: 30                 │
+│ MinimalInputConfig:        │            │ protocol: "icmp"             │
+│   test_ip: "10.0.0.1"     │            │ local_tools_path: "/path/..."│
+│   ssh.host: "192.168.1.10"│            └─────────────────────────────┘
+└─────────────────────────────┘
+```
+
+**映射逻辑**（由 `_build_*_params()` 方法实现）：
+
+- `sender_host_ssh` / `receiver_host_ssh`：来自 MinimalInputConfig 的 SSH 连接信息（host + user + key）
+- `sender_vm_ip` / `receiver_vm_ip`：来自 MinimalInputConfig 的 `test_ip`，用于 BPF 包过滤
+- `sender_vnet` / `receiver_vnet`：来自 L2 拓扑采集的 `nics[].host_vnet`，BPF 工具在此接口部署
+- `sender_phy_nic` / `receiver_phy_nic`：来自 L2 拓扑采集的 `nics[].physical_nics[].name`，物理层 BPF 部署点
+- `duration` / `protocol`：来自 DiagnosisRequest 的 `options`，有默认值
+
+**核心要点**：MinimalInputConfig 是唯一真相源。L2 拓扑采集补充了 MinimalInputConfig 中没有的运行时信息（vnet 名称、OVS bridge、QEMU PID 等），两者结合后自动生成完整的 L3 测量参数。这个映射过程是纯 Python 代码，不消耗 token，也不依赖 LLM 的参数理解能力——避免了 LLM 错误构建工具参数导致测量失败的风险。
 
 ---
 
@@ -612,8 +758,157 @@ sequenceDiagram
 
 ### 6.1 实现进度总览
 
+以下是各模块的实现状态，供接手团队快速了解哪些可以直接使用、哪些需要继续完善：
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| DiagnosisController | ✅ 完整 | 确定性编排，5 种工作流，Autonomous + Interactive 双模式 |
+| SkillExecutor | ✅ 完整 | Claude Agent SDK Skill 调用，支持超时和错误处理 |
+| Webhook Server | ✅ 完整 | FastAPI，Alertmanager 集成，20+ 告警类型映射 |
+| MinimalInputConfig | ✅ 完整 | YAML 配置解析与 Pydantic 验证 |
+| GlobalInventory | ✅ 完整 | 资产管理 + VM 名称解析（vm_name → host + UUID） |
+| Checkpoint System | ✅ 基础 | 3 种 Checkpoint 类型，asyncio.Event 等待机制，API 交互 |
+| LLM 建议引擎 | 🔧 演进中 | 当前规则驱动（基于 WORKFLOW_TABLE escalation 路径），正向 LLM 分析驱动演进 |
+| Schemas | ✅ 完整 | 统一 Request/Result 数据模型，Pydantic v2 |
+| 10 Claude Skills | ✅ 完整 | L2/L3/L4 全链路覆盖（network-env-collector → *-analysis） |
+| Orchestrator (ReAct) | 🔧 框架 | Agent 框架 + 17 工具就绪，Subagent 编排和结果合成待完善 |
+| Web 前端 | 🔧 基础 | React 19 + Tailwind CSS，基础页面框架和 mock 数据 |
+
+**测试覆盖**：44 个测试文件，316+ test cases（unit + integration），覆盖所有工作流路径、错误处理和边界条件。全量运行约 6 分钟。
+
+**可直接使用的能力**：ControllerEngine 的完整诊断链路（从告警/配置输入 → L2 拓扑采集 → L3 BPF 测量 → L4 分析归因 → 诊断报告输出）已经过实际环境验证，可以投入生产使用。Interactive 模式的多层递归诊断基础功能可用，建议引擎的智能化是主要演进方向。
+
 ### 6.2 与原始设计的偏差
+
+以下是实际实现与原始设计文档之间的显著偏差，说明了偏差原因和当前影响：
+
+- **OrchestratorEngine**：原计划与 ControllerEngine 并行开发，两个引擎齐头并进。实际上 ControllerEngine 优先完成并投入使用，OrchestratorEngine 仅框架就绪。偏差原因是 Phase 1 的 2-3 种诊断类型用确定性编排完全足够，ReAct 引擎的开发优先级自然降低。这不构成技术债——OrchestratorEngine 的 Agent 框架和工具层已就绪，后续补完结果合成和配置加载即可启用。
+
+- **LLM 建议引擎**：原计划由 LLM 综合分析诊断结果、知识库和 Skill Library 后生成下一步建议。当前以规则驱动实现——`_generate_stage_suggestions()` 基于 WORKFLOW_TABLE 的 escalation 路径（boundary → segment → event → specialized）生成固定的建议选项。偏差原因是规则驱动在当前工作流数量下已足够，且可调试性更好。向 LLM 驱动演进是 Phase 2 的核心工作。
+
+- **前端**：原计划实现完整的诊断 Dashboard（实时进度、交互式 Checkpoint、历史查询）。当前仅完成基础页面框架和 mock 数据展示。偏差原因是后端 API 和诊断逻辑的优先级更高，前端开发推迟。当前前端代码（`web/` 目录）可作为后续开发的起点。
+
+- **L1 监控层**：原计划实现深度 Grafana/Loki 集成查询（自动拉取告警上下文指标、关联历史事件、异常基线检测）。当前 L1 层功能较轻，主要依赖告警本身携带的信息和 `read_pingmesh_logs` 读取本地日志。偏差原因是 L3 测量和 L4 分析的优先级更高——BPF 工具提供的精确测量数据往往比监控指标更有诊断价值。后续可按需增强 L1 的 Grafana 查询能力。
 
 ### 6.3 扩展指南
 
+#### 添加新工作流
+
+这是最常见的扩展场景。以添加 "VM 延迟 event 模式" 为例：
+
+**Step 1**：在 WORKFLOW_TABLE 注册新条目：
+
+```python
+# src/netsherlock/controller/diagnosis_controller.py
+WORKFLOW_TABLE = {
+    # ... 现有条目 ...
+    ("vm", "latency", "event"): ("virtio-event-tracer", "vm-event-latency-analysis", "_build_vm_event_params"),
+}
+```
+
+**Step 2**：实现 measurement Skill（`.claude/skills/virtio-event-tracer/SKILL.md`）：
+- 定义 Skill 的输入参数格式（SSH 信息、test_ip、vnet 等）
+- 编写 BPF 工具部署和执行逻辑（SSH → 传输工具 → 启动抓包 → 收集日志）
+- 参考现有 `vm-network-path-tracer` 的 SKILL.md 作为模板
+
+**Step 3**：实现 analysis Skill（`.claude/skills/vm-event-latency-analysis/SKILL.md`）：
+- 定义分析输入格式（测量日志路径、环境信息）
+- 编写数据解析和归因逻辑
+- 参考现有 `vm-network-latency-analysis` 作为模板
+
+**Step 4**：在 Controller 中添加参数构建方法：
+
+```python
+def _build_vm_event_params(self, state: DiagnosisState) -> dict:
+    """从 L2 拓扑 + MinimalInputConfig 构建 event 模式参数"""
+    # 参考 _build_vm_path_tracer_params() 的模式
+    ...
+```
+
+**Step 5**：添加测试覆盖——至少包括工作流查表测试、参数构建测试和端到端 mock 测试。
+
+#### 添加新 Skill
+
+Skill 是独立的执行单元，添加新 Skill 不影响现有代码：
+
+- **Skill 位置**：`.claude/skills/<skill-name>/SKILL.md`
+- **核心模式**：接收结构化参数 → SSH 远程执行工具 → 解析输出 → 返回结构化结果
+- **参考模板**：`vm-network-path-tracer` 是最典型的 L3 Skill（双端部署、receiver-first、日志收集），`vm-network-latency-analysis` 是最典型的 L4 Skill（日志解析、统计计算、归因分析）
+- **测试方式**：Skill 可在 Claude Code 中独立调用测试，不需要通过 Controller
+
+#### 引擎演进
+
+**Phase 2（Controller + LLM 建议）**：
+
+核心改动集中在 `_generate_stage_suggestions()` 方法。当前实现是基于 WORKFLOW_TABLE escalation 路径的规则逻辑，演进方向是：
+
+1. 将当前 Stage 的诊断结果（l3_measurements + l4_analysis）作为 prompt 输入
+2. 将可用 Skill Library（所有已注册 Skill 的能力描述）作为 context
+3. 调用 LLM 生成结构化建议（推荐 Skill 组合 + 理由 + 预期收益）
+4. 保留 Controller 的确定性执行——用户选择建议后，Controller 按选定工作流确定性执行
+
+**Phase 3（Orchestrator 自主编排）**：
+
+主要待补完项：
+- `_synthesize_diagnosis()`：从 Agent 的对话历史中提取结构化 `DiagnosisResult`，当前为 placeholder
+- Subagent 结果解析：L2/L3/L4 Subagent 的输出需要解析为 `DiagnosisState` 的对应字段
+- MinimalInputConfig 接入：当前 Orchestrator 未加载 MinimalInputConfig，需要在 Agent 初始化时注入
+
 ### 6.4 关键代码入口与依赖关系
+
+**入口文件索引**：
+
+| 入口 | 文件 | 说明 |
+|------|------|------|
+| CLI | `src/netsherlock/main.py` | Click CLI，`diagnose` / `query` / `server` 子命令 |
+| Webhook API | `src/netsherlock/api/webhook.py` | FastAPI，`/diagnose`、`/webhook/alertmanager`、`/diagnose/{id}/checkpoint` |
+| Controller | `src/netsherlock/controller/diagnosis_controller.py` | 核心编排逻辑，WORKFLOW_TABLE，Interactive 循环 |
+| Orchestrator | `src/netsherlock/agents/orchestrator.py` | ReAct Agent 框架，Main Agent + Subagent 定义 |
+| SkillExecutor | `src/netsherlock/core/skill_executor.py` | Claude Agent SDK Skill 调用封装 |
+| Schemas | `src/netsherlock/schemas/` | Pydantic 数据模型（request.py, result.py, config.py） |
+| Config | `src/netsherlock/config/` | Settings, GlobalInventory, MinimalInputConfig |
+
+**核心依赖关系**：
+
+```
+webhook.py ──► DiagnosisEngine Protocol
+                    ├──► ControllerEngine
+                    │       ├──► SkillExecutor ──► Claude Agent SDK (claude-agent-sdk)
+                    │       ├──► WORKFLOW_TABLE
+                    │       ├──► CheckpointManager ──► asyncio.Event
+                    │       └──► DiagnosisState ──► Schemas (pydantic)
+                    └──► OrchestratorEngine
+                            ├──► Claude Agent SDK (Agent + Subagent)
+                            └──► ToolExecutor ──► 17 工具函数
+
+Config Layer:
+  MinimalInputConfig ──► pydantic + pydantic-settings
+  GlobalInventory ──► YAML 资产文件
+  Settings ──► 环境变量 + .env
+
+Infrastructure:
+  SSH Manager ──► asyncssh
+  Grafana/Loki clients ──► httpx
+  API Server ──► fastapi + uvicorn
+```
+
+**测试运行**：使用项目虚拟环境而非系统 Python：
+
+```bash
+.venv/bin/pytest                    # 全量运行（约 6 分钟）
+.venv/bin/pytest tests/unit/        # 仅单元测试
+.venv/bin/pytest -k "controller"    # 按关键字过滤
+```
+
+**开发启动**：
+
+```bash
+# 启动 API 服务
+.venv/bin/python -m netsherlock server --port 8000
+
+# CLI 诊断（需要 minimal-input.yaml）
+.venv/bin/python -m netsherlock diagnose --config minimal-input.yaml --mode autonomous
+
+# 前端开发
+cd web && npm run dev
+```
