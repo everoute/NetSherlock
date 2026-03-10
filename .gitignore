@@ -68,6 +68,8 @@ data/
 # Project specific
 docs/planning-with-files/*
 docs/plans/*
+docs/other/
+docs/design/_build/
 task_plan.md
 findings.md
 progress.md
