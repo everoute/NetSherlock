@@ -49,7 +49,7 @@ troubleshooting  NetSherlock       NetSherlock       NetSherlock
 
 - **渐进智能化**：确定性编排 → LLM 辅助 → 自主 Agent，按需演进而非一步到位。我们在 Phase 1 选择了 ControllerEngine（确定性编排）作为生产引擎，同时保留了 OrchestratorEngine（ReAct）的框架。这不是技术债，而是有意为之——在诊断类型有限（2-3 种）时，确定性编排的可靠性和可调试性远优于 LLM 自主决策。
 
-- **Context 结构化**：Skill 的本质是将领域知识以结构化方式组织为模型可用的 context。L1-L2 层收集和组织环境信息（Layer 1 Context），L3 层通过主动测量获取深层数据（Layer 2 Context，通过 Action 获得），L4 层则在这些结构化 context 的基础上进行智能分析。这种视角贯穿整个架构设计——每增加一层 Skill，本质上是在为 LLM 提供更丰富、更结构化的诊断 context。
+- **Context 结构化**：系统处理两层 Context，每层都能独立构成 ReAct 闭环。**Layer 1 Context**（已有监控数据）通过 L1 查询 Grafana/Loki 指标和日志获取——仅靠这一层就能完成告警分类、指标关联、常见问题初步定位，形成基础排查闭环。**Layer 2 Context**（深度测量数据）通过 L2 环境采集和 L3 eBPF 工具部署主动获取——提供微秒级延迟分布、内核调用栈等 Layer 1 无法触及的深层信息。L4 层在两层 Context 基础上进行智能分析。当前实现中，Layer 1 闭环体现在 Controller 的 L1 阶段（查询监控 → 分类 → 路由到工作流），Layer 2 闭环体现在 Skill 内部（拓扑采集 → 工具部署 → 数据收集 → 分析归因）。Skill 封装的本质就是将领域知识结构化为模型可用的 context。
 
 ---
 
